@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Truck, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
@@ -11,7 +10,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center space-x-2 space-x-reverse">
               <Truck className="h-8 w-8 text-blue-400" />
-              <span className="text-2xl font-bold">דודו הובלות</span>
+              <span className="text-2xl font-bold">דויד הובלות</span>
             </div>
             <p className="text-gray-300 leading-relaxed">
               השותף המהימן שלכם לשירותי הובלה ואריזה מקצועיים. 
@@ -58,7 +57,7 @@ export const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 space-x-reverse">
                 <Mail className="h-5 w-5 text-blue-400" />
-                <span className="text-gray-300">info@dudumoving.co.il</span>
+                <span className="text-gray-300">info@davidmoving.co.il</span>
               </div>
               <div className="flex items-start space-x-3 space-x-reverse">
                 <MapPin className="h-5 w-5 text-blue-400 mt-1" />
@@ -75,7 +74,7 @@ export const Footer = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © 2024 דודו הובלות. כל הזכויות שמורות.
+            © 2024 דויד הובלות. כל הזכויות שמורות.
           </p>
           <div className="flex space-x-6 space-x-reverse mt-4 md:mt-0">
             <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">מדיניות פרטיות</span>

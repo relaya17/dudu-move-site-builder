@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Truck, Phone, MapPin } from 'lucide-react';
@@ -69,7 +68,7 @@ export const Hero = () => {
 
           <div className="relative">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-              <h3 className="text-2xl font-bold mb-6 text-center">למה לבחור בדודו הובלות?</h3>
+              <h3 className="text-2xl font-bold mb-6 text-center">למה לבחור בדויד הובלות?</h3>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3 space-x-reverse">
                   <div className="w-2 h-2 bg-blue-300 rounded-full"></div>

@@ -7,49 +7,49 @@ export const Services = () => {
   const services = [
     {
       icon: <Home className="h-12 w-12 text-blue-600" />,
-      title: "Residential Moving",
-      description: "Professional home moving services for families and individuals. We handle everything from packing to unpacking.",
-      features: ["Packing & Unpacking", "Furniture Assembly", "Fragile Item Care"]
+      title: "הובלות דירה",
+      description: "שירותי הובלת דירה מקצועיים למשפחות ויחידים. אנו מטפלים בהכל מאריזה ועד פריקה.",
+      features: ["אריזה ופריקה", "הרכבת רהיטים", "טיפול בחפצים שבירים"]
     },
     {
       icon: <Building className="h-12 w-12 text-blue-600" />,
-      title: "Commercial Moving",
-      description: "Office and business relocations with minimal downtime. We understand the importance of keeping your business running.",
-      features: ["Office Equipment", "Minimal Downtime", "Weekend Moving"]
+      title: "הובלות משרדים",
+      description: "העברת משרדים ועסקים עם זמן השבתה מינימלי. אנו מבינים את החשיבות של המשך פעילות העסק.",
+      features: ["ציוד משרדי", "זמן השבתה מינימלי", "הובלות בסופי שבוע"]
     },
     {
       icon: <Package className="h-12 w-12 text-blue-600" />,
-      title: "Packing Services",
-      description: "Professional packing services using high-quality materials to ensure your belongings arrive safely.",
-      features: ["Quality Materials", "Custom Crating", "Inventory Tracking"]
+      title: "שירותי אריזה",
+      description: "שירותי אריזה מקצועיים עם חומרים איכותיים להבטחת הגעה בטוחה של חפציכם.",
+      features: ["חומרים איכותיים", "קופסאות מותאמות", "מעקב מלאי"]
     },
     {
       icon: <Truck className="h-12 w-12 text-blue-600" />,
-      title: "Long Distance Moving",
-      description: "State-to-state and cross-country moves handled with care and precision. Licensed for interstate transport.",
-      features: ["GPS Tracking", "Storage Options", "Flexible Scheduling"]
+      title: "הובלות למרחקים ארוכים",
+      description: "הובלות בין־עירוניות וארציות המטופלות בזהירות ובדייקנות. מורשים להובלות בין־עירוניות.",
+      features: ["מעקב GPS", "אפשרויות אחסון", "זמנים גמישים"]
     },
     {
       icon: <Shield className="h-12 w-12 text-blue-600" />,
-      title: "Storage Solutions",
-      description: "Secure, climate-controlled storage facilities for short-term and long-term needs.",
-      features: ["Climate Controlled", "24/7 Security", "Flexible Terms"]
+      title: "פתרונות אחסון",
+      description: "מתקני אחסון מאובטחים עם בקרת אקלים לטווח קצר וארוך.",
+      features: ["בקרת אקלים", "אבטחה 24/7", "תנאים גמישים"]
     },
     {
       icon: <Clock className="h-12 w-12 text-blue-600" />,
-      title: "Emergency Moving",
-      description: "Last-minute moving services available 24/7. We're here when you need us most.",
-      features: ["24/7 Availability", "Rapid Response", "Emergency Packing"]
+      title: "הובלות חירום",
+      description: "שירותי הובלה דחופים זמינים 24/7. אנחנו כאן כשאתם הכי צריכים אותנו.",
+      features: ["זמינות 24/7", "תגובה מהירה", "אריזה דחופה"]
     }
   ];
 
   return (
-    <section id="services" className="py-20 bg-gray-50">
+    <section id="services" className="py-20 bg-gray-50" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Moving Services</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">שירותי ההובלה שלנו</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Comprehensive moving and packing solutions tailored to your specific needs
+            פתרונות הובלה ואריזה מקיפים המותאמים לצרכים הספציפיים שלכם
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export const Services = () => {
                 <ul className="space-y-2">
                   {service.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-center text-gray-700">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full ml-3"></div>
                       {feature}
                     </li>
                   ))}

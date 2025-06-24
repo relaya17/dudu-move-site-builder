@@ -41,8 +41,8 @@ export const ContactForm = () => {
     console.log('Form submitted:', formData);
     
     toast({
-      title: "Quote Request Submitted!",
-      description: "We'll contact you within 24 hours with your free quote.",
+      title: "בקשת הצעת מחיר נשלחה!",
+      description: "ניצור איתכם קשר תוך 24 שעות עם הצעת המחיר החינמית שלכם.",
     });
 
     // Reset form
@@ -59,12 +59,12 @@ export const ContactForm = () => {
   };
 
   return (
-    <section id="contact" className="py-20 bg-gray-50">
+    <section id="contact" className="py-20 bg-gray-50" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Get Your Free Quote</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">קבלו הצעת מחיר חינם</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Fill out the form below and we'll provide you with a detailed, no-obligation quote within 24 hours
+            מלאו את הטופס למטה ואנו נספק לכם הצעת מחיר מפורטת ללא התחייבות תוך 24 שעות
           </p>
         </div>
 
@@ -72,27 +72,27 @@ export const ContactForm = () => {
           <div className="lg:col-span-2">
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Request Your Quote</CardTitle>
+                <CardTitle className="text-2xl">בקשת הצעת מחיר</CardTitle>
                 <CardDescription>
-                  Please provide as much detail as possible for an accurate estimate
+                  אנא ספקו כמה שיותר פרטים להערכה מדויקת
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name *</Label>
+                      <Label htmlFor="name">שם מלא *</Label>
                       <Input
                         id="name"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        placeholder="John Doe"
+                        placeholder="יוסי כהן"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
+                      <Label htmlFor="email">כתובת אימייל *</Label>
                       <Input
                         id="email"
                         name="email"
@@ -100,14 +100,14 @@ export const ContactForm = () => {
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        placeholder="john@example.com"
+                        placeholder="yossi@example.com"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="phone">מספר טלפון *</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -115,27 +115,27 @@ export const ContactForm = () => {
                         value={formData.phone}
                         onChange={handleInputChange}
                         required
-                        placeholder="(555) 123-4567"
+                        placeholder="050-123-4567"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="moveType">Type of Move *</Label>
+                      <Label htmlFor="moveType">סוג הובלה *</Label>
                       <Select onValueChange={handleSelectChange} required>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select move type" />
+                          <SelectValue placeholder="בחרו סוג הובלה" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="residential">Residential</SelectItem>
-                          <SelectItem value="commercial">Commercial</SelectItem>
-                          <SelectItem value="long-distance">Long Distance</SelectItem>
-                          <SelectItem value="storage">Storage</SelectItem>
+                          <SelectItem value="residential">הובלת דירה</SelectItem>
+                          <SelectItem value="commercial">הובלת משרד</SelectItem>
+                          <SelectItem value="long-distance">הובלה למרחק ארוך</SelectItem>
+                          <SelectItem value="storage">אחסון</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="moveDate">Preferred Move Date</Label>
+                    <Label htmlFor="moveDate">תאריך מעבר מועדף</Label>
                     <Input
                       id="moveDate"
                       name="moveDate"
@@ -147,43 +147,43 @@ export const ContactForm = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="fromAddress">From Address *</Label>
+                      <Label htmlFor="fromAddress">כתובת מוצא *</Label>
                       <Input
                         id="fromAddress"
                         name="fromAddress"
                         value={formData.fromAddress}
                         onChange={handleInputChange}
                         required
-                        placeholder="123 Current St, City, State"
+                        placeholder="רחוב הרצל 123, תל אביב"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="toAddress">To Address *</Label>
+                      <Label htmlFor="toAddress">כתובת יעד *</Label>
                       <Input
                         id="toAddress"
                         name="toAddress"
                         value={formData.toAddress}
                         onChange={handleInputChange}
                         required
-                        placeholder="456 New St, City, State"
+                        placeholder="שדרות רוטשילד 456, תל אביב"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="details">Additional Details</Label>
+                    <Label htmlFor="details">פרטים נוספים</Label>
                     <Textarea
                       id="details"
                       name="details"
                       value={formData.details}
                       onChange={handleInputChange}
                       rows={4}
-                      placeholder="Please describe any special requirements, number of rooms, fragile items, etc."
+                      placeholder="אנא תארו דרישות מיוחדות, מספר חדרים, חפצים שבירים וכו'"
                     />
                   </div>
 
                   <Button type="submit" size="lg" className="w-full bg-blue-600 hover:bg-blue-700">
-                    Submit Quote Request
+                    שלחו בקשת הצעת מחיר
                   </Button>
                 </form>
               </CardContent>
@@ -194,30 +194,30 @@ export const ContactForm = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Phone className="mr-2 h-5 w-5 text-blue-600" />
-                  Contact Information
+                  <Phone className="ml-2 h-5 w-5 text-blue-600" />
+                  פרטי יצירת קשר
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 space-x-reverse">
                   <Phone className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-semibold">Phone</p>
-                    <p className="text-gray-600">(555) 123-MOVE</p>
+                    <p className="font-semibold">טלפון</p>
+                    <p className="text-gray-600">052-123-4567</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 space-x-reverse">
                   <Mail className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-semibold">Email</p>
-                    <p className="text-gray-600">info@dudumoving.com</p>
+                    <p className="font-semibold">אימייל</p>
+                    <p className="text-gray-600">info@dudumoving.co.il</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 space-x-reverse">
                   <MapPin className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-semibold">Address</p>
-                    <p className="text-gray-600">123 Business Ave<br />City, State 12345</p>
+                    <p className="font-semibold">כתובת</p>
+                    <p className="text-gray-600">רחוב העסקים 123<br />תל אביב, ישראל</p>
                   </div>
                 </div>
               </CardContent>
@@ -226,26 +226,26 @@ export const ContactForm = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5 text-blue-600" />
-                  Business Hours
+                  <Calendar className="ml-2 h-5 w-5 text-blue-600" />
+                  שעות פעילות
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Monday - Friday</span>
-                    <span>7:00 AM - 7:00 PM</span>
+                    <span>ימים א'-ה'</span>
+                    <span>07:00 - 19:00</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Saturday</span>
-                    <span>8:00 AM - 5:00 PM</span>
+                    <span>יום ו'</span>
+                    <span>08:00 - 17:00</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Sunday</span>
-                    <span>9:00 AM - 3:00 PM</span>
+                    <span>שבת</span>
+                    <span>09:00 - 15:00</span>
                   </div>
                   <div className="pt-2 border-t">
-                    <p className="text-sm text-blue-600 font-medium">Emergency moves available 24/7</p>
+                    <p className="text-sm text-blue-600 font-medium">הובלות חירום זמינות 24/7</p>
                   </div>
                 </div>
               </CardContent>

@@ -5,19 +5,19 @@ import { Truck, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } fr
 
 export const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 text-white" dir="rtl">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 space-x-reverse">
               <Truck className="h-8 w-8 text-blue-400" />
-              <span className="text-2xl font-bold">Dudu Moving</span>
+              <span className="text-2xl font-bold">דודו הובלות</span>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              Your trusted partner for professional moving and packing services. 
-              Making your relocation stress-free since 2014.
+              השותף המהימן שלכם לשירותי הובלה ואריזה מקצועיים. 
+              הופכים את המעבר שלכם לחוויה ללא לחץ מאז 2014.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 space-x-reverse">
               <Facebook className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
               <Twitter className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
               <Instagram className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
@@ -26,45 +26,45 @@ export const Footer = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Our Services</h3>
+            <h3 className="text-xl font-semibold">השירותים שלנו</h3>
             <ul className="space-y-2 text-gray-300">
-              <li className="hover:text-white cursor-pointer transition-colors">Residential Moving</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Commercial Moving</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Long Distance Moving</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Packing Services</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Storage Solutions</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Emergency Moving</li>
+              <li className="hover:text-white cursor-pointer transition-colors">הובלות דירה</li>
+              <li className="hover:text-white cursor-pointer transition-colors">הובלות משרדים</li>
+              <li className="hover:text-white cursor-pointer transition-colors">הובלות למרחקים ארוכים</li>
+              <li className="hover:text-white cursor-pointer transition-colors">שירותי אריזה</li>
+              <li className="hover:text-white cursor-pointer transition-colors">פתרונות אחסון</li>
+              <li className="hover:text-white cursor-pointer transition-colors">הובלות חירום</li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Quick Links</h3>
+            <h3 className="text-xl font-semibold">קישורים מהירים</h3>
             <ul className="space-y-2 text-gray-300">
-              <li className="hover:text-white cursor-pointer transition-colors">About Us</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Get Quote</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Moving Tips</li>
-              <li className="hover:text-white cursor-pointer transition-colors">FAQ</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Careers</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Reviews</li>
+              <li className="hover:text-white cursor-pointer transition-colors">אודותינו</li>
+              <li className="hover:text-white cursor-pointer transition-colors">קבלת הצעת מחיר</li>
+              <li className="hover:text-white cursor-pointer transition-colors">טיפים למעבר דירה</li>
+              <li className="hover:text-white cursor-pointer transition-colors">שאלות נפוצות</li>
+              <li className="hover:text-white cursor-pointer transition-colors">קריירה</li>
+              <li className="hover:text-white cursor-pointer transition-colors">ביקורות</li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Contact Info</h3>
+            <h3 className="text-xl font-semibold">פרטי יצירת קשר</h3>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 space-x-reverse">
                 <Phone className="h-5 w-5 text-blue-400" />
-                <span className="text-gray-300">(555) 123-MOVE</span>
+                <span className="text-gray-300">052-123-4567</span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 space-x-reverse">
                 <Mail className="h-5 w-5 text-blue-400" />
-                <span className="text-gray-300">info@dudumoving.com</span>
+                <span className="text-gray-300">info@dudumoving.co.il</span>
               </div>
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-3 space-x-reverse">
                 <MapPin className="h-5 w-5 text-blue-400 mt-1" />
                 <span className="text-gray-300">
-                  123 Business Ave<br />
-                  City, State 12345
+                  רחוב העסקים 123<br />
+                  תל אביב, ישראל
                 </span>
               </div>
             </div>
@@ -75,12 +75,12 @@ export const Footer = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © 2024 Dudu Moving. All rights reserved.
+            © 2024 דודו הובלות. כל הזכויות שמורות.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">Privacy Policy</span>
-            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">Terms of Service</span>
-            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">Cookie Policy</span>
+          <div className="flex space-x-6 space-x-reverse mt-4 md:mt-0">
+            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">מדיניות פרטיות</span>
+            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">תנאי שירות</span>
+            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">מדיניות עוגיות</span>
           </div>
         </div>
       </div>

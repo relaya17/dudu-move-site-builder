@@ -5,33 +5,32 @@ import { Award, Users, MapPin, Star } from 'lucide-react';
 
 export const About = () => {
   const stats = [
-    { icon: <Award className="h-8 w-8" />, number: "10+", label: "Years Experience" },
-    { icon: <Users className="h-8 w-8" />, number: "5000+", label: "Happy Customers" },
-    { icon: <MapPin className="h-8 w-8" />, number: "50+", label: "Cities Served" },
-    { icon: <Star className="h-8 w-8" />, number: "4.9", label: "Star Rating" }
+    { icon: <Award className="h-8 w-8" />, number: "10+", label: "שנות ניסיון" },
+    { icon: <Users className="h-8 w-8" />, number: "5000+", label: "לקוחות מרוצים" },
+    { icon: <MapPin className="h-8 w-8" />, number: "50+", label: "ערים בשירות" },
+    { icon: <Star className="h-8 w-8" />, number: "4.9", label: "דירוג כוכבים" }
   ];
 
   return (
-    <section id="about" className="py-20 bg-white">
+    <section id="about" className="py-20 bg-white" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">About Dudu Moving</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">אודות דודו הובלות</h2>
             <div className="space-y-6 text-gray-600 leading-relaxed">
               <p className="text-lg">
-                With over a decade of experience in the moving industry, Dudu Moving has built a reputation 
-                as one of the most trusted moving companies in the region. We understand that moving can be 
-                stressful, which is why we're committed to making your relocation as smooth as possible.
+                עם מעל עשור של ניסיון בתחום ההובלות, דודו הובלות בנתה מוניטין כאחת מחברות 
+                ההובלה המהימנות ביותר באזור. אנו מבינים שמעבר דירה יכול להיות מלחיץ, ולכן אנו 
+                מחויבים להפוך את המעבר שלכם לחלק ככל האפשר.
               </p>
               <p className="text-lg">
-                Our team of professional movers is fully trained, licensed, and insured. We take pride in 
-                treating your belongings as if they were our own, ensuring everything arrives at your new 
-                destination safely and on time.
+                הצוות שלנו של מובילים מקצועיים מאומן במלואו, מורשה ומבוטח. אנחנו גאים 
+                להתייחס לחפצים שלכם כאילו הם שלנו, ומבטיחים שהכל יגיע ליעד החדש בבטחה ובזמן.
               </p>
               <p className="text-lg">
-                From local residential moves to complex commercial relocations, we have the expertise and 
-                equipment to handle any size job. Our commitment to excellence has earned us thousands of 
-                satisfied customers and a 4.9-star rating.
+                מהובלות דירה מקומיות ועד העברות משרדים מורכבות, יש לנו את המומחיות והציוד 
+                לטפל בכל גודל עבודה. המחויבות שלנו למצוינות זיכתה אותנו באלפי לקוחות מרוצים 
+                ודירוג של 4.9 כוכבים.
               </p>
             </div>
           </div>

@@ -6,50 +6,50 @@ import { Star } from 'lucide-react';
 export const Testimonials = () => {
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      location: "Austin, TX",
+      name: "שרה כהן",
+      location: "תל אביב",
       rating: 5,
-      text: "Dudu Moving made our cross-country move seamless. The team was professional, careful with our belongings, and delivered everything on time. Highly recommended!"
+      text: "דודו הובלות הפכו את המעבר שלנו לחלק לחלוטין. הצוות היה מקצועי, זהיר עם החפצים שלנו, והעביר הכל בזמן. ממליצה בחום!"
     },
     {
-      name: "Michael Chen",
-      location: "Denver, CO",
+      name: "מיכאל לוי",
+      location: "ירושלים",
       rating: 5,
-      text: "Outstanding service from start to finish! They handled our office relocation with minimal disruption to our business. The pricing was fair and transparent."
+      text: "שירות מעולה מתחילה ועד סוף! הם טיפלו בהעברת המשרד שלנו עם הפרעה מינימלית לעסק. התמחור היה הוגן ושקוף."
     },
     {
-      name: "Emily Rodriguez",
-      location: "Seattle, WA",
+      name: "רותי אברהם",
+      location: "חיפה",
       rating: 5,
-      text: "I was stressed about moving with two young kids, but Dudu Moving's team made it so easy. They were patient, efficient, and took great care of our furniture."
+      text: "הייתי מלחיצה לגבי המעבר עם שני ילדים קטנים, אבל הצוות של דודו הובלות עשה את זה כל כך קל. הם היו סבלניים, יעילים וזהירים עם הרהיטים."
     },
     {
-      name: "David Thompson",
-      location: "Phoenix, AZ",
+      name: "דוד ישראלי",
+      location: "באר שבע",
       rating: 5,
-      text: "Best moving experience I've ever had! The crew arrived on time, worked quickly, and nothing was damaged. Worth every penny for the peace of mind."
+      text: "החוויה הטובה ביותר של הובלה שחוויתי אי פעם! הצוות הגיע בזמן, עבד מהר, ושום דבר לא נזרק. שווה כל שקל עבור השקט הנפשי."
     },
     {
-      name: "Lisa Wang",
-      location: "Portland, OR",
+      name: "לירון בן דוד",
+      location: "נתניה",
       rating: 5,
-      text: "Professional, courteous, and efficient. They even helped with last-minute packing. I'll definitely use Dudu Moving for any future moves."
+      text: "מקצועיים, אדיבים ויעילים. הם אפילו עזרו עם אריזה בדקה האחרונה. בהחלט אשתמש בדודו הובלות למעברים עתידיים."
     },
     {
-      name: "Robert Martinez",
-      location: "Las Vegas, NV",
+      name: "רונן גרוס",
+      location: "רחובות",
       rating: 5,
-      text: "Exceptional service! They handled our antique furniture with extreme care and provided excellent customer service throughout the entire process."
+      text: "שירות יוצא מן הכלל! הם טיפלו ברהיטים העתיקים שלנו בזהירות יתרה וסיפקו שירות לקוחות מעולה לאורך כל התהליך."
     }
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-white" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">מה הלקוחות שלנו אומרים</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Don't just take our word for it - hear from thousands of satisfied customers
+            אל תסתמכו רק על המילה שלנו - שמעו מאלפי לקוחות מרוצים
           </p>
         </div>
 
@@ -73,15 +73,15 @@ export const Testimonials = () => {
         </div>
 
         <div className="text-center mt-12">
-          <div className="inline-flex items-center space-x-4 bg-blue-50 px-8 py-4 rounded-lg">
+          <div className="inline-flex items-center space-x-4 space-x-reverse bg-blue-50 px-8 py-4 rounded-lg">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
               ))}
             </div>
-            <div className="text-left">
-              <p className="text-2xl font-bold text-gray-900">4.9/5 Stars</p>
-              <p className="text-gray-600">Based on 500+ reviews</p>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-gray-900">4.9/5 כוכבים</p>
+              <p className="text-gray-600">מבוסס על 500+ ביקורות</p>
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { FurnitureInventory } from './FurnitureInventory';
+
+interface FurnitureItem {
+  id: string;
+  type: string;
+  quantity: number;
+  needsDisassembly: boolean;
+}
 
 export const ContactForm = () => {
   const { toast } = useToast();
@@ -21,6 +28,7 @@ export const ContactForm = () => {
     toAddress: '',
     details: ''
   });
+  const [furnitureInventory, setFurnitureInventory] = useState<FurnitureItem[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -36,9 +44,19 @@ export const ContactForm = () => {
     });
   };
 
+  const handleInventoryChange = (inventory: FurnitureItem[]) => {
+    setFurnitureInventory(inventory);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    
+    const submissionData = {
+      ...formData,
+      furnitureInventory
+    };
+    
+    console.log('Form submitted:', submissionData);
     
     toast({
       title: "בקשת הצעת מחיר נשלחה!",
@@ -56,6 +74,7 @@ export const ContactForm = () => {
       toAddress: '',
       details: ''
     });
+    setFurnitureInventory([]);
   };
 
   return (
@@ -69,7 +88,7 @@ export const ContactForm = () => {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="text-2xl">בקשת הצעת מחיר</CardTitle>
@@ -127,8 +146,8 @@ export const ContactForm = () => {
                         <SelectContent>
                           <SelectItem value="residential">הובלת דירה</SelectItem>
                           <SelectItem value="commercial">הובלת משרד</SelectItem>
-                          <SelectItem value="long-distance">הובלה למרחק ארוך</SelectItem>
-                          <SelectItem value="storage">אחסון</SelectItem>
+                          <SelectItem value="local">הובלה מקומית</SelectItem>
+                          <SelectItem value="packing">שירותי אריזה</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -188,6 +207,8 @@ export const ContactForm = () => {
                 </form>
               </CardContent>
             </Card>
+
+            <FurnitureInventory onInventoryChange={handleInventoryChange} />
           </div>
 
           <div className="space-y-6">
@@ -245,7 +266,7 @@ export const ContactForm = () => {
                     <span>09:00 - 15:00</span>
                   </div>
                   <div className="pt-2 border-t">
-                    <p className="text-sm text-blue-600 font-medium">הובלות חירום זמינות 24/7</p>
+                    <p className="text-sm text-blue-600 font-medium">שירות לקוחות זמין 24/7</p>
                   </div>
                 </div>
               </CardContent>

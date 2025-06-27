@@ -81,7 +81,7 @@ export const ContactForm = () => {
     <section id="contact" className="py-20 bg-gray-50" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">קבלו הצעת מחיר חינם</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">קבלו הצעת מחיר </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             מלאו את הטופס למטה ואנו נספק לכם הצעת מחיר מפורטת ללא התחייבות תוך 24 שעות
           </p>
@@ -224,7 +224,7 @@ export const ContactForm = () => {
                   <Phone className="h-5 w-5 text-blue-600" />
                   <div>
                     <p className="font-semibold">טלפון</p>
-                    <p className="text-gray-600">052-123-4567</p>
+                    <p className="text-gray-600">0547777623</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 space-x-reverse">
@@ -238,7 +238,7 @@ export const ContactForm = () => {
                   <MapPin className="h-5 w-5 text-blue-600" />
                   <div>
                     <p className="font-semibold">כתובת</p>
-                    <p className="text-gray-600">רחוב העסקים 123<br />תל אביב, ישראל</p>
+                    <p className="text-gray-600"><br />אילת, ישראל</p>
                   </div>
                 </div>
               </CardContent>

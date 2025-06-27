@@ -5,7 +5,7 @@ import { Award, Users, MapPin, Star } from 'lucide-react';
 
 export const About = () => {
   const stats = [
-    { icon: <Award className="h-8 w-8" />, number: "10+", label: "שנות ניסיון" },
+    { icon: <Award className="h-8 w-8" />, number: "7+", label: "שנות ניסיון" },
     { icon: <Users className="h-8 w-8" />, number: "5000+", label: "לקוחות מרוצים" },
     { icon: <MapPin className="h-8 w-8" />, number: "50+", label: "ערים בשירות" },
     { icon: <Star className="h-8 w-8" />, number: "4.9", label: "דירוג כוכבים" }
@@ -19,8 +19,8 @@ export const About = () => {
             <h2 className="text-4xl font-bold text-gray-900 mb-6">אודות דויד הובלות</h2>
             <div className="space-y-6 text-gray-600 leading-relaxed">
               <p className="text-lg">
-                עם מעל עשור של ניסיון בתחום ההובלות, דויד הובלות בנתה מוניטין כאחת מחברות 
-                ההובלה המהימנות ביותר באזור. אנו מבינים שמעבר דירה יכול להיות מלחיץ, ולכן אנו 
+                עם ניסיון בתחום ההובלות, דויד הובלות בנתה מוניטין כאחת מחברות
+                                ההובלה המהימנות ביותר באזור. אנו מבינים שמעבר דירה יכול להיות מלחיץ, ולכן אנו 
                 מחויבים להפוך את המעבר שלכם לחלק ככל האפשר.
               </p>
               <p className="text-lg">

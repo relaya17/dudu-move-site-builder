@@ -29,7 +29,7 @@ export const Hero = () => {
                 size="lg" 
                 className="bg-white text-blue-700 hover:bg-blue-50 font-semibold px-8 py-4 text-lg"
               >
-                קבלו הצעת מחיר חינם
+                קבלו הצעת מחיר
               </Button>
               <Button 
                 variant="outline" 
@@ -70,10 +70,7 @@ export const Hero = () => {
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
               <h3 className="text-2xl font-bold mb-6 text-center">למה לבחור בדויד הובלות?</h3>
               <div className="space-y-4">
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
-                  <span className="text-lg">מעל 10 שנות ניסיון</span>
-                </div>
+                
                 <div className="flex items-center space-x-3 space-x-reverse">
                   <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
                   <span className="text-lg">צוות מקצועי ומיומן</span>

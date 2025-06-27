@@ -1,3 +1,4 @@
+// ContactForm.tsx
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,17 +32,11 @@ export const ContactForm = () => {
   const [furnitureInventory, setFurnitureInventory] = useState<FurnitureItem[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSelectChange = (value: string) => {
-    setFormData({
-      ...formData,
-      moveType: value
-    });
+    setFormData({ ...formData, moveType: value });
   };
 
   const handleInventoryChange = (inventory: FurnitureItem[]) => {
@@ -50,20 +45,19 @@ export const ContactForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const submissionData = {
       ...formData,
       furnitureInventory
     };
-    
+
     console.log('Form submitted:', submissionData);
-    
+
     toast({
-      title: "בקשת הצעת מחיר נשלחה!",
-      description: "ניצור איתכם קשר תוך 24 שעות עם הצעת המחיר החינמית שלכם.",
+      title: 'בקשת הצעת מחיר נשלחה!',
+      description: 'ניצור איתכם קשר תוך 24 שעות עם הצעת המחיר החינמית שלכם.',
     });
 
-    // Reset form
     setFormData({
       name: '',
       email: '',
@@ -81,7 +75,7 @@ export const ContactForm = () => {
     <section id="contact" className="py-20 bg-gray-50" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">קבלו הצעת מחיר </h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">קבלו הצעת מחיר</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             מלאו את הטופס למטה ואנו נספק לכם הצעת מחיר מפורטת ללא התחייבות תוך 24 שעות
           </p>
@@ -101,41 +95,18 @@ export const ContactForm = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="name">שם מלא *</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="יוסי כהן"
-                      />
+                      <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required placeholder="יוסי כהן" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">כתובת אימייל *</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="yossi@example.com"
-                      />
+                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required placeholder="yossi@example.com" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="phone">מספר טלפון *</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="050-123-4567"
-                      />
+                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} required placeholder="050-123-4567" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="moveType">סוג הובלה *</Label>
@@ -155,51 +126,27 @@ export const ContactForm = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="moveDate">תאריך מעבר מועדף</Label>
-                    <Input
-                      id="moveDate"
-                      name="moveDate"
-                      type="date"
-                      value={formData.moveDate}
-                      onChange={handleInputChange}
-                    />
+                    <Input id="moveDate" name="moveDate" type="date" value={formData.moveDate} onChange={handleInputChange} />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="fromAddress">כתובת מוצא *</Label>
-                      <Input
-                        id="fromAddress"
-                        name="fromAddress"
-                        value={formData.fromAddress}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="רחוב הרצל 123, תל אביב"
-                      />
+                      <Input id="fromAddress" name="fromAddress" value={formData.fromAddress} onChange={handleInputChange} required placeholder="רחוב הרצל 123, תל אביב" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="toAddress">כתובת יעד *</Label>
-                      <Input
-                        id="toAddress"
-                        name="toAddress"
-                        value={formData.toAddress}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="שדרות רוטשילד 456, תל אביב"
-                      />
+                      <Input id="toAddress" name="toAddress" value={formData.toAddress} onChange={handleInputChange} required placeholder="שדרות רוטשילד 456, תל אביב" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="details">פרטים נוספים</Label>
-                    <Textarea
-                      id="details"
-                      name="details"
-                      value={formData.details}
-                      onChange={handleInputChange}
-                      rows={4}
-                      placeholder="אנא תארו דרישות מיוחדות, מספר חדרים, חפצים שבירים וכו'"
-                    />
+                    <Textarea id="details" name="details" value={formData.details} onChange={handleInputChange} rows={4} placeholder="אנא תארו דרישות מיוחדות, מספר חדרים, חפצים שבירים וכו'" />
                   </div>
+
+                  {/* ✅ כאן הכנסנו את קומפוננטת הרהיטים */}
+                  <FurnitureInventory onInventoryChange={handleInventoryChange} />
 
                   <Button type="submit" size="lg" className="w-full bg-blue-600 hover:bg-blue-700">
                     שלחו בקשת הצעת מחיר
@@ -207,8 +154,6 @@ export const ContactForm = () => {
                 </form>
               </CardContent>
             </Card>
-
-            <FurnitureInventory onInventoryChange={handleInventoryChange} />
           </div>
 
           <div className="space-y-6">
@@ -262,8 +207,8 @@ export const ContactForm = () => {
                     <span>08:00 - 17:00</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>שבת</span>
-                    <span>09:00 - 15:00</span>
+                    <span>יום שבת</span>
+                    <span>סגור</span>
                   </div>
                   <div className="pt-2 border-t">
                     <p className="text-sm text-blue-600 font-medium">שירות לקוחות זמין 24/7</p>

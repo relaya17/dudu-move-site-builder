@@ -7,7 +7,7 @@ export const Hero = () => {
   };
 
   const callNow = () => {
-    window.location.href = 'tel:+972123456789'; // תחליף למספר טלפון שלך
+    window.location.href = 'tel:+9720547777623'; // תחליף למספר טלפון שלך
   };
 
   return (
@@ -39,6 +39,7 @@ export const Hero = () => {
           >
             התקשרו עכשיו
           </Button>
+          
         </div>
       </div>
     </section>

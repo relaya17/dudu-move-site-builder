@@ -9,13 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FurnitureInventory } from './FurnitureInventory';
-
-interface FurnitureItem {
-  id: string;
-  type: string;
-  quantity: number;
-  needsDisassembly: boolean;
-}
+import QuoteService from '@/services/quoteService';
+import { FurnitureItem } from '@/types/quote';
 
 export const ContactForm = () => {
   const { toast } = useToast();
@@ -46,18 +41,17 @@ export const ContactForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const submissionData = {
-      ...formData,
-      furnitureInventory
-    };
+    // שמירת הצעת המחיר באמצעות השירות החדש
+    const savedQuote = QuoteService.saveQuoteRequest(formData, furnitureInventory);
 
-    console.log('Form submitted:', submissionData);
+    console.log('הצעת מחיר נשמרה בהצלחה:', savedQuote.id);
 
     toast({
       title: 'בקשת הצעת מחיר נשלחה!',
-      description: 'ניצור איתכם קשר תוך 24 שעות עם הצעת המחיר החינמית שלכם.',
+      description: `הצעת מחיר מס' ${savedQuote.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות.`,
     });
 
+    // איפוס הטופס
     setFormData({
       name: '',
       email: '',

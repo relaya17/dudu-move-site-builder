@@ -1,4 +1,3 @@
-
 export interface FurnitureItem {
   id: string;
   type: string;

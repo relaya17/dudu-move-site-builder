@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,29 +36,38 @@ export const ContactForm = () => {
     setFurnitureInventory(inventory);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const savedQuote = QuoteService.saveQuoteRequest(formData, furnitureInventory);
+    try {
+      const savedQuote = await QuoteService.saveQuoteRequest(formData, furnitureInventory);
 
-    console.log('הצעת מחיר נשמרה בהצלחה:', savedQuote.id);
+      console.log('הצעת מחיר נשמרה בהצלחה:', savedQuote.id);
 
-    toast({
-      title: 'בקשת הצעת מחיר נשלחה!',
-      description: `הצעת מחיר מס' ${savedQuote.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות.`,
-    });
+      toast({
+        title: 'בקשת הצעת מחיר נשלחה!',
+        description: `הצעת מחיר מס' ${savedQuote.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות.`,
+      });
 
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      moveType: '',
-      moveDate: '',
-      fromAddress: '',
-      toAddress: '',
-      details: ''
-    });
-    setFurnitureInventory([]);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        moveType: '',
+        moveDate: '',
+        fromAddress: '',
+        toAddress: '',
+        details: ''
+      });
+      setFurnitureInventory([]);
+    } catch (error) {
+      console.error('שגיאה בשליחת הצעת המחיר:', error);
+      toast({
+        title: 'שגיאה',
+        description: 'אירעה בעיה בשליחת הצעת המחיר, אנא נסו שוב מאוחר יותר.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

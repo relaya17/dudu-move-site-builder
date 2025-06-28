@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Award, Users, MapPin, Star } from 'lucide-react';
 
 export const About = () => {
   const stats = [
-    { icon: <Award className="h-8 w-8" />, number: "7+", label: "שנות ניסיון" },
-    { icon: <Users className="h-8 w-8" />, number: "5000+", label: "לקוחות מרוצים" },
-    { icon: <MapPin className="h-8 w-8" />, number: "50+", label: "ערים בשירות" },
-    { icon: <Star className="h-8 w-8" />, number: "4.9", label: "דירוג כוכבים" }
+    { icon: <Award className="h-8 w-8 text-blue-600" />, number: "7+", label: "שנות ניסיון" },
+    { icon: <Users className="h-8 w-8 text-blue-600" />, number: "5000+", label: "לקוחות מרוצים" },
+    { icon: <MapPin className="h-8 w-8 text-blue-600" />, number: "50+", label: "ערים בשירות" },
+    { icon: <Star className="h-8 w-8 text-blue-600" />, number: "4.9", label: "דירוג כוכבים" }
   ];
 
   return (
@@ -19,30 +18,26 @@ export const About = () => {
             <h2 className="text-4xl font-bold text-gray-900 mb-6">אודות דויד הובלות</h2>
             <div className="space-y-6 text-gray-600 leading-relaxed">
               <p className="text-lg">
-                עם ניסיון בתחום ההובלות, דויד הובלות בנתה מוניטין כאחת מחברות
-                                ההובלה המהימנות ביותר באזור. אנו מבינים שמעבר דירה יכול להיות מלחיץ, ולכן אנו 
-                מחויבים להפוך את המעבר שלכם לחלק ככל האפשר.
+                עם ניסיון בתחום ההובלות, דויד הובלות בנתה מוניטין כאחת מחברות ההובלה המהימנות ביותר באזור.
+                אנו מבינים שמעבר דירה יכול להיות מלחיץ, ולכן אנו מחויבים להפוך את המעבר שלכם לחלק ככל האפשר.
               </p>
               <p className="text-lg">
-                הצוות שלנו של מובילים מקצועיים מאומן במלואו, מורשה ומבוטח. אנחנו גאים 
-                להתייחס לחפצים שלכם כאילו הם שלנו, ומבטיחים שהכל יגיע ליעד החדש בבטחה ובזמן.
+                הצוות שלנו של מובילים מקצועיים מאומן במלואו, מורשה ומבוטח. אנחנו גאים להתייחס לחפצים שלכם כאילו הם שלנו,
+                ומבטיחים שהכל יגיע ליעד החדש בבטחה ובזמן.
               </p>
               <p className="text-lg">
-                מהובלות דירה מקומיות ועד העברות משרדים מורכבות, יש לנו את המומחיות והציוד 
-                לטפל בכל גודל עבודה. המחויבות שלנו למצוינות זיכתה אותנו באלפי לקוחות מרוצים 
-                ודירוג של 4.9 כוכבים.
+                מהובלות דירה מקומיות ועד העברות משרדים מורכבות, יש לנו את המומחיות והציוד לטפל בכל גודל עבודה.
+                המחויבות שלנו למצוינות זיכתה אותנו באלפי לקוחות מרוצים ודירוג של 4.9 כוכבים.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="pt-6">
-                  <div className="flex justify-center mb-4 text-blue-600">
-                    {stat.icon}
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
+              <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="flex flex-col items-center text-center gap-3">
+                  <div>{stat.icon}</div>
+                  <div className="text-3xl font-bold text-gray-900">{stat.number}</div>
                   <div className="text-gray-600 font-medium">{stat.label}</div>
                 </CardContent>
               </Card>

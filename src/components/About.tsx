@@ -15,10 +15,12 @@ export const About = () => {
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">אודות דויד הובלות</h2>
-            <div className="space-y-6 text-gray-600 leading-relaxed">
+          <h2 className="text-4xl font-bold text-gray-900 mb-6 text-center animate-fade-in-down">
+             אודות דויד הובלות
+          </h2>
+          <div className="space-y-6 text-gray-600 leading-relaxed">
               <p className="text-lg">
-                עם ניסיון בתחום ההובלות, דויד הובלות בנתה מוניטין כאחת מחברות ההובלה המהימנות ביותר באזור.
+                עם ניסיון בתחום ההובלות, דוד הובלות בנתה מוניטין כאחת מחברות ההובלה המהימנות ביותר באזור.
                 אנו מבינים שמעבר דירה יכול להיות מלחיץ, ולכן אנו מחויבים להפוך את המעבר שלכם לחלק ככל האפשר.
               </p>
               <p className="text-lg">

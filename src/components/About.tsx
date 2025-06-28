@@ -34,13 +34,16 @@ export const About = () => {
 
           <div className="grid grid-cols-2 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="flex flex-col items-center text-center gap-3">
-                  <div>{stat.icon}</div>
-                  <div className="text-3xl font-bold text-gray-900">{stat.number}</div>
-                  <div className="text-gray-600 font-medium">{stat.label}</div>
-                </CardContent>
-              </Card>
+         <Card key={index} className="p-6 bg-gray-50 border border-gray-200 hover:shadow-md transition duration-300">
+         <CardContent className="flex flex-col items-center text-center gap-3">
+           <div className="bg-blue-100 rounded-full p-3">
+             {stat.icon}
+           </div>
+           <div className="text-3xl font-bold text-gray-900">{stat.number}</div>
+           <div className="text-gray-600 font-medium">{stat.label}</div>
+         </CardContent>
+       </Card>
+       
             ))}
           </div>
         </div>

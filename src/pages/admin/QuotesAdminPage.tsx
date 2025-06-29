@@ -27,8 +27,10 @@ const QuotesAdminPage = () => {
           <p><strong>טלפון:</strong> {quote.customerInfo.phone}</p>
           <p><strong>אימייל:</strong> {quote.customerInfo.email}</p>
           <p><strong>סוג מעבר:</strong> {quote.moveDetails.moveType}</p>
+          <p><strong>תאריך:</strong> {quote.moveDetails.moveDate}</p>
           <p><strong>כתובת מ:</strong> {quote.moveDetails.fromAddress}</p>
           <p><strong>כתובת ל:</strong> {quote.moveDetails.toAddress}</p>
+          <p><strong>הערות:</strong> {quote.moveDetails.details}</p>
           <p><strong>רהיטים:</strong> {quote.furnitureInventory.length} פריטים</p>
           <p><strong>סטטוס:</strong> {quote.status}</p>
         </div>

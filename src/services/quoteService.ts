@@ -1,9 +1,9 @@
+// ✅ 1. QuoteService.ts - שירות שמדבר עם השרת
 import { QuoteRequest, FurnitureItem } from '@/types/quote';
 
 class QuoteService {
   private static readonly API_URL = 'http://localhost:3001/api/quotes';
 
-  // שמירת הצעת מחיר חדשה בשרת (POST)
   static async saveQuoteRequest(
     formData: {
       name: string;
@@ -21,35 +21,35 @@ class QuoteService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...formData,
+        customerInfo: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+        },
+        moveDetails: {
+          moveType: formData.moveType,
+          moveDate: formData.moveDate,
+          fromAddress: formData.fromAddress,
+          toAddress: formData.toAddress,
+          details: formData.details,
+        },
         furnitureInventory,
+        status: 'pending',
       }),
     });
 
-    if (!response.ok) {
-      throw new Error('Error saving quote');
-    }
+    if (!response.ok) throw new Error('Error saving quote');
 
-    const savedQuote = await response.json();
-
-    // הדפסה לקונסול למעקב
-    console.log('🎯 הצעת מחיר חדשה נשמרה בשרת:', savedQuote);
-
-    return savedQuote;
-  }
-  // ב-quoteService.ts
-  static async getAllQuotes(): Promise<QuoteRequest[]> {
-    const response = await fetch(this.API_URL);
-    if (!response.ok) {
-      throw new Error('Error fetching quotes');
-    }
     return await response.json();
   }
 
-  // שאר הפונקציות יכולות להשאר כמו שהיו, אם ברצונך לנהל נתונים ב-localStorage או להפוך אותן לאסינכרוניות + API
-  // לדוגמה, אפשר להוסיף getAllQuotes() שתקבל מהשרת וכו'
-
-  // ... שאר המתודות כפי שהיו בגרסה שלך ...
+  static async getAllQuotes(): Promise<QuoteRequest[]> {
+    const response = await fetch(this.API_URL);
+    if (!response.ok) throw new Error('Error fetching quotes');
+    return await response.json();
+  }
 }
 
 export default QuoteService;
+
+// (QuotesAdminPage component removed. This file should only contain service logic.)

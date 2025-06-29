@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Star } from 'lucide-react';
@@ -44,7 +43,7 @@ export const Testimonials = () => {
   ];
 
   return (
-    <section className="py-20 bg-white" dir="rtl">
+    <section id="testimonials" className="py-20 bg-white" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">מה הלקוחות שלנו אומרים</h2>
@@ -53,22 +52,27 @@ export const Testimonials = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto snap-x scroll-smooth px-2 md:px-0">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="h-full hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-600 mb-4 leading-relaxed">"{testimonial.text}"</p>
-                <div className="border-t pt-4">
-                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500">{testimonial.location}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div key={index} className="snap-start min-w-[280px] md:min-w-0">
+              <Card className="h-full hover:shadow-lg transition-shadow duration-300 animate-fadeInUp">
+                <CardContent className="p-6">
+                  <div
+                    className="flex items-center mb-4"
+                    aria-label={`דירוג ${testimonial.rating} מתוך 5 כוכבים`}
+                  >
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-4 leading-relaxed">"{testimonial.text}"</p>
+                  <div className="border-t pt-4">
+                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                    <p className="text-sm text-gray-500">{testimonial.location}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
 

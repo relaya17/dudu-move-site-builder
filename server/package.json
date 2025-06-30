@@ -1,28 +1,23 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
   "dependencies": {
-    "body-parser": "^2.2.0",
-    "cors": "^2.8.5",
     "express": "^5.1.0",
-    "fs-extra": "^11.3.0",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.1",
-    "mysql2": "^3.14.1"
+    "mysql2": "^3.14.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
   },
   "devDependencies": {
-    "@types/body-parser": "^1.19.6",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3"
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.1",
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.11.0"
   }
 }

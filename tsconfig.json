@@ -1,23 +1,15 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module":"ESNext",
-    "lib": ["DOM", "ES2020"],
-    "jsx": "react-jsx",
-
-    "strict": true,
-    "esModuleInterop": true,
-    "forceConsiclient/src/*singInFileNames": true,
-    "skipLibCheck": true,
-
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
+    "compilerOptions": {
+      "target": "ES2020",
+      "lib": ["DOM", "ES2020"],
+      "module": "CommonJS",
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "baseUrl": ".",
+      "outDir": "dist"
     },
-
-    "rootDir": ".",
-    "outDir": "dist"
-  },
-  "include": ["src", "server"],
-  "exclude": ["node_modules", "dist"]
-}
+    "include": ["client", "server"]
+  }
+  

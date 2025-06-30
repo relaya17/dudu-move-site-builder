@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import QuoteService from '@/services/quoteService';
-import { QuoteRequest } from '@/types/quote';
+import QuoteService from '../services/quoteService';
+import { QuoteRequest } from '../types/quote';
 
 const QuotesAdminPage = () => {
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);

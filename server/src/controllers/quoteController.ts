@@ -1,11 +1,22 @@
-import { db } from './db';
+import { Request, Response } from 'express';
+import { db } from '../routes/db'; // Assuming db is exported from a file in the same directory
 
-export const createQuote = async (req, res) => {
-    const { name, email, phone, move_type, move_date, from_address, to_address, details } = req.body;
-    const [rows, fields]: any = await db.execute(
-        `INSERT INTO quotes (name, email, phone, move_type, move_date, from_address, to_address, details) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, email, phone, move_type, move_date, from_address, to_address, details]
-    );
-    res.status(201).json({ id: rows.insertId });
+export const createQuote = async (req: Request, res: Response) => {
+    try {
+        const { name, email, phone, move_type, move_date, from_address, to_address, details } = req.body;
+
+        const [result] = await db.execute(
+            `INSERT INTO quotes (name, email, phone, move_type, move_date, from_address, to_address, details)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [name, email, phone, move_type, move_date, from_address, to_address, details]
+        );
+
+        // TypeScript לא יודע בדיוק את סוג התוצאה, אז אפשר לעשות type assertion:
+        const insertResult = result as { insertId: number };
+
+        res.status(201).json({ id: insertResult.insertId });
+    } catch (error) {
+        console.error('Error creating quote:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };

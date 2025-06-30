@@ -1,5 +1,5 @@
 // src/services/quoteService.ts
-import { FurnitureItem, QuoteRequest } from '@/types/quote';
+import { FurnitureItem, QuoteRequest } from '../types/quote';
 
 class QuoteService {
   private static readonly API_URL = 'http://localhost:3001/api/quotes';
@@ -34,20 +34,27 @@ class QuoteService {
           details: formData.details,
         },
         furnitureInventory,
-        status: 'pending', // סטטוס ברירת מחדל
+        status: 'pending', // ברירת מחדל
       }),
     });
 
-    if (!response.ok) throw new Error('שגיאה בשליחת הנתונים לשרת');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בשליחת הנתונים לשרת: ${errorText}`);
+    }
+
     return await response.json();
   }
 
   static async getAllQuotes(): Promise<QuoteRequest[]> {
     const response = await fetch(this.API_URL);
-    if (!response.ok) throw new Error('שגיאה בשליפת הצעות מחיר');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בשליפת הצעות מחיר: ${errorText}`);
+    }
+
     return await response.json();
   }
 }
 
 export default QuoteService;
-export { QuoteService };

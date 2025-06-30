@@ -1,19 +1,23 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
   "compilerOptions": {
+    "target": "ES2020",
+    "module":"ESNext",
+    "lib": ["DOM", "ES2020"],
+    "jsx": "react-jsx",
+
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsiclient/src/*singInFileNames": true,
+    "skipLibCheck": true,
+
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"]
     },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src", "server"],
+  "exclude": ["node_modules", "dist"]
 }

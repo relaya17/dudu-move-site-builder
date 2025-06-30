@@ -1,15 +1,17 @@
 {
-    "compilerOptions": {
-      "target": "ES2020",
-      "lib": ["DOM", "ES2020"],
-      "module": "CommonJS",
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "strict": true,
-      "forceConsistentCasingInFileNames": true,
-      "baseUrl": ".",
-      "outDir": "dist"
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
     },
-    "include": ["client", "server"]
-  }
-  
+    "target": "ES2020",
+    "lib": ["DOM", "ES2020"],
+    "module": "ESNext",
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}

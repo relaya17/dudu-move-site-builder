@@ -1,5 +1,5 @@
-// ✅ 1. QuoteService.ts - שירות שמדבר עם השרת
-import { QuoteRequest, FurnitureItem } from '@/types/quote';
+// src/services/quoteService.ts
+import { FurnitureItem, QuoteRequest } from '@/types/quote';
 
 class QuoteService {
   private static readonly API_URL = 'http://localhost:3001/api/quotes';
@@ -34,22 +34,20 @@ class QuoteService {
           details: formData.details,
         },
         furnitureInventory,
-        status: 'pending',
+        status: 'pending', // סטטוס ברירת מחדל
       }),
     });
 
-    if (!response.ok) throw new Error('Error saving quote');
-
+    if (!response.ok) throw new Error('שגיאה בשליחת הנתונים לשרת');
     return await response.json();
   }
 
   static async getAllQuotes(): Promise<QuoteRequest[]> {
     const response = await fetch(this.API_URL);
-    if (!response.ok) throw new Error('Error fetching quotes');
+    if (!response.ok) throw new Error('שגיאה בשליפת הצעות מחיר');
     return await response.json();
   }
 }
 
 export default QuoteService;
-
-// (QuotesAdminPage component removed. This file should only contain service logic.)
+export { QuoteService };

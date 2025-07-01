@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { db } from '../routes/db'; // Assuming db is exported from a file in the same directory
+import { db } from '../db'; // Assuming db is exported from a file in the same directory
 
 export const createQuote = async (req: Request, res: Response) => {
     try {

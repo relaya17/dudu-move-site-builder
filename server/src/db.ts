@@ -5,5 +5,5 @@ export const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: 'yourpassword',
-    database: 'moving_quotes',
+    database: 'david_moving',
 });

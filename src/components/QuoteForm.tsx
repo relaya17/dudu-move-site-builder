@@ -1,5 +1,6 @@
 // components/QuoteForm.tsx
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 
 export const QuoteForm = () => {

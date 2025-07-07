@@ -1,15 +1,21 @@
 import { Router } from 'express';
 import { Request, Response } from 'express';
-import { MoveTypeService } from '../services/moveTypeService';
-import { createError, asyncHandler } from '../middleware/errorHandler';
-import { adminRateLimit, generalRateLimit } from '../middleware/rateLimiter';
+import { MoveTypeService } from '../services/moveTypeService'; // שירות לטיפול בלוגיקה של סוגי ההעברה (move types)
+import { createError, asyncHandler } from '../middleware/errorHandler'; // טיפול בשגיאות אסינכרוניות
+import { adminRateLimit, generalRateLimit } from '../middleware/rateLimiter'; // הגבלת בקשות (rate limiting) להגן על השרת
 
 const router = Router();
 
+/**
+ * יצירת סוג העברה חדש.
+ * הנתונים מתקבלים מה-body של הבקשה.
+ * במקרה של הצלחה מחזיר סטטוס 201 עם הפריט שנוצר.
+ * במקרה של שגיאה, זורק שגיאה עם הודעה מתאימה.
+ */
 const createMoveType = async (req: Request, res: Response): Promise<void> => {
     try {
-        const typeData = req.body;
-        const moveType = await MoveTypeService.createMoveType(typeData);
+        const typeData = req.body; // הנתונים שנשלחו ליצירת סוג העברה חדש
+        const moveType = await MoveTypeService.createMoveType(typeData); // יצירת סוג ההעברה דרך השירות
 
         res.status(201).json({
             success: true,
@@ -21,6 +27,10 @@ const createMoveType = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * הבאת כל סוגי ההעברה הקיימים במערכת.
+ * מחזיר רשימה של סוגי העברה עם סטטוס 200.
+ */
 const getAllMoveTypes = async (req: Request, res: Response): Promise<void> => {
     try {
         const moveTypes = await MoveTypeService.getAllMoveTypes();
@@ -35,6 +45,11 @@ const getAllMoveTypes = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * הבאת סוג העברה לפי מזהה (id).
+ * מזהה מגיע מפרמטרי ה-URL.
+ * אם לא נמצא סוג העברה מתאים, זורק שגיאה 404.
+ */
 const getMoveTypeById = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -49,10 +64,15 @@ const getMoveTypeById = async (req: Request, res: Response): Promise<void> => {
             data: moveType
         });
     } catch (error) {
-        throw error;
+        throw error; // מעביר את השגיאה הלאה לטיפול גלובלי
     }
 };
 
+/**
+ * עדכון סוג העברה קיים לפי מזהה (id).
+ * מקבל את הנתונים החדשים מה-body.
+ * מחזיר הודעה על הצלחה או שגיאה אם לא נמצא סוג העברה לעדכון.
+ */
 const updateMoveType = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -73,6 +93,10 @@ const updateMoveType = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * מחיקת סוג העברה לפי מזהה (id).
+ * מחזיר הודעה על הצלחה או שגיאה אם לא נמצא לפרט למחיקה.
+ */
 const deleteMoveType = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -91,13 +115,20 @@ const deleteMoveType = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Routes - move types are public for frontend to display options
+// הגדרת הנתיבים (Routes)
+// GET / - מחזיר את כל סוגי ההעברה, מוגבל לפי כלל rate limiting כללי (generalRateLimit)
 router.get('/', generalRateLimit, asyncHandler(getAllMoveTypes));
+
+// GET /:id - מחזיר סוג העברה לפי מזהה, מוגבל גם כן לפי rate limiting כללי
 router.get('/:id', generalRateLimit, asyncHandler(getMoveTypeById));
 
-// Admin routes for management
+// POST / - יצירת סוג העברה חדש, מוגבל לפי rate limiting למנהלים בלבד (adminRateLimit)
 router.post('/', adminRateLimit, asyncHandler(createMoveType));
+
+// PUT /:id - עדכון סוג העברה קיים, מוגבל למנהלים בלבד
 router.put('/:id', adminRateLimit, asyncHandler(updateMoveType));
+
+// DELETE /:id - מחיקת סוג העברה קיים, מוגבל למנהלים בלבד
 router.delete('/:id', adminRateLimit, asyncHandler(deleteMoveType));
 
-export default router; 
+export default router;

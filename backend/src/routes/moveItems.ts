@@ -1,11 +1,17 @@
 import { Router } from 'express';
 import { Request, Response } from 'express';
-import { MoveItemService } from '../services/moveItemService';
-import { createError, asyncHandler } from '../middleware/errorHandler';
-import { adminRateLimit } from '../middleware/rateLimiter';
+import { MoveItemService } from '../services/moveItemService'; // שירות לטיפול בפריטי העברה
+import { createError, asyncHandler } from '../middleware/errorHandler'; // טיפול בשגיאות אסינכרוניות
+import { adminRateLimit } from '../middleware/rateLimiter'; // הגבלת בקשות למנהלים בלבד
 
 const router = Router();
 
+/**
+ * יצירת פריט העברה חדש.
+ * מקבל נתונים מה-body של הבקשה.
+ * מחזיר את הפריט שנוצר עם סטטוס 201.
+ * זורק שגיאה 500 במקרה של כישלון.
+ */
 const createMoveItem = async (req: Request, res: Response): Promise<void> => {
     try {
         const itemData = req.body;
@@ -21,6 +27,11 @@ const createMoveItem = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * קבלת כל פריטי ההעברה.
+ * ניתן לבצע חיפוש לפי מחרוזת query param בשם search.
+ * מחזיר רשימת פריטים עם סטטוס 200.
+ */
 const getAllMoveItems = async (req: Request, res: Response): Promise<void> => {
     try {
         const { search } = req.query;
@@ -42,6 +53,10 @@ const getAllMoveItems = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * קבלת פריט העברה לפי מזהה (id).
+ * אם לא נמצא, מחזיר שגיאה 404.
+ */
 const getMoveItemById = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -60,6 +75,11 @@ const getMoveItemById = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * עדכון פריט העברה לפי מזהה.
+ * מחזיר הודעה על הצלחה.
+ * אם לא נמצא פריט או לא נעשו שינויים, מחזיר שגיאה 404.
+ */
 const updateMoveItem = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -80,6 +100,11 @@ const updateMoveItem = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+/**
+ * מחיקת פריט העברה לפי מזהה.
+ * מחזיר הודעת הצלחה.
+ * אם לא נמצא פריט מתאים, מחזיר שגיאה 404.
+ */
 const deleteMoveItem = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -98,11 +123,11 @@ const deleteMoveItem = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Routes
-router.get('/', adminRateLimit, asyncHandler(getAllMoveItems));
-router.get('/:id', adminRateLimit, asyncHandler(getMoveItemById));
-router.post('/', adminRateLimit, asyncHandler(createMoveItem));
-router.put('/:id', adminRateLimit, asyncHandler(updateMoveItem));
-router.delete('/:id', adminRateLimit, asyncHandler(deleteMoveItem));
+// הגדרת הנתיבים (Routes) - כולם מוגבלים ל-admin בלבד
+router.get('/', adminRateLimit, asyncHandler(getAllMoveItems));       // קבלת כל הפריטים עם חיפוש אופציונלי
+router.get('/:id', adminRateLimit, asyncHandler(getMoveItemById));    // קבלת פריט לפי id
+router.post('/', adminRateLimit, asyncHandler(createMoveItem));       // יצירת פריט חדש
+router.put('/:id', adminRateLimit, asyncHandler(updateMoveItem));     // עדכון פריט קיים
+router.delete('/:id', adminRateLimit, asyncHandler(deleteMoveItem));  // מחיקת פריט
 
-export default router; 
+export default router;

@@ -9,6 +9,11 @@ interface RateLimitStore {
 
 const store: RateLimitStore = {};
 
+// Function to clear rate limit store (for development)
+export const clearRateLimitStore = () => {
+    Object.keys(store).forEach(key => delete store[key]);
+};
+
 export const createRateLimiter = (options: {
     windowMs: number;
     max: number;
@@ -76,7 +81,7 @@ export const generalRateLimit = createRateLimiter({
 
 export const estimateRateLimit = createRateLimiter({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // limit each IP to 5 estimate submissions per hour
+    max: 50, // limit each IP to 50 estimate submissions per hour (increased for development)
     message: 'Too many estimate requests. Please wait before submitting another request.',
     skipSuccessfulRequests: true,
 });

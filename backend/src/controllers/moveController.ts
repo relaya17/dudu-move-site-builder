@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
 import { MoveService } from '../services/moveService';
 import { createError } from '../middleware/errorHandler';
+import { Request, Response, NextFunction } from 'express';
 
-export const createMove = async (req: Request, res: Response): Promise<void> => {
+export const createMove = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const moveData = req.body;
+        // TODO: בדיקת תקינות moveData כאן
 
         const move = await MoveService.createMove(moveData);
 
@@ -14,9 +15,10 @@ export const createMove = async (req: Request, res: Response): Promise<void> => 
             message: 'Move created successfully'
         });
     } catch (error: any) {
-        throw createError(error.message || 'Failed to create move', 500);
+        next(createError(error.message || 'Failed to create move', 500));
     }
 };
+
 
 export const getAllMoves = async (req: Request, res: Response): Promise<void> => {
     try {

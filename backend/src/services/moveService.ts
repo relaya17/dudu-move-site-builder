@@ -2,32 +2,26 @@ import database from '../database/connection';
 import { Move, CreateMoveRequest, MoveWithDetails, MovePriceCalculation, ItemInMove, CreateItemInMoveRequest } from '../types/moveTypes';
 import { CustomerService } from './customerService';
 
+/**
+ * MoveService: אחראית על פעולות הקשורות למעברי דירה, לקוחות, פריטים, וחישוב מחירים
+ */
 export class MoveService {
-
+    /** יצירת מעבר חדש כולל לקוח ופריטים */
     static async createMove(moveData: CreateMoveRequest): Promise<Move> {
         const connection = await database.getConnection();
-
         try {
             await connection.beginTransaction();
-
-            // Handle customer creation or lookup
             let customerId = moveData.customer_id;
-
             if (!customerId && moveData.customer) {
                 const customer = await CustomerService.findOrCreateCustomer(moveData.customer);
                 customerId = customer.id!;
             }
+            if (!customerId) throw new Error('Customer ID or customer data is required');
 
-            if (!customerId) {
-                throw new Error('Customer ID or customer data is required');
-            }
-
-            // Create the move
             const [moveResult] = await connection.execute(
-                `INSERT INTO move 
-        (customer_id, move_type_id, origin_address, destination_address, date, 
-         origin_floor, destination_floor, origin_has_elevator, destination_has_elevator, comments) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO move (customer_id, move_type_id, origin_address, destination_address, date,
+          origin_floor, destination_floor, origin_has_elevator, destination_has_elevator, comments)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     customerId,
                     moveData.move_type_id,
@@ -41,16 +35,13 @@ export class MoveService {
                     moveData.comments
                 ]
             );
-
             const moveId = (moveResult as any).insertId;
 
-            // Add items to the move
-            if (moveData.items && moveData.items.length > 0) {
+            if (moveData.items?.length) {
                 for (const item of moveData.items) {
                     await connection.execute(
-                        `INSERT INTO item_in_move 
-            (move_id, move_item_id, isFragile, needsDisassemble, needsReassemble, comments, addedPrice) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                        `INSERT INTO item_in_move (move_id, move_item_id, isFragile, needsDisassemble, needsReassemble, comments, addedPrice)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
                         [
                             moveId,
                             item.move_item_id,
@@ -65,7 +56,6 @@ export class MoveService {
             }
 
             await connection.commit();
-
             return {
                 id: moveId,
                 customer_id: customerId,
@@ -79,7 +69,6 @@ export class MoveService {
                 destination_has_elevator: moveData.destination_has_elevator,
                 comments: moveData.comments
             };
-
         } catch (error) {
             await connection.rollback();
             throw error;
@@ -88,95 +77,63 @@ export class MoveService {
         }
     }
 
+    /** שליפת כל המעברים */
     static async getAllMoves(): Promise<Move[]> {
-        const rows = await database.query(
-            'SELECT * FROM move ORDER BY created_at DESC'
-        );
-
+        const rows = await database.query('SELECT * FROM move ORDER BY created_at DESC');
         return rows as Move[];
     }
 
+    /** שליפת מעבר לפי מזהה */
     static async getMoveById(id: number): Promise<Move | null> {
-        const rows = await database.query(
-            'SELECT * FROM move WHERE id = ?',
-            [id]
-        );
-
-        if (rows.length === 0) {
-            return null;
-        }
-
-        return rows[0] as Move;
+        const rows = await database.query('SELECT * FROM move WHERE id = ?', [id]);
+        return rows.length ? (rows[0] as Move) : null;
     }
 
+    /** שליפת מעבר עם כל הפרטים (לקוח, סוג מעבר, פריטים) */
     static async getMoveWithDetails(id: number): Promise<MoveWithDetails | null> {
         const rows = await database.query(
-            `SELECT 
-        m.*,
-        c.phone as customer_phone, c.first_name as customer_first_name, 
-        c.last_name as customer_last_name, c.email as customer_email,
-        mt.name as move_type_name, mt.added_price as move_type_price
+            `SELECT m.*, c.phone as customer_phone, c.first_name as customer_first_name,
+              c.last_name as customer_last_name, c.email as customer_email,
+              mt.name as move_type_name, mt.added_price as move_type_price
        FROM move m
        JOIN customers c ON m.customer_id = c.id
        JOIN move_type mt ON m.move_type_id = mt.id
        WHERE m.id = ?`,
             [id]
         );
-
-        if (rows.length === 0) {
-            return null;
-        }
-
+        if (!rows.length) return null;
         const moveRow = rows[0] as any;
 
-        // Get items for this move
         const itemRows = await database.query(
-            `SELECT 
-        iim.*,
-        mi.name as item_name, mi.added_price as item_base_price
+            `SELECT iim.*, mi.name as item_name, mi.added_price as item_base_price
        FROM item_in_move iim
        JOIN move_item mi ON iim.move_item_id = mi.id
        WHERE iim.move_id = ?`,
             [id]
         );
 
-        const items = (itemRows as any[]).map(itemRow => ({
-            id: itemRow.id,
-            move_id: itemRow.move_id,
-            move_item_id: itemRow.move_item_id,
-            isFragile: itemRow.isFragile,
-            needsDisassemble: itemRow.needsDisassemble,
-            needsReassemble: itemRow.needsReassemble,
-            comments: itemRow.comments,
-            addedPrice: itemRow.addedPrice,
+        const items = (itemRows as any[]).map(item => ({
+            id: item.id,
+            move_id: item.move_id,
+            move_item_id: item.move_item_id,
+            isFragile: item.isFragile,
+            needsDisassemble: item.needsDisassemble,
+            needsReassemble: item.needsReassemble,
+            comments: item.comments,
+            addedPrice: item.addedPrice,
             move_item: {
-                id: itemRow.move_item_id,
-                name: itemRow.item_name,
-                added_price: itemRow.item_base_price
+                id: item.move_item_id,
+                name: item.item_name,
+                added_price: item.item_base_price
             }
         }));
 
-        // Calculate total price
         const basePrice = moveRow.move_type_price;
-        const itemsPrice = items.reduce((sum, item) =>
-            sum + item.move_item.added_price + item.addedPrice, 0
-        );
+        const itemsPrice = items.reduce((sum, i) => sum + i.move_item.added_price + i.addedPrice, 0);
         const totalPrice = basePrice + itemsPrice;
 
         return {
-            id: moveRow.id,
-            customer_id: moveRow.customer_id,
-            move_type_id: moveRow.move_type_id,
-            origin_address: moveRow.origin_address,
-            destination_address: moveRow.destination_address,
-            date: moveRow.date,
-            origin_floor: moveRow.origin_floor,
-            destination_floor: moveRow.destination_floor,
-            origin_has_elevator: moveRow.origin_has_elevator,
-            destination_has_elevator: moveRow.destination_has_elevator,
-            comments: moveRow.comments,
-            created_at: moveRow.created_at,
-            updated_at: moveRow.updated_at,
+            ...moveRow,
             customer: {
                 id: moveRow.customer_id,
                 phone: moveRow.customer_phone,
@@ -194,90 +151,71 @@ export class MoveService {
         };
     }
 
+    /** שליפת מעברים לפי לקוח */
     static async getMovesByCustomer(customerId: number): Promise<Move[]> {
         const rows = await database.query(
             'SELECT * FROM move WHERE customer_id = ? ORDER BY created_at DESC',
             [customerId]
         );
-
         return rows as Move[];
     }
 
+    /** חישוב מחיר כולל של מעבר */
     static async calculateMovePrice(moveId: number): Promise<MovePriceCalculation | null> {
-        const moveWithDetails = await this.getMoveWithDetails(moveId);
+        const move = await this.getMoveWithDetails(moveId);
+        if (!move) return null;
 
-        if (!moveWithDetails) {
-            return null;
-        }
-
-        const basePrice = moveWithDetails.move_type.added_price;
-        const itemsBreakdown = moveWithDetails.items.map(item => ({
-            name: item.move_item!.name,
-            base_price: item.move_item!.added_price,
-            added_price: item.addedPrice,
-            total_price: item.move_item!.added_price + item.addedPrice
+        const base = move.move_type.added_price;
+        const items = move.items.map(i => ({
+            name: i.move_item!.name,
+            base_price: i.move_item!.added_price,
+            added_price: i.addedPrice,
+            total_price: i.move_item!.added_price + i.addedPrice
         }));
-
-        const itemsPrice = itemsBreakdown.reduce((sum, item) => sum + item.total_price, 0);
-        const totalPrice = basePrice + itemsPrice;
+        const itemsTotal = items.reduce((sum, i) => sum + i.total_price, 0);
 
         return {
-            base_price: basePrice,
-            items_price: itemsPrice,
-            total_price: totalPrice,
+            base_price: base,
+            items_price: itemsTotal,
+            total_price: base + itemsTotal,
             breakdown: {
-                move_type: moveWithDetails.move_type.name,
-                move_type_price: basePrice,
-                items: itemsBreakdown
+                move_type: move.move_type.name,
+                move_type_price: base,
+                items
             }
         };
     }
 
+    /** עדכון מעבר */
     static async updateMove(id: number, moveData: Partial<Move>): Promise<boolean> {
         const fields: string[] = [];
         const values: any[] = [];
+        const allowed = ['origin_address', 'destination_address', 'date', 'origin_floor', 'destination_floor', 'origin_has_elevator', 'destination_has_elevator', 'comments'];
 
-        // Only allow updating certain fields
-        const allowedFields = [
-            'origin_address', 'destination_address', 'date', 'origin_floor',
-            'destination_floor', 'origin_has_elevator', 'destination_has_elevator', 'comments'
-        ];
-
-        Object.entries(moveData).forEach(([key, value]) => {
-            if (value !== undefined && allowedFields.includes(key)) {
+        for (const [key, val] of Object.entries(moveData)) {
+            if (allowed.includes(key) && val !== undefined) {
                 fields.push(`${key} = ?`);
-                values.push(value);
+                values.push(val);
             }
-        });
-
-        if (fields.length === 0) {
-            return false;
         }
 
+        if (!fields.length) return false;
         values.push(id);
-
-        const result = await database.execute(
-            `UPDATE move SET ${fields.join(', ')} WHERE id = ?`,
-            values
-        );
-
+        const result = await database.execute(`UPDATE move SET ${fields.join(', ')} WHERE id = ?`, values);
         return (result as any).affectedRows > 0;
     }
 
+    /** מחיקת מעבר */
     static async deleteMove(id: number): Promise<boolean> {
-        const result = await database.execute(
-            'DELETE FROM move WHERE id = ?',
-            [id]
-        );
-
+        const result = await database.execute('DELETE FROM move WHERE id = ?', [id]);
         return (result as any).affectedRows > 0;
     }
 
+    /** הוספת פריט למעבר */
     static async addItemToMove(moveId: number, itemData: CreateItemInMoveRequest): Promise<ItemInMove> {
         const result = await database.execute(
-            `INSERT INTO item_in_move 
-      (move_id, move_item_id, isFragile, needsDisassemble, needsReassemble, comments, addedPrice) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO item_in_move (move_id, move_item_id, isFragile, needsDisassemble, needsReassemble, comments, addedPrice)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
                 moveId,
                 itemData.move_item_id,
@@ -288,9 +226,7 @@ export class MoveService {
                 itemData.addedPrice || 0
             ]
         );
-
         const insertId = (result as any).insertId;
-
         return {
             id: insertId,
             move_id: moveId,
@@ -303,12 +239,9 @@ export class MoveService {
         };
     }
 
+    /** הסרת פריט ממעבר */
     static async removeItemFromMove(itemInMoveId: number): Promise<boolean> {
-        const result = await database.execute(
-            'DELETE FROM item_in_move WHERE id = ?',
-            [itemInMoveId]
-        );
-
+        const result = await database.execute('DELETE FROM item_in_move WHERE id = ?', [itemInMoveId]);
         return (result as any).affectedRows > 0;
     }
-} 
+}

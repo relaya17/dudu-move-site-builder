@@ -17,8 +17,9 @@ export const ContactForm = () => {
     name: '',
     email: '',
     phone: '',
+    moveType: '',
+    moveDate: '',
     apartmentType: '',
-    preferredMoveDate: '',
     currentAddress: '',
     destinationAddress: '',
     additionalNotes: ''
@@ -41,7 +42,11 @@ export const ContactForm = () => {
     e.preventDefault();
 
     try {
-      const savedEstimate = await MovingEstimateService.submitEstimateRequest(formData, furnitureInventory);
+      const estimateData = {
+        ...formData,
+        preferredMoveDate: formData.moveDate
+      };
+      const savedEstimate = await MovingEstimateService.submitEstimateRequest(estimateData, furnitureInventory);
 
       console.log('בקשת הערכת מחיר נשמרה בהצלחה:', savedEstimate.id);
 
@@ -54,8 +59,9 @@ export const ContactForm = () => {
         name: '',
         email: '',
         phone: '',
+        moveType: '',
+        moveDate: '',
         apartmentType: '',
-        preferredMoveDate: '',
         currentAddress: '',
         destinationAddress: '',
         additionalNotes: ''

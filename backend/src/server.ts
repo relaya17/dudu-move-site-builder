@@ -8,8 +8,12 @@ import helmet from 'helmet';
 import movesRouter from './routes/moves';
 import moveItemsRouter from './routes/moveItems';
 import moveTypesRouter from './routes/moveTypes';
+import moveRequestRouter from './routes/moveRequestRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
-import { generalRateLimit } from './middleware/rateLimiter';
+import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
+
+
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,9 +21,11 @@ const PORT = process.env.PORT || 3001;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: true, // Allow all origins in development
   credentials: true
 }));
+
+
 
 // Rate limiting
 app.use(generalRateLimit);
@@ -46,10 +52,22 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Development endpoint to clear rate limit store
+if (process.env.NODE_ENV === 'development') {
+  app.post('/clear-rate-limit', (req, res) => {
+    clearRateLimitStore();
+    res.status(200).json({
+      success: true,
+      message: 'Rate limit store cleared'
+    });
+  });
+}
+
 // API routes
 app.use('/api/moves', movesRouter);
 app.use('/api/move-items', moveItemsRouter);
 app.use('/api/move-types', moveTypesRouter);
+app.use('/api/move-requests', moveRequestRouter);
 
 // Handle 404 for unknown routes
 app.use(notFoundHandler);

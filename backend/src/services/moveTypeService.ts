@@ -3,10 +3,12 @@ import { MoveType } from '../types/moveTypes';
 
 export class MoveTypeService {
 
+    /**
+     * יצירת סוג מעבר חדש עם שם ועלות נוספת.
+     */
     static async createMoveType(typeData: Omit<MoveType, 'id'>): Promise<MoveType> {
         const result = await database.execute(
-            `INSERT INTO move_type (name, added_price) 
-       VALUES (?, ?)`,
+            `INSERT INTO move_type (name, added_price) VALUES (?, ?)`,
             [typeData.name, typeData.added_price]
         );
 
@@ -18,6 +20,9 @@ export class MoveTypeService {
         };
     }
 
+    /**
+     * שליפת כל סוגי המעבר, ממוינים לפי מחיר נוסף.
+     */
     static async getAllMoveTypes(): Promise<MoveType[]> {
         const rows = await database.query(
             'SELECT * FROM move_type ORDER BY added_price ASC'
@@ -26,6 +31,10 @@ export class MoveTypeService {
         return rows as MoveType[];
     }
 
+    /**
+     * קבלת סוג מעבר לפי מזהה.
+     * מחזיר null אם לא קיים.
+     */
     static async getMoveTypeById(id: number): Promise<MoveType | null> {
         const rows = await database.query(
             'SELECT * FROM move_type WHERE id = ?',
@@ -39,6 +48,11 @@ export class MoveTypeService {
         return rows[0] as MoveType;
     }
 
+    /**
+     * עדכון שדות בסוג מעבר קיים.
+     * מקבל אובייקט עם השדות שיש לעדכן.
+     * מחזיר true אם בוצע עדכון, אחרת false.
+     */
     static async updateMoveType(id: number, typeData: Partial<Omit<MoveType, 'id'>>): Promise<boolean> {
         const fields: string[] = [];
         const values: any[] = [];
@@ -51,7 +65,7 @@ export class MoveTypeService {
         });
 
         if (fields.length === 0) {
-            return false;
+            return false; // אין שדות לעדכן
         }
 
         values.push(id);
@@ -64,8 +78,14 @@ export class MoveTypeService {
         return (result as any).affectedRows > 0;
     }
 
+    /**
+     * מחיקת סוג מעבר לפי מזהה.
+     * מונע מחיקה אם הסוג בשימוש בטבלה 'move'.
+     * זורק שגיאה אם נמצא שימוש.
+     * מחזיר true אם המחיקה בוצעה.
+     */
     static async deleteMoveType(id: number): Promise<boolean> {
-        // Check if type is used in any moves
+        // בדיקת שימוש בטבלה 'move'
         const usageRows = await database.query(
             'SELECT COUNT(*) as count FROM move WHERE move_type_id = ?',
             [id]
@@ -84,4 +104,4 @@ export class MoveTypeService {
 
         return (result as any).affectedRows > 0;
     }
-} 
+}

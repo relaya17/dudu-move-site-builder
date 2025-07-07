@@ -3,6 +3,7 @@ import { MoveItem } from '../types/moveTypes';
 
 export class MoveItemService {
 
+    // יצירת פריט חדש להובלה במסד הנתונים
     static async createMoveItem(itemData: Omit<MoveItem, 'id'>): Promise<MoveItem> {
         const result = await database.execute(
             `INSERT INTO move_item (name, added_price) 
@@ -18,6 +19,7 @@ export class MoveItemService {
         };
     }
 
+    // שליפה של כל פריטי ההובלה מהמסד (ממוינים לפי שם)
     static async getAllMoveItems(): Promise<MoveItem[]> {
         const rows = await database.query(
             'SELECT * FROM move_item ORDER BY name ASC'
@@ -26,6 +28,7 @@ export class MoveItemService {
         return rows as MoveItem[];
     }
 
+    // שליפת פריט הובלה לפי מזהה ייחודי
     static async getMoveItemById(id: number): Promise<MoveItem | null> {
         const rows = await database.query(
             'SELECT * FROM move_item WHERE id = ?',
@@ -39,10 +42,12 @@ export class MoveItemService {
         return rows[0] as MoveItem;
     }
 
+    // עדכון של פריט הובלה (לפי מזהה)
     static async updateMoveItem(id: number, itemData: Partial<Omit<MoveItem, 'id'>>): Promise<boolean> {
         const fields: string[] = [];
         const values: any[] = [];
 
+        // יוצרים את חלק ה־SET של השאילתה דינמית
         Object.entries(itemData).forEach(([key, value]) => {
             if (value !== undefined && key !== 'id') {
                 fields.push(`${key} = ?`);
@@ -64,8 +69,9 @@ export class MoveItemService {
         return (result as any).affectedRows > 0;
     }
 
+    // מחיקת פריט הובלה ממסד הנתונים, אם הוא לא בשימוש
     static async deleteMoveItem(id: number): Promise<boolean> {
-        // Check if item is used in any moves
+        // בדיקה אם הפריט בשימוש כלשהו בהובלות קיימות
         const usageRows = await database.query(
             'SELECT COUNT(*) as count FROM item_in_move WHERE move_item_id = ?',
             [id]
@@ -85,6 +91,7 @@ export class MoveItemService {
         return (result as any).affectedRows > 0;
     }
 
+    // חיפוש פריטי הובלה לפי מונח חיפוש בשם (חיפוש חלקי)
     static async searchMoveItems(searchTerm: string): Promise<MoveItem[]> {
         const rows = await database.query(
             'SELECT * FROM move_item WHERE name LIKE ? ORDER BY name ASC',
@@ -93,4 +100,4 @@ export class MoveItemService {
 
         return rows as MoveItem[];
     }
-} 
+}

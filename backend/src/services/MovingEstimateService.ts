@@ -23,6 +23,8 @@ export class MovingEstimateService {
             destination_floor: number;
             origin_has_elevator: boolean;
             destination_has_elevator: boolean;
+            origin_has_crane: boolean;
+            destination_has_crane: boolean;
         },
         furnitureItems: Array<{
             name: string;
@@ -45,11 +47,19 @@ export class MovingEstimateService {
             const floorDifference = Math.abs(moveData.destination_floor - moveData.origin_floor);
 
             // חישוב מחיר משוער
+            const mappedFurnitureItems = furnitureItems.map(item => ({
+                type: item.name,
+                quantity: item.quantity,
+                description: item.comments || ''
+            }));
+
             const priceEstimate = PricingService.calculateTotalPrice(
                 moveData.apartment_type,
-                furnitureItems,
+                mappedFurnitureItems,
                 floorDifference,
-                moveData.origin_has_elevator && moveData.destination_has_elevator
+                moveData.origin_has_elevator && moveData.destination_has_elevator,
+                moveData.origin_has_crane,
+                moveData.destination_has_crane
             );
 
             // יצירת מסמך לקוח חדש
@@ -71,6 +81,8 @@ export class MovingEstimateService {
                 destination_floor: moveData.destination_floor,
                 origin_has_elevator: moveData.origin_has_elevator,
                 destination_has_elevator: moveData.destination_has_elevator,
+                origin_has_crane: moveData.origin_has_crane,
+                destination_has_crane: moveData.destination_has_crane,
                 additional_notes: moveData.additional_notes,
                 furniture_items: furnitureItems,
                 price_estimate: priceEstimate,

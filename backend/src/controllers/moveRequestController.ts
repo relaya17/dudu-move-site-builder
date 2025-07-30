@@ -4,26 +4,24 @@ import { estimateRequestSchema } from '../middleware/validation';
 
 export const submitMoveRequest = async (req: Request, res: Response) => {
     try {
-        // ולידציה של הנתונים
+        console.log('Received request data:', JSON.stringify(req.body, null, 2));
+
         const validatedData = await estimateRequestSchema.parseAsync(req.body);
+        console.log('Validated data:', JSON.stringify(validatedData, null, 2));
+
         const { customerData, moveData, furnitureItems } = validatedData;
-
-        const result = await MovingEstimateService.submitEstimateRequest(
-            customerData,
-            moveData,
-            furnitureItems
-        );
-
-        res.status(201).json({
-            success: true,
-            message: 'בקשת הערכת מחיר נשלחה בהצלחה',
-            data: result
-        });
-    } catch (error) {
+        const result = await MovingEstimateService.submitEstimateRequest(customerData, {
+            ...moveData,
+            preferred_move_date: moveData.preferred_move_date || '',
+            additional_notes: moveData.additional_notes || ''
+        }, furnitureItems);
+        res.status(201).json({ success: true, message: 'בקשת הערכת מחיר נשלחה בהצלחה', data: result });
+    } catch (error: any) {
         console.error('שגיאה בשליחת בקשת הערכת מחיר:', error);
 
         // אם זו שגיאת ולידציה
         if (error.name === 'ZodError') {
+            console.error('Validation errors:', error.errors);
             return res.status(400).json({
                 success: false,
                 message: 'נתונים לא תקינים',
@@ -31,10 +29,7 @@ export const submitMoveRequest = async (req: Request, res: Response) => {
             });
         }
 
-        res.status(500).json({
-            success: false,
-            message: 'אירעה שגיאה בשליחת בקשת הערכת המחיר'
-        });
+        res.status(500).json({ success: false, message: 'אירעה שגיאה בשליחת בקשת הערכת המחיר' });
     }
 };
 

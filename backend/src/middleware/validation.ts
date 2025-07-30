@@ -40,7 +40,9 @@ export const moveDetailsSchema = z.object({
         .min(0, 'קומה לא יכולה להיות שלילית')
         .max(100, 'קומה לא יכולה להיות מעל 100'),
     origin_has_elevator: z.boolean().default(false),
-    destination_has_elevator: z.boolean().default(false)
+    destination_has_elevator: z.boolean().default(false),
+    origin_has_crane: z.boolean().default(false),
+    destination_has_crane: z.boolean().default(false)
 });
 
 // סכמת ולידציה לפריט ריהוט

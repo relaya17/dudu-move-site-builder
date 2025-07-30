@@ -7,6 +7,7 @@ interface PricingConfig {
     floorPrice: number;
     distancePrice: number;
     elevatorDiscount: number;
+    cranePrice: number;
 }
 
 interface FurnitureItem {
@@ -30,11 +31,12 @@ export class PricingService {
         basePrice: 500, // מחיר בסיס להובלה
         pricePerItem: 50, // מחיר לכל פריט נוסף
         fragileMultiplier: 1.5, // מכפיל לפריטים שבירים
-        disassemblePrice: 100, // מחיר לפירוק
-        reassemblePrice: 150, // מחיר להרכבה
+        disassemblePrice: 200, // מחיר לפירוק בסיסי
+        reassemblePrice: 150, // מחיר להרכבה בסיסית
         floorPrice: 50, // מחיר לכל קומה
         distancePrice: 2, // מחיר לכל ק"מ
         elevatorDiscount: 0.8, // הנחה במעלית (20%)
+        cranePrice: 500, // מחיר להובלה בכרן
     };
 
     private static readonly FURNITURE_PRICING: FurniturePricing = {
@@ -62,8 +64,22 @@ export class PricingService {
         },
 
         // רהיטי שינה
+        bed_single: {
+            basePrice: 250,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 3,
+            description: 'מיטת יחיד'
+        },
+        bed_double: {
+            basePrice: 450,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 3,
+            description: 'מיטה זוגית'
+        },
         bed: {
-            basePrice: 200,
+            basePrice: 350,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
@@ -105,6 +121,27 @@ export class PricingService {
             needsDisassemble: true,
             maxQuantity: 2,
             description: 'שולחן אוכל'
+        },
+        dining_corner_small: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'פינת אוכל קטנה'
+        },
+        dining_corner_medium: {
+            basePrice: 500,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'פינת אוכל בינונית'
+        },
+        dining_corner_large: {
+            basePrice: 700,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 1,
+            description: 'פינת אוכל גדולה'
         },
 
         // מכשירים אלקטרוניים
@@ -151,6 +188,20 @@ export class PricingService {
             needsDisassemble: true,
             maxQuantity: 5,
             description: 'ארון'
+        },
+        cabinet_small: {
+            basePrice: 100,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 5,
+            description: 'ארון קטן'
+        },
+        cabinet_large: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 3,
+            description: 'ארון גדול'
         },
         bookshelf: {
             basePrice: 100,
@@ -212,6 +263,20 @@ export class PricingService {
             maxQuantity: 3,
             description: 'שטיח'
         },
+        bag: {
+            basePrice: 20,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 20,
+            description: 'שקית'
+        },
+        box: {
+            basePrice: 20,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 20,
+            description: 'קרטון'
+        },
         other: {
             basePrice: 50,
             fragile: false,
@@ -228,23 +293,25 @@ export class PricingService {
         apartmentType: string,
         furnitureItems: FurnitureItem[],
         floorDifference: number,
-        hasElevator: boolean
+        hasElevator: boolean,
+        originHasCrane: boolean = false,
+        destinationHasCrane: boolean = false
     ): number {
-        let totalPrice = this.PRICING_CONFIG.basePrice;
+        const basePrice = this.PRICING_CONFIG.basePrice;
+        const apartmentPrice = this.calculateApartmentTypePrice(apartmentType);
+        const furniturePrice = this.calculateFurniturePrice(furnitureItems);
+        const floorPrice = this.calculateFloorPrice(floorDifference, hasElevator);
 
-        // חישוב מחיר לפי סוג דירה
-        totalPrice += this.calculateApartmentTypePrice(apartmentType);
+        // מחיר מנוף
+        let cranePrice = 0;
+        if (originHasCrane) {
+            cranePrice += this.PRICING_CONFIG.cranePrice;
+        }
+        if (destinationHasCrane) {
+            cranePrice += this.PRICING_CONFIG.cranePrice;
+        }
 
-        // חישוב מחיר רהיטים
-        totalPrice += this.calculateFurniturePrice(furnitureItems);
-
-        // חישוב מחיר קומות
-        totalPrice += this.calculateFloorPrice(floorDifference, hasElevator);
-
-        // חישוב מחיר מרחק (אופציונלי)
-        // totalPrice += this.calculateDistancePrice(originAddress, destinationAddress);
-
-        return Math.round(totalPrice);
+        return basePrice + apartmentPrice + furniturePrice + floorPrice + cranePrice;
     }
 
     /**
@@ -280,14 +347,24 @@ export class PricingService {
                 itemPrice *= this.PRICING_CONFIG.fragileMultiplier;
             }
 
-            // מחיר פירוק
+            // מחיר פירוק והרכבה - מחירים שונים לארונות
             if (pricing.needsDisassemble) {
-                itemPrice += this.PRICING_CONFIG.disassemblePrice;
-            }
+                let disassemblePrice = this.PRICING_CONFIG.disassemblePrice;
+                let reassemblePrice = this.PRICING_CONFIG.reassemblePrice;
 
-            // מחיר הרכבה
-            if (pricing.needsDisassemble) {
-                itemPrice += this.PRICING_CONFIG.reassemblePrice;
+                // מחירים מיוחדים לארונות
+                if (item.type === 'cabinet_small') {
+                    disassemblePrice = 250; // פירוק ארון קטן
+                    reassemblePrice = 350;  // הרכבה ארון קטן
+                } else if (item.type === 'cabinet_large') {
+                    disassemblePrice = 300; // פירוק ארון גדול
+                    reassemblePrice = 500;  // הרכבה ארון גדול
+                } else if (item.type === 'cabinet') {
+                    disassemblePrice = 275; // פירוק ארון רגיל
+                    reassemblePrice = 425;  // הרכבה ארון רגיל
+                }
+
+                itemPrice += disassemblePrice + reassemblePrice;
             }
 
             totalPrice += itemPrice;
@@ -328,6 +405,8 @@ export class PricingService {
         needsDisassemble: boolean;
         isFragile: boolean;
         description: string;
+        disassemblePrice?: number;
+        reassemblePrice?: number;
     } {
         const pricing = this.FURNITURE_PRICING[itemType] || this.FURNITURE_PRICING.other;
         let totalPrice = pricing.basePrice * quantity;
@@ -336,8 +415,26 @@ export class PricingService {
             totalPrice *= this.PRICING_CONFIG.fragileMultiplier;
         }
 
+        let disassemblePrice = 0;
+        let reassemblePrice = 0;
+
         if (pricing.needsDisassemble) {
-            totalPrice += this.PRICING_CONFIG.disassemblePrice + this.PRICING_CONFIG.reassemblePrice;
+            // מחירים מיוחדים לארונות
+            if (itemType === 'cabinet_small') {
+                disassemblePrice = 250;
+                reassemblePrice = 350;
+            } else if (itemType === 'cabinet_large') {
+                disassemblePrice = 300;
+                reassemblePrice = 500;
+            } else if (itemType === 'cabinet') {
+                disassemblePrice = 275;
+                reassemblePrice = 425;
+            } else {
+                disassemblePrice = this.PRICING_CONFIG.disassemblePrice;
+                reassemblePrice = this.PRICING_CONFIG.reassemblePrice;
+            }
+
+            totalPrice += disassemblePrice + reassemblePrice;
         }
 
         return {
@@ -345,7 +442,9 @@ export class PricingService {
             totalPrice: Math.round(totalPrice),
             needsDisassemble: pricing.needsDisassemble,
             isFragile: pricing.fragile,
-            description: pricing.description
+            description: pricing.description,
+            disassemblePrice,
+            reassemblePrice
         };
     }
 

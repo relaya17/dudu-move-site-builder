@@ -20,7 +20,7 @@ export class CustomerService {
         return {
             id: insertId.toString(),
             name: customerData.name,
-            email: customerData.email,
+            email: customerData.email || '',
             phone: customerData.phone,
             created_at: new Date()
         };
@@ -108,7 +108,7 @@ export class CustomerService {
     // חיפוש לקוח קיים לפי אימייל או טלפון, ואם לא קיים - יצירתו
     static async findOrCreateCustomer(customerData: CreateCustomerRequest): Promise<Customer> {
         // ניסיון למצוא לקוח קיים לפי אימייל
-        let customer = await this.getCustomerByEmail(customerData.email);
+        let customer = await this.getCustomerByEmail(customerData.email || '');
 
         if (!customer) {
             // אם לא נמצא לפי אימייל, ננסה לפי טלפון

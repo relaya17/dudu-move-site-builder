@@ -1,5 +1,5 @@
 // components/MovingEstimateForm.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,7 +71,8 @@ export const MovingEstimateForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [showPriceAnimation, setShowPriceAnimation] = useState(false);
 
   // מחירי רהיטים
   const furniturePricing: FurniturePricing = {
@@ -203,6 +204,33 @@ export const MovingEstimateForm = () => {
 
     return basePrice + apartmentPrice + furniturePrice + floorPrice + cranePrice;
   };
+
+  const totalPrice = calculateTotalPrice();
+  const basePrice = 500; // מחיר בסיס
+  const apartmentPrice = apartmentPrices[formData.apartmentType] || 500;
+  let furniturePrice = 0;
+  inventory.forEach(item => {
+    furniturePrice += calculateItemPrice(item);
+  });
+  const floorDifference = Math.abs(formData.destinationFloor - formData.originFloor);
+  let floorPrice = floorDifference * 50;
+  if (formData.originHasElevator && formData.destinationHasElevator) {
+    floorPrice *= 0.8; // הנחה במעלית
+  }
+  let cranePrice = 0;
+  if (formData.originHasCrane) {
+    cranePrice += 800; // מנוף בכתובת הנוכחית
+  }
+  if (formData.destinationHasCrane) {
+    cranePrice += 800; // מנוף בכתובת היעד
+  }
+
+  // אפקט אנימציה למחיר
+  useEffect(() => {
+    setShowPriceAnimation(true);
+    const timer = setTimeout(() => setShowPriceAnimation(false), 300);
+    return () => clearTimeout(timer);
+  }, [totalPrice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -438,8 +466,6 @@ export const MovingEstimateForm = () => {
     { value: 'box', label: 'קרטון' },
     { value: 'other', label: 'אחר' },
   ];
-
-  const totalPrice = calculateTotalPrice();
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -949,9 +975,41 @@ export const MovingEstimateForm = () => {
                 </TooltipProvider>
               </div>
               <div className="text-2xl font-bold text-primary">
-                ₪{totalPrice.toLocaleString()}
+                <span className={`transition-all duration-300 ${showPriceAnimation ? 'scale-110 text-green-600' : ''}`}>
+                  ₪{totalPrice.toLocaleString()}
+                </span>
               </div>
             </div>
+            
+            {/* פירוט המחיר */}
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>מחיר בסיס:</span>
+                <span>₪{basePrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>מחיר דירה ({formData.apartmentType || 'לא נבחר'} חדרים):</span>
+                <span>₪{apartmentPrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>מחיר רהיטים ({inventory.length} פריטים):</span>
+                <span>₪{furniturePrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>מחיר קומות:</span>
+                <span>₪{floorPrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>מחיר מנוף:</span>
+                <span>₪{cranePrice.toLocaleString()}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-bold">
+                <span>סה"כ:</span>
+                <span>₪{totalPrice.toLocaleString()}</span>
+              </div>
+            </div>
+            
             <p className="text-sm text-muted-foreground mt-2">
               * המחיר הינו הערכה בלבד ועשוי להשתנות בהתאם לתנאים בפועל
               <br />

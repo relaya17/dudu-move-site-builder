@@ -18,22 +18,19 @@ class MovingEstimateService {
       destinationFloor: number;
       originHasElevator: boolean;
       destinationHasElevator: boolean;
+      originHasCrane: boolean;
+      destinationHasCrane: boolean;
     },
     inventory: FurnitureItem[]
   ): Promise<MovingEstimateRequest> {
-    // Split name into first and last name
-    const nameParts = formData.name.split(' ');
-    const firstName = nameParts[0] || formData.name;
-    const lastName = nameParts.slice(1).join(' ') || '';
-
     const requestData = {
       customerData: {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.phone.startsWith('05') ? formData.phone : `05${formData.phone}`,
       },
       moveData: {
-        apartment_type: formData.apartmentType,
+        apartment_type: formData.apartmentType || '',
         preferred_move_date: formData.preferredMoveDate,
         current_address: formData.currentAddress,
         destination_address: formData.destinationAddress,
@@ -42,14 +39,16 @@ class MovingEstimateService {
         destination_floor: formData.destinationFloor,
         origin_has_elevator: formData.originHasElevator,
         destination_has_elevator: formData.destinationHasElevator,
+        origin_has_crane: formData.originHasCrane,
+        destination_has_crane: formData.destinationHasCrane,
       },
       furnitureItems: inventory.map(item => ({
         name: item.type,
         quantity: item.quantity,
         description: item.description,
-        isFragile: item.type === 'tv' || item.type === 'computer',
-        needsDisassemble: item.type === 'bed' || item.type === 'table',
-        needsReassemble: item.type === 'bed' || item.type === 'table',
+        isFragile: item.type === 'tv' || item.type === 'computer' || item.type === 'refrigerator' || item.type === 'washing_machine' || item.type === 'dishwasher' || item.type === 'microwave' || item.type === 'toaster' || item.type === 'coffee_machine' || item.type === 'mirror' || item.type === 'lamp' || item.type === 'mattress',
+        needsDisassemble: item.type === 'bed' || item.type === 'table' || item.type === 'desk' || item.type === 'dining_table' || item.type === 'sofa' || item.type === 'wardrobe' || item.type === 'cabinet' || item.type === 'bookshelf' || item.type === 'bed_single' || item.type === 'bed_double' || item.type === 'dining_corner_small' || item.type === 'dining_corner_medium' || item.type === 'dining_corner_large',
+        needsReassemble: item.type === 'bed' || item.type === 'table' || item.type === 'desk' || item.type === 'dining_table' || item.type === 'sofa' || item.type === 'wardrobe' || item.type === 'cabinet' || item.type === 'bookshelf' || item.type === 'bed_single' || item.type === 'bed_double' || item.type === 'dining_corner_small' || item.type === 'dining_corner_medium' || item.type === 'dining_corner_large',
         comments: item.description
       }))
     };
@@ -66,6 +65,7 @@ class MovingEstimateService {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Server response:', errorText);
+      console.error('Request data sent:', JSON.stringify(requestData, null, 2));
       throw new Error(`שגיאה בשליחת בקשת הערכת מחיר: ${response.status} ${response.statusText}`);
     }
 

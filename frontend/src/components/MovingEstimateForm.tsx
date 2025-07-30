@@ -2,15 +2,17 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Home, MapPin, Calendar, Phone, Mail, User, Package, AlertCircle, CheckCircle, DollarSign } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar, Package, DollarSign, AlertCircle, CheckCircle, User, Mail, Phone, MapPin, Building, CalendarDays, Info, Eye, Home } from 'lucide-react';
 import MovingEstimateService from '@/services/movingEstimateService';
 import { FurnitureItem } from '@/types/movingEstimate';
 
@@ -27,6 +29,8 @@ interface FormData {
   destinationFloor: number;
   originHasElevator: boolean;
   destinationHasElevator: boolean;
+  originHasCrane: boolean;
+  destinationHasCrane: boolean;
 }
 
 interface FurniturePricing {
@@ -52,13 +56,17 @@ export const MovingEstimateForm = () => {
     destinationFloor: 0,
     originHasElevator: false,
     destinationHasElevator: false,
+    originHasCrane: false,
+    destinationHasCrane: false,
   });
 
   const [inventory, setInventory] = useState<FurnitureItem[]>([
     { type: 'sofa', quantity: 1, description: 'ספה' },
-    { type: 'bed', quantity: 1, description: 'מיטה' },
-    { type: 'table', quantity: 1, description: 'שולחן' },
+    { type: 'bed_double', quantity: 1, description: 'מיטה זוגית' },
+    { type: 'dining_corner_medium', quantity: 1, description: 'פינת אוכל בינונית' },
     { type: 'chair', quantity: 4, description: 'כיסאות' },
+    { type: 'bag', quantity: 5, description: 'שקיות' },
+    { type: 'box', quantity: 10, description: 'קרטונים' },
   ]);
 
   const [loading, setLoading] = useState(false);
@@ -68,7 +76,9 @@ export const MovingEstimateForm = () => {
   // מחירי רהיטים
   const furniturePricing: FurniturePricing = {
     sofa: { basePrice: 300, description: 'ספה', isFragile: false, needsDisassemble: true },
-    bed: { basePrice: 200, description: 'מיטה', isFragile: false, needsDisassemble: true },
+    bed_single: { basePrice: 250, description: 'מיטת יחיד', isFragile: false, needsDisassemble: true },
+    bed_double: { basePrice: 450, description: 'מיטה זוגית', isFragile: false, needsDisassemble: true },
+    bed: { basePrice: 350, description: 'מיטה', isFragile: false, needsDisassemble: true },
     table: { basePrice: 150, description: 'שולחן', isFragile: false, needsDisassemble: true },
     chair: { basePrice: 50, description: 'כיסא', isFragile: false, needsDisassemble: false },
     armchair: { basePrice: 120, description: 'כורסה', isFragile: false, needsDisassemble: false },
@@ -76,20 +86,27 @@ export const MovingEstimateForm = () => {
     wardrobe: { basePrice: 250, description: 'ארון בגדים', isFragile: false, needsDisassemble: true },
     desk: { basePrice: 180, description: 'שולחן עבודה', isFragile: false, needsDisassemble: true },
     dining_table: { basePrice: 200, description: 'שולחן אוכל', isFragile: false, needsDisassemble: true },
+    dining_corner_small: { basePrice: 150, description: 'פינת אוכל קטנה', isFragile: false, needsDisassemble: true },
+    dining_corner_medium: { basePrice: 500, description: 'פינת אוכל בינונית', isFragile: false, needsDisassemble: true },
+    dining_corner_large: { basePrice: 700, description: 'פינת אוכל גדולה', isFragile: false, needsDisassemble: true },
+    cabinet: { basePrice: 120, description: 'ארון', isFragile: false, needsDisassemble: true },
+    cabinet_small: { basePrice: 100, description: 'ארון קטן', isFragile: false, needsDisassemble: true },
+    cabinet_large: { basePrice: 150, description: 'ארון גדול', isFragile: false, needsDisassemble: true },
+    bookshelf: { basePrice: 100, description: 'מדף ספרים', isFragile: false, needsDisassemble: true },
+    drawer: { basePrice: 80, description: 'מגירה', isFragile: false, needsDisassemble: false },
     tv: { basePrice: 120, description: 'טלוויזיה', isFragile: true, needsDisassemble: false },
     computer: { basePrice: 80, description: 'מחשב', isFragile: true, needsDisassemble: false },
     refrigerator: { basePrice: 400, description: 'מקרר', isFragile: true, needsDisassemble: false },
     washing_machine: { basePrice: 200, description: 'מכונת כביסה', isFragile: true, needsDisassemble: false },
     dishwasher: { basePrice: 180, description: 'מדיח כלים', isFragile: true, needsDisassemble: false },
-    cabinet: { basePrice: 120, description: 'ארון', isFragile: false, needsDisassemble: true },
-    bookshelf: { basePrice: 100, description: 'מדף ספרים', isFragile: false, needsDisassemble: true },
-    drawer: { basePrice: 80, description: 'מגירה', isFragile: false, needsDisassemble: false },
     microwave: { basePrice: 60, description: 'מיקרוגל', isFragile: true, needsDisassemble: false },
     toaster: { basePrice: 30, description: 'טוסטר', isFragile: true, needsDisassemble: false },
     coffee_machine: { basePrice: 50, description: 'מכונת קפה', isFragile: true, needsDisassemble: false },
     mirror: { basePrice: 40, description: 'מראה', isFragile: true, needsDisassemble: false },
     lamp: { basePrice: 30, description: 'מנורה', isFragile: true, needsDisassemble: false },
     rug: { basePrice: 40, description: 'שטיח', isFragile: false, needsDisassemble: false },
+    bag: { basePrice: 20, description: 'שקית', isFragile: false, needsDisassemble: false },
+    box: { basePrice: 20, description: 'קרטון', isFragile: false, needsDisassemble: false },
     other: { basePrice: 50, description: 'אחר', isFragile: false, needsDisassemble: false },
   };
 
@@ -138,9 +155,24 @@ export const MovingEstimateForm = () => {
       price *= 1.5;
     }
 
-    // מחיר פירוק והרכבה
+    // מחיר פירוק והרכבה - מחירים שונים לארונות
     if (pricing.needsDisassemble) {
-      price += 250; // 100 פירוק + 150 הרכבה
+      let disassemblePrice = 100; // מחיר בסיס לפירוק
+      let reassemblePrice = 150;  // מחיר בסיס להרכבה
+      
+      // מחירים מיוחדים לארונות
+      if (item.type === 'cabinet_small') {
+        disassemblePrice = 250; // פירוק ארון קטן
+        reassemblePrice = 350;  // הרכבה ארון קטן
+      } else if (item.type === 'cabinet_large') {
+        disassemblePrice = 300; // פירוק ארון גדול
+        reassemblePrice = 500;  // הרכבה ארון גדול
+      } else if (item.type === 'cabinet') {
+        disassemblePrice = 275; // פירוק ארון רגיל
+        reassemblePrice = 425;  // הרכבה ארון רגיל
+      }
+      
+      price += disassemblePrice + reassemblePrice;
     }
 
     return Math.round(price);
@@ -163,25 +195,204 @@ export const MovingEstimateForm = () => {
       floorPrice *= 0.8; // הנחה במעלית
     }
 
-    return basePrice + apartmentPrice + furniturePrice + floorPrice;
+    // מחיר מנוף
+    let cranePrice = 0;
+    if (formData.originHasCrane) {
+      cranePrice += 800; // מנוף בכתובת הנוכחית
+    }
+    if (formData.destinationHasCrane) {
+      cranePrice += 800; // מנוף בכתובת היעד
+    }
+
+    return basePrice + apartmentPrice + furniturePrice + floorPrice + cranePrice;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // בדיקת ולידציה לפני שליחה
+    if (!formData.name || !formData.phone || !formData.apartmentType || 
+        !formData.currentAddress || !formData.destinationAddress || inventory.length === 0) {
+      setError('אנא מלא את כל השדות הנדרשים ווודא שיש לפחות פריט אחד ברשימה');
+      return;
+    }
+
+    // בדיקת סוג דירה
+    const validApartmentTypes = ['1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5+'];
+    if (!validApartmentTypes.includes(formData.apartmentType)) {
+      setError('אנא בחר סוג דירה מהרשימה');
+      return;
+    }
+
+    // בדיקת פורמט טלפון
+    const phoneRegex = /^05\d{8}$/;
+    const formattedPhone = formData.phone.startsWith('05') ? formData.phone : `05${formData.phone}`;
+    if (!phoneRegex.test(formattedPhone)) {
+      setError('מספר טלפון לא תקין - חייב להתחיל ב-05 ולהכיל 10 ספרות');
+      return;
+    }
+
+    // בדיקת כתובות
+    if (formData.currentAddress.length < 5 || formData.destinationAddress.length < 5) {
+      setError('כתובת חייבת להכיל לפחות 5 תווים');
+      return;
+    }
+
+    // בדיקת קומות
+    if (typeof formData.originFloor !== 'number' || typeof formData.destinationFloor !== 'number') {
+      setError('אנא הזן מספר קומה תקין');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess(false);
 
     try {
       const result = await MovingEstimateService.submitEstimateRequest(formData, inventory);
+      
+      // שליחת מייל אישור
+      await sendConfirmationEmail(formData, inventory, result);
+      
       setSuccess(true);
       console.log('הערכת מחיר נשלחה בהצלחה:', result);
+      
+      // מעבר לדף תודה אחרי 2 שניות
+      setTimeout(() => {
+        window.location.href = '/thank-you';
+      }, 2000);
+      
     } catch (err) {
       console.error('שגיאה בשליחת הערכת מחיר:', err);
       setError(err instanceof Error ? err.message : 'אירעה שגיאה בשליחת הבקשה');
     } finally {
       setLoading(false);
     }
+  };
+
+  // פונקציה לשליחת מייל אישור
+  const sendConfirmationEmail = async (customerData: FormData, furnitureItems: FurnitureItem[], result: any) => {
+    try {
+      const emailData = {
+        to: customerData.email,
+        subject: 'הערכת מחיר להובלה - דודו הובלות',
+        html: generateEmailHTML(customerData, furnitureItems, result)
+      };
+
+      const response = await fetch('http://localhost:3001/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData)
+      });
+
+      if (!response.ok) {
+        console.error('שגיאה בשליחת מייל אישור');
+      }
+    } catch (error) {
+      console.error('שגיאה בשליחת מייל:', error);
+    }
+  };
+
+  // יצירת תוכן המייל
+  const generateEmailHTML = (customerData: FormData, furnitureItems: FurnitureItem[], result: any) => {
+    const totalPrice = calculateTotalPrice();
+    const furnitureList = furnitureItems.map(item => {
+      const pricing = furniturePricing[item.type] || furniturePricing.other;
+      const itemPrice = calculateItemPrice(item);
+      return `
+        <tr>
+          <td>${pricing.description}</td>
+          <td>${item.quantity}</td>
+          <td>₪${itemPrice}</td>
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="he">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>הערכת מחיר להובלה - דודו הובלות</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #1f2937; color: white; padding: 20px; text-align: center; }
+          .content { padding: 20px; background: #f9fafb; }
+          .price-summary { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { padding: 10px; text-align: right; border-bottom: 1px solid #ddd; }
+          th { background: #f3f4f6; font-weight: bold; }
+          .total-price { font-size: 24px; font-weight: bold; color: #1f2937; }
+          .footer { background: #1f2937; color: white; padding: 20px; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>דודו הובלות</h1>
+            <h2>הערכת מחיר להובלה</h2>
+          </div>
+          
+          <div class="content">
+            <h3>שלום ${customerData.name},</h3>
+            <p>תודה על פנייתך לדודו הובלות!</p>
+            <p>הערכת המחיר שלך מוכנה. להלן הפרטים:</p>
+            
+            <div class="price-summary">
+              <h4>פרטי המעבר:</h4>
+              <p><strong>מכתובת:</strong> ${customerData.currentAddress}${customerData.originFloor > 0 ? ` (קומה ${customerData.originFloor})` : ''}${customerData.originHasElevator ? ' - יש מעלית' : ''}${customerData.originHasCrane ? ' - נדרש מנוף' : ''}</p>
+              <p><strong>אל כתובת:</strong> ${customerData.destinationAddress}${customerData.destinationFloor > 0 ? ` (קומה ${customerData.destinationFloor})` : ''}${customerData.destinationHasElevator ? ' - יש מעלית' : ''}${customerData.destinationHasCrane ? ' - נדרש מנוף' : ''}</p>
+              <p><strong>סוג דירה:</strong> ${customerData.apartmentType} חדרים</p>
+              ${customerData.preferredMoveDate ? `<p><strong>תאריך מועדף:</strong> ${customerData.preferredMoveDate}</p>` : ''}
+            </div>
+            
+            <h4>רשימת הפריטים:</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>פריט</th>
+                  <th>כמות</th>
+                  <th>מחיר</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${furnitureList}
+              </tbody>
+            </table>
+            
+            <div class="price-summary">
+              <h4>סיכום מחיר:</h4>
+              <p class="total-price">₪${totalPrice.toLocaleString()}</p>
+              <p><small>* המחיר הינו הערכה בלבד ועשוי להשתנות בהתאם לתנאים בפועל</small></p>
+              <p><small>* כולל מחיר קומות: ₪${Math.abs(customerData.destinationFloor - customerData.originFloor) * 50}</small></p>
+              ${(customerData.originHasElevator && customerData.destinationHasElevator) ? '<p><small>* הנחה במעלית: 20%</small></p>' : ''}
+              ${(customerData.originHasCrane || customerData.destinationHasCrane) ? `<p><small>* מנוף: ₪${(customerData.originHasCrane ? 800 : 0) + (customerData.destinationHasCrane ? 800 : 0)}</small></p>` : ''}
+            </div>
+            
+            <p><strong>מספר בקשה:</strong> ${result.id}</p>
+            
+            <h4>השלבים הבאים:</h4>
+            <ol>
+              <li>נציג שלנו יצור איתך קשר תוך 24 שעות</li>
+              <li>נאשר את הפרטים ונקבע תאריך להובלה</li>
+              <li>נגיע בזמן עם צוות מקצועי</li>
+            </ol>
+          </div>
+          
+          <div class="footer">
+            <p><strong>דודו הובלות</strong></p>
+            <p>טלפון: 03-1234567</p>
+            <p>אימייל: info@dudu-move.co.il</p>
+            <p>שעות פעילות: א'-ה' 8:00-20:00</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   };
 
   const apartmentTypes = [
@@ -197,6 +408,8 @@ export const MovingEstimateForm = () => {
 
   const furnitureTypes = [
     { value: 'sofa', label: 'ספה' },
+    { value: 'bed_single', label: 'מיטת יחיד' },
+    { value: 'bed_double', label: 'מיטה זוגית' },
     { value: 'bed', label: 'מיטה' },
     { value: 'table', label: 'שולחן' },
     { value: 'chair', label: 'כיסא' },
@@ -205,7 +418,12 @@ export const MovingEstimateForm = () => {
     { value: 'wardrobe', label: 'ארון בגדים' },
     { value: 'desk', label: 'שולחן עבודה' },
     { value: 'dining_table', label: 'שולחן אוכל' },
+    { value: 'dining_corner_small', label: 'פינת אוכל קטנה' },
+    { value: 'dining_corner_medium', label: 'פינת אוכל בינונית' },
+    { value: 'dining_corner_large', label: 'פינת אוכל גדולה' },
     { value: 'cabinet', label: 'ארון' },
+    { value: 'cabinet_small', label: 'ארון קטן' },
+    { value: 'cabinet_large', label: 'ארון גדול' },
     { value: 'bookshelf', label: 'מדף ספרים' },
     { value: 'drawer', label: 'מגירה' },
     { value: 'tv', label: 'טלוויזיה' },
@@ -219,6 +437,8 @@ export const MovingEstimateForm = () => {
     { value: 'mirror', label: 'מראה' },
     { value: 'lamp', label: 'מנורה' },
     { value: 'rug', label: 'שטיח' },
+    { value: 'bag', label: 'שקית' },
+    { value: 'box', label: 'קרטון' },
     { value: 'other', label: 'אחר' },
   ];
 
@@ -247,53 +467,105 @@ export const MovingEstimateForm = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">שם מלא *</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="name">שם מלא</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>הזן את השם המלא כפי שמופיע בתעודת זהות</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="שם מלא"
-                  required
+                  placeholder="לדוגמה: יוסי כהן"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">אימייל</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="phone">מספר טלפון</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>הזן מספר טלפון שמתחיל ב-05 ומכיל 10 ספרות</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="05XXXXXXXX"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="email">כתובת אימייל</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>האימייל יישלח אליו הערכת המחיר המפורטת</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="example@email.com"
+                  placeholder="your.email@example.com"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">טלפון *</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="050-1234567"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="apartmentType">סוג דירה *</Label>
-                <Select value={formData.apartmentType} onValueChange={(value) => handleInputChange('apartmentType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחר סוג דירה" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {apartmentTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="apartmentType">סוג דירה</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>בחר את גודל הדירה - מספר החדרים כולל חדר שירותים</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {apartmentTypes.map((type) => (
+                    <div
+                      key={type.value}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        formData.apartmentType === type.value
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => handleInputChange('apartmentType', type.value)}
+                    >
+                      <div className="text-center">
+                        <Building className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                        <div className="font-medium">{type.label}</div>
+                        <div className="text-xs text-muted-foreground">{type.value} חדרים</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -309,79 +581,201 @@ export const MovingEstimateForm = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="currentAddress">כתובת נוכחית *</Label>
+                <Label htmlFor="currentAddress">כתובת נוכחית</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>הכתובת שממנה נעבור - רחוב, מספר בית, עיר</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Input
                   id="currentAddress"
                   value={formData.currentAddress}
                   onChange={(e) => handleInputChange('currentAddress', e.target.value)}
-                  placeholder="רחוב, עיר"
-                  required
+                  placeholder="לדוגמה: הרצל 123, תל אביב"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="destinationAddress">כתובת יעד *</Label>
+                <Label htmlFor="destinationAddress">כתובת יעד</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>הכתובת שאליה נעבור - רחוב, מספר בית, עיר</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Input
                   id="destinationAddress"
                   value={formData.destinationAddress}
                   onChange={(e) => handleInputChange('destinationAddress', e.target.value)}
-                  placeholder="רחוב, עיר"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="preferredMoveDate">תאריך מעבר מועדף</Label>
-                <Input
-                  id="preferredMoveDate"
-                  type="date"
-                  value={formData.preferredMoveDate}
-                  onChange={(e) => handleInputChange('preferredMoveDate', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="originFloor">קומה נוכחית</Label>
-                <Input
-                  id="originFloor"
-                  type="number"
-                  min="0"
-                  value={formData.originFloor}
-                  onChange={(e) => handleInputChange('originFloor', parseInt(e.target.value) || 0)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="destinationFloor">קומת יעד</Label>
-                <Input
-                  id="destinationFloor"
-                  type="number"
-                  min="0"
-                  value={formData.destinationFloor}
-                  onChange={(e) => handleInputChange('destinationFloor', parseInt(e.target.value) || 0)}
-                  placeholder="0"
+                  placeholder="לדוגמה: ויצמן 456, חיפה"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <Checkbox
-                  id="originHasElevator"
-                  checked={formData.originHasElevator}
-                  onCheckedChange={(checked) => handleInputChange('originHasElevator', checked as boolean)}
-                />
-                <Label htmlFor="originHasElevator">מעלית בכתובת הנוכחית</Label>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="apartmentType">סוג דירה</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>בחר את גודל הדירה - מספר החדרים כולל חדר שירותים</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Select value={formData.apartmentType} onValueChange={(value) => handleInputChange('apartmentType', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="בחר סוג דירה" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {apartmentTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <Checkbox
-                  id="destinationHasElevator"
-                  checked={formData.destinationHasElevator}
-                  onCheckedChange={(checked) => handleInputChange('destinationHasElevator', checked as boolean)}
-                />
-                <Label htmlFor="destinationHasElevator">מעלית בכתובת היעד</Label>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="preferredMoveDate">תאריך מעבר מועדף</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>תאריך המעבר המועדף עליכם - לא מחייב</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="relative">
+                  <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="preferredMoveDate"
+                    type="date"
+                    value={formData.preferredMoveDate}
+                    onChange={(e) => handleInputChange('preferredMoveDate', e.target.value)}
+                    className="pl-10"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* קומות ומעליות */}
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">
+                <p>פרטי קומות ומעליות - עוזר לנו לחשב את המחיר המדויק</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* כתובת נוכחית */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <h4 className="font-medium text-gray-900">כתובת נוכחית</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="originFloor">קומה</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>הקומה של הדירה הנוכחית (0 = קרקע)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Input
+                        id="originFloor"
+                        type="number"
+                        min="0"
+                        value={formData.originFloor}
+                        onChange={(e) => handleInputChange('originFloor', parseInt(e.target.value) || 0)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="originHasElevator"
+                        checked={formData.originHasElevator}
+                        onCheckedChange={(checked) => handleInputChange('originHasElevator', checked as boolean)}
+                      />
+                      <Label htmlFor="originHasElevator">יש מעלית</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="originHasCrane"
+                        checked={formData.originHasCrane}
+                        onCheckedChange={(checked) => handleInputChange('originHasCrane', checked as boolean)}
+                      />
+                      <Label htmlFor="originHasCrane">נדרש מנוף</Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* כתובת יעד */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <h4 className="font-medium text-gray-900">כתובת יעד</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="destinationFloor">קומה</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>הקומה של הדירה החדשה (0 = קרקע)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Input
+                        id="destinationFloor"
+                        type="number"
+                        min="0"
+                        value={formData.destinationFloor}
+                        onChange={(e) => handleInputChange('destinationFloor', parseInt(e.target.value) || 0)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="destinationHasElevator"
+                        checked={formData.destinationHasElevator}
+                        onCheckedChange={(checked) => handleInputChange('destinationHasElevator', checked as boolean)}
+                      />
+                      <Label htmlFor="destinationHasElevator">יש מעלית</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="destinationHasCrane"
+                        checked={formData.destinationHasCrane}
+                        onCheckedChange={(checked) => handleInputChange('destinationHasCrane', checked as boolean)}
+                      />
+                      <Label htmlFor="destinationHasCrane">נדרש מנוף</Label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -391,10 +785,22 @@ export const MovingEstimateForm = () => {
           {/* רשימת רהיטים */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                רשימת רהיטים
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  רשימת רהיטים
+                </h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>הוסף את כל הרהיטים והפריטים שצריך להעביר</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Button type="button" variant="outline" size="sm" onClick={addInventoryItem}>
                 הוסף פריט
               </Button>
@@ -467,7 +873,19 @@ export const MovingEstimateForm = () => {
 
           {/* הערות נוספות */}
           <div className="space-y-2">
-            <Label htmlFor="additionalNotes">הערות נוספות</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="additionalNotes">הערות נוספות</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>פרטים נוספים כמו חניה, גישה מיוחדת, שעות מועדפות וכו'</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Textarea
               id="additionalNotes"
               value={formData.additionalNotes}
@@ -480,16 +898,34 @@ export const MovingEstimateForm = () => {
           {/* סיכום מחיר */}
           <div className="bg-muted p-4 rounded-lg">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                סיכום מחיר
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  סיכום מחיר
+                </h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>הערכת מחיר משוערת - המחיר הסופי ייקבע לאחר בדיקה</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <div className="text-2xl font-bold text-primary">
                 ₪{totalPrice.toLocaleString()}
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               * המחיר הינו הערכה בלבד ועשוי להשתנות בהתאם לתנאים בפועל
+              <br />
+              * מחיר קומות מחושב לפי הפרש הקומות (₪50 לקומה)
+              <br />
+              * הנחה של 20% במעלית בשתי הכתובות
+              <br />
+              * מנוף: ₪800 לכל כתובת שדורשת מנוף
             </p>
           </div>
 
@@ -505,15 +941,196 @@ export const MovingEstimateForm = () => {
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                בקשת הערכת המחיר נשלחה בהצלחה! נציג יצור איתך קשר בהקדם.
+                בקשת הערכת המחיר נשלחה בהצלחה! המייל נשלח לכתובת שציינת. 
+                <br />
+                <span className="text-sm text-muted-foreground">
+                  מעבר לדף תודה בעוד מספר שניות...
+                </span>
               </AlertDescription>
             </Alert>
           )}
 
           {/* כפתור שליחה */}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'שולח...' : 'שלח בקשת הערכת מחיר'}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" variant="outline" className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  תצוגה מקדימה
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>תצוגה מקדימה - בקשת הערכת מחיר</DialogTitle>
+                  <DialogDescription>
+                    בדוק את כל הפרטים לפני השליחה
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* פרטי לקוח */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        פרטי לקוח
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">שם מלא</Label>
+                          <p className="text-sm text-muted-foreground">{formData.name || 'לא הוזן'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">טלפון</Label>
+                          <p className="text-sm text-muted-foreground">{formData.phone || 'לא הוזן'}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">אימייל</Label>
+                        <p className="text-sm text-muted-foreground">{formData.email || 'לא הוזן'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* פרטי המעבר */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        פרטי המעבר
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">כתובת נוכחית</Label>
+                          <p className="text-sm text-muted-foreground">{formData.currentAddress || 'לא הוזן'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">כתובת יעד</Label>
+                          <p className="text-sm text-muted-foreground">{formData.destinationAddress || 'לא הוזן'}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">סוג דירה</Label>
+                          <p className="text-sm text-muted-foreground">{formData.apartmentType ? `${formData.apartmentType} חדרים` : 'לא נבחר'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">תאריך מועדף</Label>
+                          <p className="text-sm text-muted-foreground">{formData.preferredMoveDate || 'לא נבחר'}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">קומות ומעליות</Label>
+                          <p className="text-sm text-muted-foreground">
+                            קומה נוכחית: {formData.originFloor} | קומה יעד: {formData.destinationFloor}
+                            <br />
+                            מעלית נוכחית: {formData.originHasElevator ? 'כן' : 'לא'} | מעלית יעד: {formData.destinationHasElevator ? 'כן' : 'לא'}
+                            <br />
+                            מנוף נוכחי: {formData.originHasCrane ? 'כן' : 'לא'} | מנוף יעד: {formData.destinationHasCrane ? 'כן' : 'לא'}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* רשימת רהיטים */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        רשימת רהיטים ({inventory.length} פריטים)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {inventory.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">לא נוספו פריטים</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {inventory.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 border rounded">
+                              <div>
+                                <p className="font-medium">{item.type}</p>
+                                <p className="text-sm text-muted-foreground">כמות: {item.quantity}</p>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                ₪{calculateItemPrice(item).toLocaleString()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* הערות נוספות */}
+                  {formData.additionalNotes && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Info className="h-4 w-4" />
+                          הערות נוספות
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{formData.additionalNotes}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* סיכום מחיר */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        סיכום מחיר
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-primary">
+                        ₪{totalPrice.toLocaleString()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? 'שולח...' : 'שלח בקשת הערכת מחיר'}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => {
+                const message = `שלום! אני מעוניין בהערכת מחיר להובלה:
+                
+שם: ${formData.name}
+טלפון: ${formData.phone}
+אימייל: ${formData.email}
+
+מכתובת: ${formData.currentAddress}
+אל כתובת: ${formData.destinationAddress}
+סוג דירה: ${formData.apartmentType} חדרים
+
+הערכת מחיר משוערת: ₪${totalPrice.toLocaleString()}
+
+אשמח לקבל הצעה מפורטת!`;
+                
+                const whatsappUrl = `https://wa.me/972501234567?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+              }}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+              </svg>
+              שלח לוואטסאפ
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

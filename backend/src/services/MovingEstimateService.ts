@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, Timestamp } from 'firebase/firestore';
 import { CreateCustomerRequest } from '../types/moveTypes';
 import { customerSchema, moveDetailsSchema, furnitureItemSchema } from '../middleware/validation';
 import { PricingService } from './PricingService';
@@ -85,6 +85,80 @@ export class MovingEstimateService {
             };
         } catch (error) {
             console.error('שגיאה בשליחת הערכת מעבר:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * קבלת כל בקשות הערכת המחיר
+     */
+    static async getAllMoveRequests() {
+        try {
+            const movesRef = collection(db, 'moves');
+            const q = query(movesRef, orderBy('created_at', 'desc'));
+            const querySnapshot = await getDocs(q);
+
+            const moves = [];
+            for (const docSnapshot of querySnapshot.docs) {
+                const moveData = docSnapshot.data();
+                const customerDoc = await getDoc(doc(db, 'customers', moveData.customer_id));
+                const customerData = customerDoc.data();
+
+                moves.push({
+                    id: docSnapshot.id,
+                    customer: customerData,
+                    ...moveData,
+                    created_at: moveData.created_at.toDate()
+                });
+            }
+
+            return moves;
+        } catch (error) {
+            console.error('שגיאה בשליפת בקשות הערכת מחיר:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * קבלת בקשת הערכת מחיר לפי ID
+     */
+    static async getMoveRequestById(id: string) {
+        try {
+            const moveDoc = await getDoc(doc(db, 'moves', id));
+            if (!moveDoc.exists()) {
+                throw new Error('בקשת הערכת המחיר לא נמצאה');
+            }
+
+            const moveData = moveDoc.data();
+            const customerDoc = await getDoc(doc(db, 'customers', moveData.customer_id));
+            const customerData = customerDoc.data();
+
+            return {
+                id: moveDoc.id,
+                customer: customerData,
+                ...moveData,
+                created_at: moveData.created_at.toDate()
+            };
+        } catch (error) {
+            console.error('שגיאה בשליפת בקשת הערכת מחיר:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * עדכון סטטוס בקשת הערכת מחיר
+     */
+    static async updateMoveRequestStatus(id: string, status: 'pending' | 'estimated' | 'accepted' | 'rejected') {
+        try {
+            const moveRef = doc(db, 'moves', id);
+            await updateDoc(moveRef, {
+                status: status,
+                updated_at: Timestamp.now()
+            });
+
+            return { success: true };
+        } catch (error) {
+            console.error('שגיאה בעדכון סטטוס בקשת הערכת מחיר:', error);
             throw error;
         }
     }

@@ -1,5 +1,5 @@
 import { db } from '@/config/firebase';
-import { collection, addDoc, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, Timestamp, orderBy, limit, writeBatch, updateDoc } from 'firebase/firestore';
 
 interface TermsUpdate {
     version: string;
@@ -29,7 +29,10 @@ export class TermsNotificationService {
 
             // שליחת התראות למשתמשים מושפעים
             if (update.requiresReConsent) {
-                await this.notifyAffectedUsers(update);
+                await this.notifyAffectedUsers({
+                    ...update,
+                    effectiveDate: new Date(update.effectiveDate)
+                });
             }
 
             return docRef.id;
@@ -97,8 +100,8 @@ export class TermsNotificationService {
 
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
-                const updateDoc = querySnapshot.docs[0];
-                await updateDoc.ref.update({
+                const docToUpdate = querySnapshot.docs[0];
+                await updateDoc(docToUpdate.ref, {
                     notifiedUsers: count
                 });
             }
@@ -117,11 +120,15 @@ export class TermsNotificationService {
             );
 
             const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => ({
-                ...doc.data(),
-                id: doc.id,
-                effectiveDate: doc.data().effectiveDate.toDate()
-            })) as TermsUpdate[];
+            return querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    ...data,
+                    id: doc.id,
+                    effectiveDate: data.effectiveDate.toDate(),
+                    changes: data.changes || []
+                } as unknown as TermsUpdate;
+            });
         } catch (error) {
             console.error('שגיאה בשליפת עדכונים אחרונים:', error);
             throw error;
@@ -138,7 +145,7 @@ export class TermsNotificationService {
             );
 
             const querySnapshot = await getDocs(q);
-            const batch = db.batch();
+            const batch = writeBatch(db);
 
             querySnapshot.docs.forEach(doc => {
                 batch.update(doc.ref, { read: true });

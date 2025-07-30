@@ -4,6 +4,14 @@ export interface CreateCustomerRequest {
     phone: string;
 }
 
+export interface MoveType {
+    id: string;
+    name: string;
+    description?: string;
+    base_price: number;
+    created_at: Date;
+}
+
 export interface Customer {
     id: string;
     name: string;
@@ -57,4 +65,11 @@ export interface CreateMoveRequest {
 
 export interface MoveWithDetails extends Move {
     customer: Customer;
+}
+
+export interface MoveItem {
+    id: number;
+    name: string;
+    added_price: number;
+    created_at?: Date;
 }

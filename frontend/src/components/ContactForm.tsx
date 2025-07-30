@@ -54,13 +54,7 @@ export const ContactForm = () => {
       toast({
         title: 'הערכת מחיר התקבלה!',
         description: `
-          הערכת מחיר: ${savedEstimate.priceEstimate.totalPrice} ש"ח
-          
-          ${savedEstimate.priceEstimate.disclaimer.text}
-          
-          ${savedEstimate.priceEstimate.disclaimer.legalNotice}
-          
-          בקשה מס' ${savedEstimate.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות.
+          בקשה מס' ${savedEstimate.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות עם הערכת מחיר מפורטת.
         `,
         duration: 10000, // הודעה תוצג ל-10 שניות
       });

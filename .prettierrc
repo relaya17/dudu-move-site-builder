@@ -6,5 +6,16 @@
     "trailingComma": "es5",
     "bracketSpacing": true,
     "arrowParens": "avoid",
-    "endOfLine": "auto"
+    "endOfLine": "auto",
+    "overrides": [
+        {
+            "files": [
+                "*.ts",
+                "*.tsx"
+            ],
+            "options": {
+                "parser": "typescript"
+            }
+        }
+    ]
 }

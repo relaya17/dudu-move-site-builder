@@ -6,27 +6,29 @@ export class CustomerService {
     // יצירת לקוח חדש במסד הנתונים
     static async createCustomer(customerData: CreateCustomerRequest): Promise<Customer> {
         const result = await database.execute(
-            `INSERT INTO customers (phone, first_name, last_name, email) 
-       VALUES (?, ?, ?, ?)`,
+            `INSERT INTO customers (name, email, phone) 
+       VALUES (?, ?, ?)`,
             [
-                customerData.phone,
-                customerData.first_name,
-                customerData.last_name,
-                customerData.email
+                customerData.name,
+                customerData.email,
+                customerData.phone
             ]
         );
 
         const insertId = (result as any).insertId;
 
         return {
-            id: insertId,
-            ...customerData
+            id: insertId.toString(),
+            name: customerData.name,
+            email: customerData.email,
+            phone: customerData.phone,
+            created_at: new Date()
         };
     }
 
     // שליפת כל הלקוחות ממסד הנתונים (בסדר יורד לפי תאריך יצירה)
     static async getAllCustomers(): Promise<Customer[]> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM customers ORDER BY created_at DESC'
         );
 
@@ -35,38 +37,38 @@ export class CustomerService {
 
     // שליפת לקוח לפי מזהה ייחודי (ID)
     static async getCustomerById(id: number): Promise<Customer | null> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM customers WHERE id = ?',
             [id]
         );
 
-        if (rows.length === 0) return null;
+        if ((rows as any[]).length === 0) return null;
 
-        return rows[0] as Customer;
+        return (rows as any[])[0] as Customer;
     }
 
     // שליפת לקוח לפי כתובת אימייל
     static async getCustomerByEmail(email: string): Promise<Customer | null> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM customers WHERE email = ?',
             [email]
         );
 
-        if (rows.length === 0) return null;
+        if ((rows as any[]).length === 0) return null;
 
-        return rows[0] as Customer;
+        return (rows as any[])[0] as Customer;
     }
 
     // שליפת לקוח לפי מספר טלפון
     static async getCustomerByPhone(phone: string): Promise<Customer | null> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM customers WHERE phone = ?',
             [phone]
         );
 
-        if (rows.length === 0) return null;
+        if ((rows as any[]).length === 0) return null;
 
-        return rows[0] as Customer;
+        return (rows as any[])[0] as Customer;
     }
 
     // עדכון לקוח לפי ID (רק שדות שנשלחו בפועל)

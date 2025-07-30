@@ -21,7 +21,7 @@ export class MoveItemService {
 
     // שליפה של כל פריטי ההובלה מהמסד (ממוינים לפי שם)
     static async getAllMoveItems(): Promise<MoveItem[]> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM move_item ORDER BY name ASC'
         );
 
@@ -30,16 +30,16 @@ export class MoveItemService {
 
     // שליפת פריט הובלה לפי מזהה ייחודי
     static async getMoveItemById(id: number): Promise<MoveItem | null> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM move_item WHERE id = ?',
             [id]
         );
 
-        if (rows.length === 0) {
+        if ((rows as any[]).length === 0) {
             return null;
         }
 
-        return rows[0] as MoveItem;
+        return (rows as any[])[0] as MoveItem;
     }
 
     // עדכון של פריט הובלה (לפי מזהה)
@@ -72,12 +72,12 @@ export class MoveItemService {
     // מחיקת פריט הובלה ממסד הנתונים, אם הוא לא בשימוש
     static async deleteMoveItem(id: number): Promise<boolean> {
         // בדיקה אם הפריט בשימוש כלשהו בהובלות קיימות
-        const usageRows = await database.query(
+        const [usageRows] = await database.query(
             'SELECT COUNT(*) as count FROM item_in_move WHERE move_item_id = ?',
             [id]
         );
 
-        const usageCount = (usageRows[0] as any).count;
+        const usageCount = Number((usageRows as any[])[0].count);
 
         if (usageCount > 0) {
             throw new Error('Cannot delete move item that is used in existing moves');
@@ -93,7 +93,7 @@ export class MoveItemService {
 
     // חיפוש פריטי הובלה לפי מונח חיפוש בשם (חיפוש חלקי)
     static async searchMoveItems(searchTerm: string): Promise<MoveItem[]> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM move_item WHERE name LIKE ? ORDER BY name ASC',
             [`%${searchTerm}%`]
         );

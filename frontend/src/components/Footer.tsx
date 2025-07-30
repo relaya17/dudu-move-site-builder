@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Separator } from '@/components/ui/separator';
 import { Truck, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 

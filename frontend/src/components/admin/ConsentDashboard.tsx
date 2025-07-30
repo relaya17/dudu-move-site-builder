@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -183,7 +183,7 @@ export const ConsentDashboard = () => {
                       outerRadius={150}
                       label
                     >
-                      {Object.entries(report?.consentsByVersion || {}).map((entry, index) => (
+                      {Object.entries(report?.consentsByVersion || {}).map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

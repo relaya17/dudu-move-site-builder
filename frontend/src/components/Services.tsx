@@ -1,7 +1,6 @@
 
-import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Truck, Package, Home, Building, Shield, Clock } from 'lucide-react';
+import { Truck, Package, Home, Building, Clock } from 'lucide-react';
 
 export const Services = () => {
   const services = [

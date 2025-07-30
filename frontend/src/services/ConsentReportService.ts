@@ -32,7 +32,12 @@ export class ConsentReportService {
             const consents = querySnapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id
-            }));
+            })) as Array<{
+                id: string;
+                version: string;
+                marketing: boolean;
+                timestamp: any;
+            }>;
 
             // חישוב סטטיסטיקות
             const versionCount: Record<string, number> = {};
@@ -85,7 +90,11 @@ export class ConsentReportService {
             const consents = querySnapshot.docs.map(doc => ({
                 ...doc.data(),
                 timestamp: doc.data().timestamp.toDate()
-            }));
+            })) as Array<{
+                version: string;
+                marketing: boolean;
+                timestamp: Date;
+            }>;
 
             // ארגון לפי תאריכים
             const trendsByDate = new Map<string, ConsentTrend>();

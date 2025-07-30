@@ -9,6 +9,7 @@ import movesRouter from './routes/moves';
 import moveItemsRouter from './routes/moveItems';
 import moveTypesRouter from './routes/moveTypes';
 import moveRequestRouter from './routes/moveRequestRoutes';
+import aiRouter from './routes/aiRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
 
@@ -68,6 +69,7 @@ app.use('/api/moves', movesRouter);
 app.use('/api/move-items', moveItemsRouter);
 app.use('/api/move-types', moveTypesRouter);
 app.use('/api/move-requests', moveRequestRouter);
+app.use('/api/ai', aiRouter);
 
 // Handle 404 for unknown routes
 app.use(notFoundHandler);

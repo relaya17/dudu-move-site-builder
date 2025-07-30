@@ -1,6 +1,4 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Truck, Phone, MapPin } from 'lucide-react';
 export const Hero = () => {
   const scrollToEstimate = () => {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });

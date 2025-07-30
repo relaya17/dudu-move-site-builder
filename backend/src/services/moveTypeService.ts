@@ -8,8 +8,8 @@ export class MoveTypeService {
      */
     static async createMoveType(typeData: Omit<MoveType, 'id'>): Promise<MoveType> {
         const result = await database.execute(
-            `INSERT INTO move_type (name, added_price) VALUES (?, ?)`,
-            [typeData.name, typeData.added_price]
+            `INSERT INTO move_type (name, base_price) VALUES (?, ?)`,
+            [typeData.name, typeData.base_price]
         );
 
         const insertId = (result as any).insertId;
@@ -24,8 +24,8 @@ export class MoveTypeService {
      * שליפת כל סוגי המעבר, ממוינים לפי מחיר נוסף.
      */
     static async getAllMoveTypes(): Promise<MoveType[]> {
-        const rows = await database.query(
-            'SELECT * FROM move_type ORDER BY added_price ASC'
+        const [rows] = await database.query(
+            'SELECT * FROM move_type ORDER BY base_price ASC'
         );
 
         return rows as MoveType[];
@@ -36,16 +36,16 @@ export class MoveTypeService {
      * מחזיר null אם לא קיים.
      */
     static async getMoveTypeById(id: number): Promise<MoveType | null> {
-        const rows = await database.query(
+        const [rows] = await database.query(
             'SELECT * FROM move_type WHERE id = ?',
             [id]
         );
 
-        if (rows.length === 0) {
+        if ((rows as any[]).length === 0) {
             return null;
         }
 
-        return rows[0] as MoveType;
+        return (rows as any[])[0] as MoveType;
     }
 
     /**
@@ -86,12 +86,12 @@ export class MoveTypeService {
      */
     static async deleteMoveType(id: number): Promise<boolean> {
         // בדיקת שימוש בטבלה 'move'
-        const usageRows = await database.query(
+        const [usageRows] = await database.query(
             'SELECT COUNT(*) as count FROM move WHERE move_type_id = ?',
             [id]
         );
 
-        const usageCount = (usageRows[0] as any).count;
+        const usageCount = Number((usageRows as any[])[0].count);
 
         if (usageCount > 0) {
             throw new Error('Cannot delete move type that is used in existing moves');

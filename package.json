@@ -1,19 +1,32 @@
 {
-  "name": "dudu-move-site",
+  "name": "dudu-move-site-builder",
   "version": "1.0.0",
-  "description": "DuDu Move Site - Full Stack Application",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\"",
-    "build": "cd frontend && npm run build && cd ../backend && npm run build",
-    "start": "cd backend && npm start"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "dev": "pnpm --parallel dev",
+    "build": "pnpm --parallel build",
+    "start": "pnpm --parallel start",
+    "lint": "pnpm --parallel lint",
+    "test": "pnpm --parallel test"
   },
   "dependencies": {
-    "@google/genai": "^1.8.0",
-    "@google/generative-ai": "^0.24.1",
-    "dotenv": "^17.0.0"
+    "firebase": "^10.8.0",
+    "firebase-admin": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "typescript": "^5.3.3",
+    "prettier": "^3.2.5",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
   }
 }

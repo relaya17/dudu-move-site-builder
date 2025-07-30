@@ -50,11 +50,21 @@ export const ContactForm = () => {
 
       console.log('בקשת הערכת מחיר נשמרה בהצלחה:', savedEstimate.id);
 
+      // הצגת המחיר והאזהרות
       toast({
-        title: 'בקשת הערכת מחיר נשלחה!',
-        description: `בקשה מס' ${savedEstimate.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות.`,
+        title: 'הערכת מחיר התקבלה!',
+        description: `
+          הערכת מחיר: ${savedEstimate.priceEstimate.totalPrice} ש"ח
+          
+          ${savedEstimate.priceEstimate.disclaimer.text}
+          
+          ${savedEstimate.priceEstimate.disclaimer.legalNotice}
+          
+          בקשה מס' ${savedEstimate.id.split('_')[1]} נשמרה. ניצור איתכם קשר תוך 24 שעות.
+        `,
+        duration: 10000, // הודעה תוצג ל-10 שניות
       });
-
+      
       setFormData({
         name: '',
         email: '',

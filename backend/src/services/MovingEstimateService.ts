@@ -1,15 +1,15 @@
-import database from '../database/connection';
+import { db } from '../config/firebase';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { CreateCustomerRequest } from '../types/moveTypes';
-import { CustomerService } from './customerService';
+import { customerSchema, moveDetailsSchema, furnitureItemSchema } from '../middleware/validation';
+import { PricingService } from './PricingService';
 
 export class MovingEstimateService {
-
     /**
      * יצירת בקשת הערכת מעבר חדשה.
-     * - יוצר או מוצא לקוח קיים.
-     * - יוצר רשומת מעבר חדשה.
-     * - מוסיף פריטי ריהוט למעבר.
-     * כל הפעולות מבוצעות בטרנזקציה כדי לשמור על עקביות הנתונים.
+     * - מוודא תקינות הנתונים
+     * - מחשב מחיר משוער
+     * - שומר את הבקשה בפיירבייס
      */
     static async submitEstimateRequest(
         customerData: CreateCustomerRequest,
@@ -19,57 +19,73 @@ export class MovingEstimateService {
             current_address: string;
             destination_address: string;
             additional_notes: string;
+            origin_floor: number;
+            destination_floor: number;
+            origin_has_elevator: boolean;
+            destination_has_elevator: boolean;
         },
-        furnitureItems: Array<{ name: string; quantity: number }>
+        furnitureItems: Array<{
+            name: string;
+            quantity: number;
+            isFragile?: boolean;
+            needsDisassemble?: boolean;
+            needsReassemble?: boolean;
+            comments?: string;
+        }>
     ) {
-        // קבלת חיבור למסד הנתונים מתוך ה-pool
-        const connection = await database.getConnection();
-
         try {
-            // התחלת טרנזקציה - כל הפעולות יעבדו כיחידה אטומית
-            await connection.beginTransaction();
-
-            // יצירת או מציאת לקוח חדש (באמצעות שירות לקוחות)
-            const customer = await CustomerService.findOrCreateCustomer(customerData);
-
-            // יצירת רשומת מעבר בטבלה 'move'
-            const [moveResult]: any = await connection.execute(
-                `INSERT INTO move (customer_id, apartment_type, preferred_move_date, current_address, destination_address, additional_notes)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [
-                    customer.id,
-                    moveData.apartment_type,
-                    moveData.preferred_move_date,
-                    moveData.current_address,
-                    moveData.destination_address,
-                    moveData.additional_notes,
-                ]
-            );
-
-            // שמירת מזהה המעבר שנוצר
-            const moveId = moveResult.insertId;
-
-            // הכנסת פריטי הריהוט לטבלת items_in_move, עם קישור למעבר
+            // ולידציה של הנתונים
+            await customerSchema.parseAsync(customerData);
+            await moveDetailsSchema.parseAsync(moveData);
             for (const item of furnitureItems) {
-                await connection.execute(
-                    `INSERT INTO items_in_move (move_id, name, quantity) VALUES (?, ?, ?)`,
-                    [moveId, item.name, item.quantity]
-                );
+                await furnitureItemSchema.parseAsync(item);
             }
 
-            // אישור הטרנזקציה
-            await connection.commit();
+            // חישוב הפרש קומות
+            const floorDifference = Math.abs(moveData.destination_floor - moveData.origin_floor);
 
-            // החזרת מזהי המעבר והלקוח שנוצרו
-            return { moveId, customerId: customer.id };
+            // חישוב מחיר משוער
+            const priceEstimate = PricingService.calculateTotalPrice(
+                moveData.apartment_type,
+                furnitureItems,
+                floorDifference,
+                moveData.origin_has_elevator && moveData.destination_has_elevator
+            );
+
+            // יצירת מסמך לקוח חדש
+            const customerRef = await addDoc(collection(db, 'customers'), {
+                name: customerData.name,
+                email: customerData.email,
+                phone: customerData.phone,
+                created_at: Timestamp.now()
+            });
+
+            // יצירת מסמך מעבר חדש
+            const moveRef = await addDoc(collection(db, 'moves'), {
+                customer_id: customerRef.id,
+                apartment_type: moveData.apartment_type,
+                preferred_move_date: moveData.preferred_move_date,
+                current_address: moveData.current_address,
+                destination_address: moveData.destination_address,
+                origin_floor: moveData.origin_floor,
+                destination_floor: moveData.destination_floor,
+                origin_has_elevator: moveData.origin_has_elevator,
+                destination_has_elevator: moveData.destination_has_elevator,
+                additional_notes: moveData.additional_notes,
+                furniture_items: furnitureItems,
+                price_estimate: priceEstimate,
+                status: 'pending',
+                created_at: Timestamp.now()
+            });
+
+            return {
+                id: moveRef.id,
+                customerId: customerRef.id,
+                priceEstimate
+            };
         } catch (error) {
-            // במקרה של שגיאה - ביטול כל השינויים שבוצעו
-            await connection.rollback();
             console.error('שגיאה בשליחת הערכת מעבר:', error);
             throw error;
-        } finally {
-            // שחרור החיבור לבריכה
-            connection.release();
         }
     }
 }

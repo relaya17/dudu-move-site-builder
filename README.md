@@ -1,54 +1,84 @@
-# DuDu Move Site
+# דודו הובלות - מערכת ניהול
 
-This is a full-stack application for DuDu Move, consisting of a React frontend and Node.js backend.
+מערכת לניהול חברת הובלות הכוללת ממשק משתמש מתקדם, מערכת הערכת מחירים אוטומטית, ומערכת ניהול לקוחות.
 
-## Project Structure
+## תכונות עיקריות
 
-The project is organized into two main directories:
+- 🚛 טופס הערכת מחיר אוטומטי
+- 📊 דשבורד ניהול מתקדם
+- 🤖 המלצות AI לייעול העסק
+- 📱 ממשק מותאם למובייל
+- 🔔 התראות בזמן אמת
+- 📈 דוחות וניתוח נתונים
 
-- `frontend/`: Contains the React application built with Vite
-- `backend/`: Contains the Node.js/Express server application
+## התקנה
 
-## Getting Started
-
-1. Install dependencies for both frontend and backend:
-
+1. התקן את הדרישות המקדימות:
    ```bash
-   npm run install:all
+   node -v  # נדרש Node.js 18 ומעלה
+   pnpm -v  # נדרש pnpm 8 ומעלה
    ```
 
-2. Start development servers:
-
+2. התקן את התלויות:
    ```bash
-   npm run dev
+   pnpm install
    ```
 
-   This will start both the frontend and backend in development mode.
-
-3. Build for production:
-
+3. העתק את קובץ הסביבה:
    ```bash
-   npm run build
+   cp .env.example .env
+   ```
+   והגדר את המשתנים הנדרשים
+
+4. הפעל את הפרויקט:
+   ```bash
+   # פיתוח
+   pnpm dev
+
+   # בנייה
+   pnpm build
+
+   # הפעלה
+   pnpm start
    ```
 
-4. Start production server:
-   ```bash
-   npm start
-   ```
+## מבנה הפרויקט
 
-## Frontend
+```
+dudu-move-site-builder/
+├── frontend/          # React + Vite
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── services/
+│   └── ...
+├── backend/           # Express + TypeScript
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   └── routes/
+│   └── ...
+└── ...
+```
 
-The frontend is a React application built with:
+## טכנולוגיות
 
-- Vite
-- TypeScript
-- Tailwind CSS
-- Shadcn UI components
+- **Frontend:**
+  - React
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+  - shadcn/ui
+  - Firebase
+  - React Query
 
-## Backend
+- **Backend:**
+  - Node.js
+  - Express
+  - TypeScript
+  - Firebase Admin
+  - OpenAI
 
-The backend is a Node.js/Express application with:
+## רישוי
 
-- TypeScript
-- Express.js
-- MongoDB (database)
+כל הזכויות שמורות © 2024

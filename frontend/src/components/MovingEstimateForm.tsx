@@ -128,13 +128,10 @@ export const MovingEstimateForm = () => {
     }));
   };
 
-  const handleInventoryChange = (index: number, field: keyof FurnitureItem, value: string | number) => {
-    const newInventory = [...inventory];
-    newInventory[index] = {
-      ...newInventory[index],
-      [field]: value
-    };
-    setInventory(newInventory);
+  const handleInventoryChange = (index: number, field: keyof FurnitureItem, value: any) => {
+    const updatedInventory = [...inventory];
+    updatedInventory[index] = { ...updatedInventory[index], [field]: value };
+    setInventory(updatedInventory);
   };
 
   const addInventoryItem = () => {
@@ -807,65 +804,102 @@ export const MovingEstimateForm = () => {
             </div>
 
             <div className="space-y-3">
-              {inventory.map((item, index) => {
-                const pricing = furniturePricing[item.type] || furniturePricing.other;
-                const itemPrice = calculateItemPrice(item);
-                
-                return (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 border rounded-lg">
-                    <Select 
-                      value={item.type} 
-                      onValueChange={(value) => handleInventoryChange(index, 'type', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="סוג פריט" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {furnitureTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => handleInventoryChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                      placeholder="כמות"
-                    />
-
-                    <Input
-                      value={item.description || ''}
-                      onChange={(e) => handleInventoryChange(index, 'description', e.target.value)}
-                      placeholder="תיאור (אופציונלי)"
-                    />
-
+              {inventory.map((item, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        ₪{itemPrice}
-                      </Badge>
-                      {pricing.isFragile && (
-                        <Badge variant="destructive" className="text-xs">שביר</Badge>
-                      )}
-                      {pricing.needsDisassemble && (
-                        <Badge variant="secondary" className="text-xs">פירוק</Badge>
-                      )}
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">פריט {index + 1}</span>
                     </div>
-
                     <Button
                       type="button"
-                      variant="destructive"
+                      variant="ghost"
                       size="sm"
                       onClick={() => removeInventoryItem(index)}
+                      className="text-destructive hover:text-destructive"
                     >
                       מחק
                     </Button>
                   </div>
-                );
-              })}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>סוג פריט</Label>
+                      <Select value={item.type} onValueChange={(value) => handleInventoryChange(index, 'type', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="בחר סוג פריט" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {furnitureTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>כמות</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleInventoryChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id={`fragile-${index}`}
+                        checked={item.isFragile}
+                        onCheckedChange={(checked) => handleInventoryChange(index, 'isFragile', checked as boolean)}
+                      />
+                      <Label htmlFor={`fragile-${index}`}>שביר</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id={`disassemble-${index}`}
+                        checked={item.needsDisassemble}
+                        onCheckedChange={(checked) => handleInventoryChange(index, 'needsDisassemble', checked as boolean)}
+                      />
+                      <Label htmlFor={`disassemble-${index}`}>נדרש פירוק</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id={`reassemble-${index}`}
+                        checked={item.needsReassemble}
+                        onCheckedChange={(checked) => handleInventoryChange(index, 'needsReassemble', checked as boolean)}
+                      />
+                      <Label htmlFor={`reassemble-${index}`}>נדרש הרכבה</Label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>הערות (אופציונלי)</Label>
+                    <Textarea
+                      value={item.comments || ''}
+                      onChange={(e) => handleInventoryChange(index, 'comments', e.target.value)}
+                      placeholder="פרטים נוספים על הפריט..."
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="text-sm text-muted-foreground">
+                      מחיר משוער לפריט זה
+                    </div>
+                    <div className="font-bold text-primary">
+                      ₪{calculateItemPrice(item).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

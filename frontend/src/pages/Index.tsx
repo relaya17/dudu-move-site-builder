@@ -2,7 +2,7 @@
 import { Hero } from '../components/Hero';
 import { Services } from '../components/Services';
 import { About } from '../components/About';
-import { ContactForm } from '../components/ContactForm';
+import { MovingEstimateForm } from '../components/MovingEstimateForm';
 import { Testimonials } from '../components/Testimonials';
 import { Footer } from '../components/Footer';
 
@@ -12,7 +12,7 @@ const Index = () => {
       <Hero />
       <Services />
       <About />
-      <ContactForm />
+      <MovingEstimateForm />
       <Testimonials />
       <Footer />
     </div>

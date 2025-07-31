@@ -62,7 +62,7 @@ Examples:
         console.error('❌ Database operation failed:', error);
         process.exit(1);
     } finally {
-        await database.close();
+        await database.end();
     }
 }
 

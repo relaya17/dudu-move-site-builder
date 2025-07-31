@@ -37,7 +37,7 @@ export const getAllMoves = async (req: Request, res: Response): Promise<void> =>
 export const getMoveById = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const move = await MoveService.getMoveById(parseInt(id));
+        const move = await MoveService.getMoveById(id);
 
         if (!move) {
             throw createError('Move not found', 404);
@@ -55,7 +55,7 @@ export const getMoveById = async (req: Request, res: Response): Promise<void> =>
 export const getMoveWithDetails = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const move = await MoveService.getMoveWithDetails(parseInt(id));
+        const move = await MoveService.getMoveWithDetails(id);
 
         if (!move) {
             throw createError('Move not found', 404);
@@ -73,7 +73,7 @@ export const getMoveWithDetails = async (req: Request, res: Response): Promise<v
 export const getMovesByCustomer = async (req: Request, res: Response): Promise<void> => {
     try {
         const { customerId } = req.params;
-        const moves = await MoveService.getMovesByCustomer(parseInt(customerId));
+        const moves = await MoveService.getMovesByCustomerId(customerId);
 
         res.status(200).json({
             success: true,
@@ -88,11 +88,7 @@ export const getMovesByCustomer = async (req: Request, res: Response): Promise<v
 export const calculateMovePrice = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const calculation = await MoveService.calculateMovePrice(parseInt(id));
-
-        if (!calculation) {
-            throw createError('Move not found', 404);
-        }
+        const calculation = await MoveService.calculateMovePrice(id);
 
         res.status(200).json({
             success: true,
@@ -108,11 +104,7 @@ export const updateMove = async (req: Request, res: Response): Promise<void> => 
         const { id } = req.params;
         const moveData = req.body;
 
-        const updated = await MoveService.updateMove(parseInt(id), moveData);
-
-        if (!updated) {
-            throw createError('Move not found or no changes made', 404);
-        }
+        await MoveService.updateMove(id, moveData);
 
         res.status(200).json({
             success: true,
@@ -126,11 +118,7 @@ export const updateMove = async (req: Request, res: Response): Promise<void> => 
 export const deleteMove = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const deleted = await MoveService.deleteMove(parseInt(id));
-
-        if (!deleted) {
-            throw createError('Move not found', 404);
-        }
+        await MoveService.deleteMove(id);
 
         res.status(200).json({
             success: true,
@@ -146,11 +134,10 @@ export const addItemToMove = async (req: Request, res: Response): Promise<void> 
         const { id } = req.params;
         const itemData = req.body;
 
-        const item = await MoveService.addItemToMove(parseInt(id), itemData);
+        await MoveService.addItemToMove(id, itemData);
 
         res.status(201).json({
             success: true,
-            data: item,
             message: 'Item added to move successfully'
         });
     } catch (error: any) {
@@ -160,12 +147,8 @@ export const addItemToMove = async (req: Request, res: Response): Promise<void> 
 
 export const removeItemFromMove = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { itemId } = req.params;
-        const removed = await MoveService.removeItemFromMove(parseInt(itemId));
-
-        if (!removed) {
-            throw createError('Item not found', 404);
-        }
+        const { moveId, itemId } = req.params;
+        await MoveService.removeItemFromMove(moveId, itemId);
 
         res.status(200).json({
             success: true,

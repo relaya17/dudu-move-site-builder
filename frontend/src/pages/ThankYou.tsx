@@ -15,7 +15,7 @@ export const ThankYou = () => {
             תודה על פנייתך!
           </CardTitle>
           <CardDescription className="text-lg text-gray-600">
-            דודו הובלות נשמח לעמוד לשירותכם
+            דוד הובלות נשמח לעמוד לשירותכם
           </CardDescription>
         </CardHeader>
 
@@ -86,7 +86,7 @@ export const ThankYou = () => {
               </div>
               <div className="text-center">
                 <p className="font-medium text-gray-900">אימייל</p>
-                <p className="text-blue-600 font-semibold">info@dudu-move.co.il</p>
+                <p className="text-blue-600 font-semibold">info@david-move.co.il</p>
               </div>
             </div>
             <div className="mt-4 text-center">

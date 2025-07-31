@@ -6,37 +6,31 @@ export const Testimonials = () => {
   const testimonials = [
     {
       name: "שרה כהן",
-      location: "תל אביב",
       rating: 5,
-      text: "דודו הובלות הפכו את המעבר שלנו לחלק לחלוטין. הצוות היה מקצועי, זהיר עם החפצים שלנו, והעביר הכל בזמן. ממליצה בחום!"
+      text: "דוד הובלות הפכו את המעבר שלנו לחלק לחלוטין. הצוות היה מקצועי, זהיר עם החפצים שלנו, והעביר הכל בזמן. ממליצה בחום!"
     },
     {
       name: "מיכאל לוי",
-      location: "ירושלים",
       rating: 5,
       text: "שירות מעולה מתחילה ועד סוף! הם טיפלו בהעברת המשרד שלנו עם הפרעה מינימלית לעסק. התמחור היה הוגן ושקוף."
     },
     {
       name: "רותי אברהם",
-      location: "חיפה",
       rating: 5,
-      text: "הייתי מלחיצה לגבי המעבר עם שני ילדים קטנים, אבל הצוות של דודו הובלות עשה את זה כל כך קל. הם היו סבלניים, יעילים וזהירים עם הרהיטים."
+      text: "הייתי מלחיצה לגבי המעבר עם שני ילדים קטנים, אבל הצוות של דוד הובלות עשה את זה כל כך קל. הם היו סבלניים, יעילים וזהירים עם הרהיטים."
     },
     {
       name: "דוד ישראלי",
-      location: "באר שבע",
       rating: 5,
       text: "החוויה הטובה ביותר של הובלה שחוויתי אי פעם! הצוות הגיע בזמן, עבד מהר, ושום דבר לא נזרק. שווה כל שקל עבור השקט הנפשי."
     },
     {
       name: "לירון בן דוד",
-      location: "נתניה",
       rating: 5,
-      text: "מקצועיים, אדיבים ויעילים. הם אפילו עזרו עם אריזה בדקה האחרונה. בהחלט אשתמש בדודו הובלות למעברים עתידיים."
+      text: "מקצועיים, אדיבים ויעילים. הם אפילו עזרו עם אריזה בדקה האחרונה. בהחלט אשתמש בדוד הובלות למעברים עתידיים."
     },
     {
       name: "רונן גרוס",
-      location: "רחובות",
       rating: 5,
       text: "שירות יוצא מן הכלל! הם טיפלו ברהיטים העתיקים שלנו בזהירות יתרה וסיפקו שירות לקוחות מעולה לאורך כל התהליך."
     }
@@ -46,7 +40,10 @@ export const Testimonials = () => {
     <section id="testimonials" className="py-20 bg-white" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">מה הלקוחות שלנו אומרים</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            מה הלקוחות שלנו אומרים
+            <span className="inline-block animate-pulse text-blue-600 ml-2 text-4xl">؟</span>
+          </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             אל תסתמכו רק על המילה שלנו - שמעו מאלפי לקוחות מרוצים
           </p>
@@ -68,7 +65,7 @@ export const Testimonials = () => {
                   <p className="text-gray-600 mb-4 leading-relaxed">"{testimonial.text}"</p>
                   <div className="border-t pt-4">
                     <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                    <p className="text-sm text-gray-500">{testimonial.location}</p>
+                    {/* <p className="text-sm text-gray-500">{testimonial.location}</p> */}
                   </div>
                 </CardContent>
               </Card>

@@ -57,7 +57,7 @@ export const securityConfig = {
 
         // הגדרות CORS
         cors: {
-            origin: ['https://dudu-move.co.il'],
+            origin: ['https://david-move.co.il'],
             methods: ['GET', 'POST', 'PUT', 'DELETE'],
             allowedHeaders: ['Content-Type', 'Authorization'],
             exposedHeaders: ['Content-Range', 'X-Total-Count'],
@@ -73,7 +73,7 @@ export const securityConfig = {
                     scriptSrc: ["'self'", "'unsafe-inline'"],
                     styleSrc: ["'self'", "'unsafe-inline'"],
                     imgSrc: ["'self'", 'data:', 'https:'],
-                    connectSrc: ["'self'", 'https://api.dudu-move.co.il'],
+                    connectSrc: ["'self'", 'https://api.david-move.co.il'],
                 },
             },
             referrerPolicy: { policy: 'same-origin' },
@@ -101,6 +101,6 @@ export const securityConfig = {
         frequency: 'daily',
         retention: 30, // ימים
         encryption: true,
-        location: 'gs://dudu-move-backups',
+        location: 'gs://david-move-backups',
     },
 };

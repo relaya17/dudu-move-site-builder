@@ -26,31 +26,43 @@ const MovingEstimatesAdminPage = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h2 className="text-lg font-semibold mb-2">פרטי לקוח</h2>
-              <p><strong>שם:</strong> {estimate.customerInfo.name}</p>
+              <p><strong>שם:</strong> {estimate.customerInfo.fullName}</p>
               <p><strong>טלפון:</strong> {estimate.customerInfo.phone}</p>
               <p><strong>אימייל:</strong> {estimate.customerInfo.email}</p>
             </div>
             <div>
               <h2 className="text-lg font-semibold mb-2">פרטי הדירה</h2>
               <p><strong>סוג דירה:</strong> {estimate.apartmentDetails.apartmentType}</p>
-              <p><strong>קומה:</strong> {estimate.apartmentDetails.floor || 'לא צוין'}</p>
-              <p><strong>מעלית:</strong> {estimate.apartmentDetails.hasElevator ? 'יש' : 'אין'}</p>
-              <p><strong>חניה:</strong> {estimate.apartmentDetails.parkingAvailable ? 'יש' : 'אין'}</p>
+              <p><strong>מספר חדרים:</strong> {estimate.apartmentDetails.rooms}</p>
+              <p><strong>קומה מ:</strong> {estimate.apartmentDetails.fromFloor || 'לא צוין'}</p>
+              <p><strong>קומה אל:</strong> {estimate.apartmentDetails.toFloor || 'לא צוין'}</p>
+              <p><strong>מעלית מ:</strong> {estimate.apartmentDetails.fromElevator ? 'יש' : 'אין'}</p>
+              <p><strong>מעלית אל:</strong> {estimate.apartmentDetails.toElevator ? 'יש' : 'אין'}</p>
+              <p><strong>מנוף מ:</strong> {estimate.apartmentDetails.fromLift ? 'נדרש' : 'לא נדרש'}</p>
+              <p><strong>מנוף אל:</strong> {estimate.apartmentDetails.toLift ? 'נדרש' : 'לא נדרש'}</p>
             </div>
           </div>
           <div className="mt-4">
             <h2 className="text-lg font-semibold mb-2">פרטי ההובלה</h2>
-            <p><strong>תאריך מועדף:</strong> {estimate.apartmentDetails.preferredMoveDate}</p>
-            <p><strong>כתובת נוכחית:</strong> {estimate.apartmentDetails.currentAddress}</p>
-            <p><strong>כתובת יעד:</strong> {estimate.apartmentDetails.destinationAddress}</p>
-            <p><strong>הערות נוספות:</strong> {estimate.apartmentDetails.additionalNotes}</p>
+            <p><strong>תאריך מועדף:</strong> {estimate.apartmentDetails.moveDate}</p>
+            <p><strong>כתובת נוכחית:</strong> {estimate.apartmentDetails.fromAddress}</p>
+            <p><strong>כתובת יעד:</strong> {estimate.apartmentDetails.toAddress}</p>
+            <p><strong>הערות נוספות:</strong> {estimate.apartmentDetails.notes}</p>
           </div>
           <div className="mt-4">
             <h2 className="text-lg font-semibold mb-2">מצאי רהיטים</h2>
             <p><strong>סה"כ פריטים:</strong> {estimate.inventory.length}</p>
             <div className="mt-2">
-              {estimate.inventory.map((item, index) => (
-                <p key={index}>{item.quantity}x {item.type} {item.description ? `(${item.description})` : ''}</p>
+              {estimate.inventory.map((item) => (
+                <div key={item.id} className="border p-2 mb-2 rounded bg-gray-50">
+                  <p><strong>סוג:</strong> {item.type}</p>
+                  <p><strong>כמות:</strong> {item.quantity}</p>
+                  {item.description && <p><strong>תיאור:</strong> {item.description}</p>}
+                  <p><strong>שביר:</strong> {item.fragile ? 'כן' : 'לא'}</p>
+                  <p><strong>פירוק:</strong> {item.disassemble ? 'כן' : 'לא'}</p>
+                  <p><strong>הרכבה:</strong> {item.assemble ? 'כן' : 'לא'}</p>
+                  {item.note && <p><strong>הערות:</strong> {item.note}</p>}
+                </div>
               ))}
             </div>
           </div>

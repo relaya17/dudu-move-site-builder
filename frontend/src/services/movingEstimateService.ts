@@ -2,55 +2,61 @@
 import { FurnitureItem, MovingEstimateRequest } from '../types/movingEstimate';
 
 class MovingEstimateService {
-  private static readonly API_URL = 'http://localhost:3001/api/move-requests';
+  private static readonly API_URL = 'http://localhost:3001/api/mongo/estimates';
 
   static async submitEstimateRequest(
     formData: {
-      name: string;
+      fullName: string;
       email: string;
       phone: string;
       apartmentType: string;
-      preferredMoveDate: string;
-      currentAddress: string;
-      destinationAddress: string;
-      additionalNotes: string;
-      originFloor: number;
-      destinationFloor: number;
-      originHasElevator: boolean;
-      destinationHasElevator: boolean;
-      originHasCrane: boolean;
-      destinationHasCrane: boolean;
+      rooms: string;
+      moveDate: string;
+      fromAddress: string;
+      fromFloor: number;
+      fromElevator: boolean;
+      fromLift: boolean;
+      toAddress: string;
+      toFloor: number;
+      toElevator: boolean;
+      toLift: boolean;
+      notes: string;
     },
-    inventory: FurnitureItem[]
+    items: FurnitureItem[]
   ): Promise<MovingEstimateRequest> {
-    const requestData = {
-      customerData: {
-        name: formData.name,
+    const requestData: MovingEstimateRequest = {
+      customerInfo: {
+        fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone.startsWith('05') ? formData.phone : `05${formData.phone}`,
       },
-      moveData: {
-        apartment_type: formData.apartmentType || '',
-        preferred_move_date: formData.preferredMoveDate,
-        current_address: formData.currentAddress,
-        destination_address: formData.destinationAddress,
-        additional_notes: formData.additionalNotes,
-        origin_floor: formData.originFloor,
-        destination_floor: formData.destinationFloor,
-        origin_has_elevator: formData.originHasElevator,
-        destination_has_elevator: formData.destinationHasElevator,
-        origin_has_crane: formData.originHasCrane,
-        destination_has_crane: formData.destinationHasCrane,
+      apartmentDetails: {
+        apartmentType: formData.apartmentType,
+        rooms: formData.rooms,
+        moveDate: formData.moveDate,
+        fromAddress: formData.fromAddress,
+        toAddress: formData.toAddress,
+        notes: formData.notes,
+        fromFloor: formData.fromFloor,
+        fromElevator: formData.fromElevator,
+        fromLift: formData.fromLift,
+        toFloor: formData.toFloor,
+        toElevator: formData.toElevator,
+        toLift: formData.toLift,
       },
-      furnitureItems: inventory.map(item => ({
-        name: item.type,
+      inventory: items.map(item => ({
+        type: item.type,
         quantity: item.quantity,
-        description: item.description,
-        isFragile: item.type === 'tv' || item.type === 'computer' || item.type === 'refrigerator' || item.type === 'washing_machine' || item.type === 'dishwasher' || item.type === 'microwave' || item.type === 'toaster' || item.type === 'coffee_machine' || item.type === 'mirror' || item.type === 'lamp' || item.type === 'mattress',
-        needsDisassemble: item.type === 'bed' || item.type === 'table' || item.type === 'desk' || item.type === 'dining_table' || item.type === 'sofa' || item.type === 'wardrobe' || item.type === 'cabinet' || item.type === 'bookshelf' || item.type === 'bed_single' || item.type === 'bed_double' || item.type === 'dining_corner_small' || item.type === 'dining_corner_medium' || item.type === 'dining_corner_large',
-        needsReassemble: item.type === 'bed' || item.type === 'table' || item.type === 'desk' || item.type === 'dining_table' || item.type === 'sofa' || item.type === 'wardrobe' || item.type === 'cabinet' || item.type === 'bookshelf' || item.type === 'bed_single' || item.type === 'bed_double' || item.type === 'dining_corner_small' || item.type === 'dining_corner_medium' || item.type === 'dining_corner_large',
-        comments: item.description
-      }))
+        description: item.description || '',
+        fragile: item.fragile || false,
+        disassemble: item.disassemble || false,
+        assemble: item.assemble || false,
+        note: item.note || '',
+        // Note: Image handling (File object) would require special backend logic (e.g., FormData) for actual upload.
+        // For now, it's excluded from the JSON payload.
+      })),
+      status: 'pending',
+      timestamp: new Date().toISOString() // Add timestamp when sending
     };
 
     const response = await fetch(this.API_URL, {

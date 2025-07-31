@@ -22,7 +22,10 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      <AccessibilityButton />
+      {/* New Card for Accessibility and Theme Toggle */}
+      <div className="material-card" style={{ position: 'fixed', bottom: '20px', right: '20px', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: 'unset', margin: 'unset', zIndex: 1000 }}>
+        <AccessibilityButton />
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );

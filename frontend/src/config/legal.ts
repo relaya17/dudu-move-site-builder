@@ -132,10 +132,10 @@ export const legalConfig = {
 
     // הגנת קניין רוחני
     intellectualProperty: {
-        copyright: '© 2024 דודו הובלות - כל הזכויות שמורות',
+        copyright: '© 2024 דוד הובלות - כל הזכויות שמורות',
         trademarks: [
-            'דודו הובלות',
-            'Dudu Move',
+            'דוד הובלות',
+            'David Move',
             'הערכת מחיר חכמה'
         ],
         protectedElements: [
@@ -161,6 +161,6 @@ export const legalConfig = {
         commercialUse: 'Requires written permission',
         modification: 'Allowed for personal use only',
         distribution: 'Prohibited without license',
-        contact: 'legal@dudu-move.co.il'
+        contact: 'legal@david-move.co.il'
     }
 };

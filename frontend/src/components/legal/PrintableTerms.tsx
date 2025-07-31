@@ -82,13 +82,13 @@ export const PrintableTerms: React.FC<PrintableTermsProps> = ({ type }) => {
         </style>
       </head>
       <body>
-        <div class="watermark">דודו הובלות</div>
+        <div class="watermark">דוד הובלות</div>
         <div class="date">תאריך הדפסה: ${new Date().toLocaleDateString('he-IL')}</div>
         <h1>${title}</h1>
         ${content}
         <div class="footer">
-          © ${new Date().getFullYear()} דודו הובלות - כל הזכויות שמורות<br>
-          מסמך זה הודפס מאתר דודו הובלות ומהווה העתק של התנאים המקוונים
+          © ${new Date().getFullYear()} דוד הובלות - כל הזכויות שמורות<br>
+מסמך זה הודפס מאתר דוד הובלות ומהווה העתק של התנאים המקוונים
         </div>
       </body>
       </html>

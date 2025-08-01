@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --parallel dev",
     "build": "pnpm --parallel build",
-    "start": "pnpm --parallel start",
+    "start": "pnpm build --filter backend && pnpm --parallel start",
     "lint": "pnpm --parallel lint",
     "test": "pnpm --parallel test",
     "clean": "rimraf **/node_modules **/dist",

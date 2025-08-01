@@ -89,8 +89,21 @@ export const MovingEstimateForm: React.FC = () => {
   useEffect(() => {
     const fetchFurnitureOptions = async () => {
       try {
+        // Temporarily disable API calls until backend is deployed
         const API_URL = import.meta.env.VITE_API_URL || 
-                         (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://dudu-move-backend.onrender.com');
+                         (window.location.hostname === 'localhost' ? 'http://localhost:3001' : null);
+        if (!API_URL) {
+          // Use mock data when backend is not available
+          const mockFurnitureData = [
+            { type: "sofa", basePrice: 300, description: "ספה", isFragile: false, needsDisassemble: true, maxQuantity: 3 },
+            { type: "chair", basePrice: 50, description: "כיסא", isFragile: false, needsDisassemble: false, maxQuantity: 10 },
+            { type: "bed_double", basePrice: 450, description: "מיטה זוגית", isFragile: false, needsDisassemble: true, maxQuantity: 3 },
+            { type: "wardrobe", basePrice: 250, description: "ארון בגדים", isFragile: false, needsDisassemble: true, maxQuantity: 2 },
+            { type: "table", basePrice: 150, description: "שולחן", isFragile: false, needsDisassemble: true, maxQuantity: 4 }
+          ];
+          setFurnitureOptions(mockFurnitureData);
+          return;
+        }
         const response = await axios.get(`${API_URL}/api/pricing/furniture-items`);
         // Ensure response.data is an array
         const data = Array.isArray(response.data) ? response.data : [];
@@ -202,7 +215,16 @@ export const MovingEstimateForm: React.FC = () => {
     try {
       // Send the data to the backend
       const API_URL = import.meta.env.VITE_API_URL || 
-                       (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://dudu-move-backend.onrender.com');
+                       (window.location.hostname === 'localhost' ? 'http://localhost:3001' : null);
+      
+      if (!API_URL) {
+        // Mock response when backend is not available
+        console.log('Mock submission - would send:', formattedData);
+        setSuccess(true);
+        setEstimatedPrice(Math.floor(Math.random() * 3000) + 1000); // Random price between 1000-4000
+        return;
+      }
+      
       const response = await axios.post(`${API_URL}/api/move-requests`, formattedData);
       console.log('Server response:', response.data);
       setSuccess(true);

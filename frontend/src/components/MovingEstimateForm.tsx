@@ -89,7 +89,7 @@ export const MovingEstimateForm: React.FC = () => {
   useEffect(() => {
     const fetchFurnitureOptions = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_APP_BACKEND_URL}/api/pricing/furniture-items`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/pricing/furniture-items`);
         // Ensure response.data is an array
         const data = Array.isArray(response.data) ? response.data : [];
         setFurnitureOptions(data);
@@ -199,7 +199,7 @@ export const MovingEstimateForm: React.FC = () => {
 
     try {
       // Send the data to the backend
-      const response = await axios.post(`${import.meta.env.VITE_APP_BACKEND_URL}/api/move-requests`, formattedData);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/move-requests`, formattedData);
       console.log('Server response:', response.data);
       setSuccess(true);
       setEstimatedPrice(response.data.data.priceEstimate); // Set estimated price from backend response

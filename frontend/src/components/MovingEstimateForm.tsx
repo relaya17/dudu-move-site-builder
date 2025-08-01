@@ -89,7 +89,9 @@ export const MovingEstimateForm: React.FC = () => {
   useEffect(() => {
     const fetchFurnitureOptions = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/pricing/furniture-items`);
+        const API_URL = import.meta.env.VITE_API_URL || 
+                         (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://dudu-move-backend.onrender.com');
+        const response = await axios.get(`${API_URL}/api/pricing/furniture-items`);
         // Ensure response.data is an array
         const data = Array.isArray(response.data) ? response.data : [];
         setFurnitureOptions(data);
@@ -199,7 +201,9 @@ export const MovingEstimateForm: React.FC = () => {
 
     try {
       // Send the data to the backend
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/move-requests`, formattedData);
+      const API_URL = import.meta.env.VITE_API_URL || 
+                       (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://dudu-move-backend.onrender.com');
+      const response = await axios.post(`${API_URL}/api/move-requests`, formattedData);
       console.log('Server response:', response.data);
       setSuccess(true);
       setEstimatedPrice(response.data.data.priceEstimate); // Set estimated price from backend response

@@ -93,6 +93,10 @@ export default {
 				fadeIn: "fadeIn 1s ease-out forwards",
 				fadeInUp: "fadeInUp 0.8s ease-out forwards",
 			},
+			fontFamily: {
+				sans: ["Open Sans", "sans-serif"],
+				serif: ["Playfair Display", "serif"],
+			},
 		},
 	},
 	plugins: [require("tailwindcss-animate")],

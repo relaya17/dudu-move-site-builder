@@ -3,6 +3,12 @@
 @tailwind utilities;
  
 @layer base {
+  body {
+    @apply font-sans; /* Apply Open Sans to body */
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif; /* Apply Playfair Display to headings */
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -90,12 +96,14 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
+  html {
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
-
+ 
 /* Custom styles for better RTL support */
 @layer components {
   [dir="rtl"] {

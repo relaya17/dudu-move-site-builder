@@ -1,4 +1,4 @@
-# DuduMove Backend API
+# DavidMove Backend API
 
 A Node.js/Express backend for the apartment moving price estimation system.
 
@@ -275,20 +275,20 @@ Content-Type: application/json
 
 ```json
 {
-	"success": true,
-	"data": {
-		"id": 123,
-		"customer_id": 45,
-		"move_type_id": 4,
-		"origin_address": "רחוב הרצל 123, תל אביב",
-		"destination_address": "שדרות רוטשילד 456, תל אביב",
-		"date": "2024-02-15",
-		"origin_floor": 3,
-		"destination_floor": 2,
-		"origin_has_elevator": true,
-		"destination_has_elevator": false,
-		"comments": "מעבר דחוף, יש הרבה חפצים שבירים"
-	},
-	"message": "Move created successfully"
+  "success": true,
+  "data": {
+    "id": 123,
+    "customer_id": 45,
+    "move_type_id": 4,
+    "origin_address": "רחוב הרצל 123, תל אביב",
+    "destination_address": "שדרות רוטשילד 456, תל אביב",
+    "date": "2024-02-15",
+    "origin_floor": 3,
+    "destination_floor": 2,
+    "origin_has_elevator": true,
+    "destination_has_elevator": false,
+    "comments": "מעבר דחוף, יש הרבה חפצים שבירים"
+  },
+  "message": "Move created successfully"
 }
 ```

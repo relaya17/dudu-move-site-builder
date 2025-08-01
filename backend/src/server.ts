@@ -5,28 +5,26 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import movesRouter from './routes/moves';
-import moveItemsRouter from './routes/moveItems';
-import moveTypesRouter from './routes/moveTypes';
 import moveRequestRouter from './routes/moveRequestRoutes';
 import aiRouter from './routes/aiRoutes';
+import mongoRoutes from './routes/mongoRoutes';
+import pricingRoutes from './routes/pricingRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
-
-
-
+import { connectMongoDB } from './database/mongoConnection';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Connect to MongoDB
+connectMongoDB();
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: true, // Allow all origins in development
+  origin: process.env.FRONTEND_URL || true, // Allow frontend URL from environment variable or all origins in development
   credentials: true
 }));
-
-
 
 // Rate limiting
 app.use(generalRateLimit);
@@ -65,11 +63,10 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // API routes
-app.use('/api/moves', movesRouter);
-app.use('/api/move-items', moveItemsRouter);
-app.use('/api/move-types', moveTypesRouter);
 app.use('/api/move-requests', moveRequestRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/mongo', mongoRoutes);
+app.use('/api/pricing', pricingRoutes);
 
 // Handle 404 for unknown routes
 app.use(notFoundHandler);
@@ -93,6 +90,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📊 Health check available at http://localhost:${PORT}/health`);
   console.log(`🏠 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🗄️ MongoDB API available at http://localhost:${PORT}/api/mongo`);
 });
 
 export default app;

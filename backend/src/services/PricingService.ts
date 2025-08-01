@@ -218,6 +218,29 @@ export class PricingService {
             description: 'מגירה'
         },
 
+        // New furniture items added below
+        wardrobe_3_door: {
+            basePrice: 300,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'ארון 3 דלתות'
+        },
+        wardrobe_4_door: {
+            basePrice: 400,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'ארון 4 דלתות'
+        },
+        wardrobe_sliding: {
+            basePrice: 350,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'ארון הזזה'
+        },
+
         // מכשירים קטנים
         microwave: {
             basePrice: 60,
@@ -276,6 +299,27 @@ export class PricingService {
             needsDisassemble: false,
             maxQuantity: 20,
             description: 'קרטון'
+        },
+        toilette_table: {
+            basePrice: 80,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'שולחן טואלט'
+        },
+        picture: {
+            basePrice: 20,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 10,
+            description: 'תמונה'
+        },
+        large_plants: {
+            basePrice: 70,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 5,
+            description: 'עצים ועציצים גדולים'
         },
         other: {
             basePrice: 50,

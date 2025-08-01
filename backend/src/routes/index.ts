@@ -1,8 +1,5 @@
 import { Router } from 'express';
 import moveRequestRoutes from './moveRequestRoutes';
-import moveRoutes from './moves';
-import moveTypesRoutes from './moveTypes';
-import moveItemsRoutes from './moveItems';
 import aiRoutes from './aiRoutes';
 import { PricingService } from '../services/PricingService';
 import nodemailer from 'nodemailer';
@@ -11,9 +8,6 @@ const router = Router();
 
 // הגדרת routes
 router.use('/move-requests', moveRequestRoutes);
-router.use('/moves', moveRoutes);
-router.use('/move-types', moveTypesRoutes);
-router.use('/move-items', moveItemsRoutes);
 router.use('/ai', aiRoutes);
 
 // Route לקבלת מחירי רהיטים
@@ -85,13 +79,13 @@ router.post('/send-email', async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER || 'dudu.move.test@gmail.com',
+                user: process.env.EMAIL_USER || 'david.move.test@gmail.com',
                 pass: process.env.EMAIL_PASS || 'your-app-password'
             }
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER || 'dudu.move.test@gmail.com',
+            from: process.env.EMAIL_USER || 'david.move.test@gmail.com',
             to: to,
             subject: subject,
             html: html

@@ -41,6 +41,11 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+// Basic root route for health check / general access
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, message: 'API is working' });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({

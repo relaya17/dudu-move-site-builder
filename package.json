@@ -8,8 +8,10 @@
   ],
   "scripts": {
     "dev": "pnpm --parallel dev",
-    "build": "pnpm --parallel build",
-    "start": "cd backend && npm run build && cd .. && pnpm --parallel start",
+    "build": "pnpm -r build",
+    "build:backend": "cd backend && npm run build",
+    "start": "npm run build:backend && pnpm --parallel start",
+    "start:backend": "cd backend && npm start",
     "lint": "pnpm --parallel lint",
     "test": "pnpm --parallel test",
     "clean": "rimraf **/node_modules **/dist",

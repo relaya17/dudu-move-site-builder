@@ -90,9 +90,12 @@ export const MovingEstimateForm: React.FC = () => {
     const fetchFurnitureOptions = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_APP_BACKEND_URL}/api/pricing/furniture-items`);
-        setFurnitureOptions(response.data);
+        // Ensure response.data is an array
+        const data = Array.isArray(response.data) ? response.data : [];
+        setFurnitureOptions(data);
       } catch (error) {
         console.error('Failed to fetch furniture options:', error);
+        setFurnitureOptions([]); // Set empty array on error
       }
     };
     fetchFurnitureOptions();
@@ -446,7 +449,7 @@ export const MovingEstimateForm: React.FC = () => {
                           style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                         >
                           <option disabled value="">בחר</option>
-                          {furnitureOptions.map((option) => (
+                          {Array.isArray(furnitureOptions) && furnitureOptions.map((option) => (
                             <option key={option.type} value={option.type}>{option.description}</option>
                           ))}
                         </select>

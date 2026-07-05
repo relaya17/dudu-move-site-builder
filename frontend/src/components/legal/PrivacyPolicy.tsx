@@ -73,9 +73,9 @@ export const PrivacyPolicy = () => {
                 לכל שאלה או בקשה בנושא פרטיות, ניתן לפנות למחלקת הגנת הפרטיות שלנו:
               </p>
               <div className="space-y-2 text-gray-600">
-                <p>דוא"ל: privacy@david-move.co.il</p>
-                <p>טלפון: 03-1234567</p>
-                <p>כתובת: רחוב הראשונים 1, תל אביב</p>
+                <p>דוא"ל: privacy@davidmoving.co.il</p>
+                <p>טלפון: 0547777623</p>
+                <p>כתובת: אילת, ישראל</p>
               </div>
             </div>
           </div>

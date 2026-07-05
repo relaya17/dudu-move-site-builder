@@ -97,7 +97,7 @@ export const Footer = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-sm">
-            © 2024 דויד הובלות. כל הזכויות שמורות.
+            © {new Date().getFullYear()} דויד הובלות. כל הזכויות שמורות.
           </p>
           <div className="flex flex-wrap items-center gap-4 [&_button]:text-gray-400 [&_button]:hover:text-white">
             <PrivacyPolicy />

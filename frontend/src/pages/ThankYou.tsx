@@ -87,11 +87,11 @@ export const ThankYou = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="font-medium text-gray-900">טלפון</p>
-                <a href="tel:03-1234567" className="text-blue-600 font-semibold hover:underline">03-1234567</a>
+                <a href="tel:0547777623" className="text-blue-600 font-semibold hover:underline">0547777623</a>
               </div>
               <div className="text-center">
                 <p className="font-medium text-gray-900">אימייל</p>
-                <a href="mailto:info@david-move.co.il" className="text-blue-600 font-semibold hover:underline">info@david-move.co.il</a>
+                <a href="mailto:info@davidmoving.co.il" className="text-blue-600 font-semibold hover:underline">info@davidmoving.co.il</a>
               </div>
             </div>
             <div className="mt-4 text-center">
@@ -128,7 +128,7 @@ export const ThankYou = () => {
               </Link>
             </Button>
             <Button variant="outline" asChild className="flex-1">
-              <a href="tel:03-1234567">
+              <a href="tel:0547777623">
                 <Phone className="w-4 h-4 mr-2" aria-hidden="true" />
                 התקשר עכשיו
               </a>

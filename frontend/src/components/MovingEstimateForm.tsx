@@ -216,18 +216,12 @@ export const MovingEstimateForm: React.FC = () => {
 
     try {
       // Send the data to the backend
-      const API_URL = import.meta.env.VITE_API_URL || 
-                       (window.location.hostname === 'localhost' ? 'http://localhost:3001' : null);
-      
-      if (!API_URL) {
-        // Mock response when backend is not available
-        console.log('Mock submission - would send:', formattedData);
-        navigate('/thank-you');
-        return;
-      }
-      
+      const API_URL = import.meta.env.VITE_API_URL ||
+        (window.location.hostname === 'localhost'
+          ? 'http://localhost:3001'
+          : 'https://dudu-move-backend.onrender.com');
+
       const response = await axios.post(`${API_URL}/api/move-requests`, formattedData);
-      console.log('Server response:', response.data);
       const trackingToken = response.data?.data?.trackingToken;
       navigate('/thank-you', { state: { trackingToken } });
     } catch (error: unknown) {

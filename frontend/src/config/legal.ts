@@ -78,8 +78,8 @@ export const legalConfig = {
         ],
         contact: {
             name: 'רכז נגישות',
-            email: 'accessibility@dudu-move.co.il',
-            phone: '03-1234567'
+            email: 'accessibility@davidmoving.co.il',
+            phone: '0547777623'
         }
     },
 
@@ -132,7 +132,7 @@ export const legalConfig = {
 
     // הגנת קניין רוחני
     intellectualProperty: {
-        copyright: '© 2024 דוד הובלות - כל הזכויות שמורות',
+        copyright: `© ${new Date().getFullYear()} דוד הובלות - כל הזכויות שמורות`,
         trademarks: [
             'דוד הובלות',
             'David Move',
@@ -161,6 +161,6 @@ export const legalConfig = {
         commercialUse: 'Requires written permission',
         modification: 'Allowed for personal use only',
         distribution: 'Prohibited without license',
-        contact: 'legal@david-move.co.il'
+        contact: 'legal@davidmoving.co.il'
     }
 };

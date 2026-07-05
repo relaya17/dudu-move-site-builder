@@ -1,7 +1,7 @@
 import { db } from '@/config/firebase';
 import { collection, addDoc, query, where, getDocs, Timestamp, orderBy, limit, writeBatch, updateDoc } from 'firebase/firestore';
 
-interface TermsUpdate {
+export interface TermsUpdate {
     version: string;
     type: 'terms' | 'privacy' | 'accessibility';
     summary: string;

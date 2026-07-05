@@ -1,4 +1,4 @@
-import { MoveEstimate, TRACKING_STAGES, TrackingStage } from '../database/models/MoveEstimate';
+import { MoveEstimate, IMoveEstimate, TRACKING_STAGES, TrackingStage } from '../database/models/MoveEstimate';
 
 export class TrackingService {
     static isValidStage(stage: string): stage is TrackingStage {
@@ -49,8 +49,7 @@ export class TrackingService {
     /**
      * מחזיר תצוגה ציבורית ומצומצמת של ההזמנה - ללא חשיפת מזהי מסד הנתונים הפנימיים.
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static toPublicView(estimate: any) {
+    static toPublicView(estimate: IMoveEstimate) {
         return {
             trackingToken: estimate.trackingToken,
             name: estimate.name,

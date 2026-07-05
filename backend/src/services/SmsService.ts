@@ -1,15 +1,19 @@
 // שירות שליחת SMS / WhatsApp תזכורות דרך Twilio.
 // פועל רק אם הוגדרו משתני הסביבה הרלוונטיים; אחרת מתעד לוג בלבד ולא נכשל.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let twilioClient: any | null | undefined;
+interface TwilioClient {
+    messages: {
+        create: (params: { from: string; to: string; body: string }) => Promise<unknown>;
+    };
+}
+
+let twilioClient: TwilioClient | null | undefined;
 
 function getFrontendUrl(): string {
     return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getClient(): any | null {
+function getClient(): TwilioClient | null {
     if (twilioClient !== undefined) {
         return twilioClient;
     }
@@ -26,7 +30,7 @@ function getClient(): any | null {
     try {
         // require דינמי כדי לא להפיל את השרת אם החבילה לא מותקנת בסביבה מסוימת
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const twilio = require('twilio');
+        const twilio = require('twilio') as (accountSid: string, authToken: string) => TwilioClient;
         twilioClient = twilio(sid, authToken);
     } catch (error) {
         console.warn('⚠️  לא ניתן היה לטעון את חבילת twilio - שליחת SMS/WhatsApp מושבתת', error);

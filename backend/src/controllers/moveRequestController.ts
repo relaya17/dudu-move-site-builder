@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ZodError } from 'zod';
 import { MovingEstimateService } from '../services/MovingEstimateService';
 import { estimateRequestSchema } from '../middleware/validation';
 
@@ -16,11 +17,11 @@ export const submitMoveRequest = async (req: Request, res: Response) => {
             additional_notes: moveData.additional_notes || ''
         }, furnitureItems);
         res.status(201).json({ success: true, message: 'בקשת הערכת מחיר נשלחה בהצלחה', data: result });
-    } catch (error: any) {
+    } catch (error) {
         console.error('שגיאה בשליחת בקשת הערכת מחיר:', error);
 
         // אם זו שגיאת ולידציה
-        if (error.name === 'ZodError') {
+        if (error instanceof ZodError) {
             console.error('Validation errors:', error.errors);
             return res.status(400).json({
                 success: false,

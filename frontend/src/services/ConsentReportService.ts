@@ -2,7 +2,7 @@ import { db } from '@/config/firebase';
 import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 
-interface ConsentReport {
+export interface ConsentReport {
     totalConsents: number;
     activeConsents: number;
     marketingConsents: number;
@@ -11,7 +11,7 @@ interface ConsentReport {
     conversionRate: number;
 }
 
-interface ConsentTrend {
+export interface ConsentTrend {
     date: string;
     total: number;
     active: number;
@@ -36,7 +36,7 @@ export class ConsentReportService {
                 id: string;
                 version: string;
                 marketing: boolean;
-                timestamp: any;
+                timestamp: Timestamp;
             }>;
 
             // חישוב סטטיסטיקות

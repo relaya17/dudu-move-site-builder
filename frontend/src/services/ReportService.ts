@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { adminHeaders } from '@/lib/adminApi';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -14,16 +15,24 @@ interface MoveDoc {
     inventory?: Array<{ type: string; quantity: number }>;
 }
 
+interface RawEstimate {
+    _id: string;
+    status?: string;
+    totalPrice?: number;
+    createdAt?: string;
+    preferredMoveDate?: string;
+    inventory?: Array<{ type: string; quantity: number }>;
+}
+
 export class ReportService {
     private static extractRevenue(move: MoveDoc): number {
         return move.totalPrice ?? 0;
     }
 
     private static async fetchAllMoves(): Promise<MoveDoc[]> {
-        const response = await fetch(`${API_ROOT}/api/mongo/estimates?limit=1000`);
-        const result = await response.json();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (result.data || []).map((e: any) => ({
+        const response = await fetch(`${API_ROOT}/api/mongo/estimates?limit=1000`, { headers: adminHeaders() });
+        const result: { data?: RawEstimate[] } = await response.json();
+        return (result.data || []).map((e) => ({
             id: e._id,
             status: e.status,
             totalPrice: e.totalPrice,

@@ -44,7 +44,7 @@ export class AiAnalysisService {
 
             const estimates = await MoveEstimate.find({ createdAt: { $gte: lastMonth } });
             const moves: MoveDoc[] = estimates.map(e => ({
-                id: e._id.toString(),
+                id: String(e._id),
                 totalPrice: e.totalPrice,
                 preferredMoveDate: e.preferredMoveDate,
                 createdAt: e.createdAt,
@@ -183,7 +183,7 @@ export class AiAnalysisService {
     private static async getRecentMoves(): Promise<MoveDoc[]> {
         const estimates = await MoveEstimate.find().sort({ createdAt: -1 }).limit(500);
         return estimates.map(e => ({
-            id: e._id.toString(),
+            id: String(e._id),
             totalPrice: e.totalPrice,
             preferredMoveDate: e.preferredMoveDate,
             createdAt: e.createdAt,

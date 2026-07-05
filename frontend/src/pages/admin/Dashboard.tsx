@@ -16,6 +16,7 @@ import { NotificationService } from "@/services/NotificationService";
 import { ReportService } from "@/services/ReportService";
 import { AiAssistant } from "@/components/admin/AiAssistant";
 import { useToast } from "@/components/ui/use-toast";
+import { adminHeaders } from "@/lib/adminApi";
 
 interface MoveRecord {
   id: string;
@@ -80,7 +81,7 @@ const AdminDashboard = () => {
 
   const fetchMoves = async () => {
     try {
-      const response = await fetch(`${API_ROOT}/api/mongo/estimates`);
+      const response = await fetch(`${API_ROOT}/api/mongo/estimates`, { headers: adminHeaders() });
       const result = await response.json();
       const estimates: Array<{
         _id: string; name: string; phone: string; createdAt: string;

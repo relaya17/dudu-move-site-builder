@@ -1,19 +1,18 @@
 // src/services/movingEstimateService.ts
 import { MovingEstimateRequest, EstimateStatus, TrackingStage } from '../types/movingEstimate';
+import { adminHeaders } from '../lib/adminApi';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:3001'
     : 'https://dudu-move-backend.onrender.com');
 
-const ADMIN_KEY = import.meta.env.VITE_ADMIN_API_KEY || '';
-
 class MovingEstimateService {
   private static readonly API_URL = `${API_ROOT}/api/mongo/estimates`;
   private static readonly TRACKING_URL = `${API_ROOT}/api/tracking`;
 
   static async getAllEstimates(): Promise<MovingEstimateRequest[]> {
-    const response = await fetch(this.API_URL);
+    const response = await fetch(this.API_URL, { headers: adminHeaders() });
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`שגיאה בשליפת הערכות מחיר: ${errorText}`);
@@ -24,7 +23,7 @@ class MovingEstimateService {
   }
 
   static async getEstimateById(id: string): Promise<MovingEstimateRequest> {
-    const response = await fetch(`${this.API_URL}/${id}`);
+    const response = await fetch(`${this.API_URL}/${id}`, { headers: adminHeaders() });
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`שגיאה בשליפת הערכת מחיר: ${errorText}`);
@@ -37,7 +36,7 @@ class MovingEstimateService {
   static async updateEstimateStatus(id: string, status: EstimateStatus): Promise<void> {
     const response = await fetch(`${this.API_URL}/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ status })
     });
 
@@ -50,10 +49,7 @@ class MovingEstimateService {
   static async updateTrackingStage(trackingToken: string, stage: TrackingStage, note?: string): Promise<void> {
     const response = await fetch(`${this.TRACKING_URL}/${trackingToken}/stage`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(ADMIN_KEY ? { 'x-admin-key': ADMIN_KEY } : {})
-      },
+      headers: adminHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ stage, note })
     });
 
@@ -66,10 +62,7 @@ class MovingEstimateService {
   static async updateTrackingLocation(trackingToken: string, lat: number, lng: number, address?: string): Promise<void> {
     const response = await fetch(`${this.TRACKING_URL}/${trackingToken}/location`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(ADMIN_KEY ? { 'x-admin-key': ADMIN_KEY } : {})
-      },
+      headers: adminHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ lat, lng, address })
     });
 

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ADMIN_API_KEY } from '@/lib/adminApi';
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+// אותו מפתח משמש הן כסיסמת כניסה למסך הניהול והן ככותרת האימות שנשלחת ל-API (ראה adminApi.ts).
+const ADMIN_PASSWORD = ADMIN_API_KEY || 'admin123';
 const SESSION_KEY = 'admin_authenticated';
 
 interface AdminGuardProps {

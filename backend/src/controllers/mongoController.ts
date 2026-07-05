@@ -3,25 +3,8 @@ import { MongoService } from '../services/MongoService';
 
 export class MongoController {
     // Move Estimate Controllers
-    static async createMoveEstimate(req: Request, res: Response): Promise<void> {
-        try {
-            const estimateData = req.body;
-            const estimate = await MongoService.createMoveEstimate(estimateData);
-
-            res.status(201).json({
-                success: true,
-                data: estimate,
-                message: 'Move estimate created successfully'
-            });
-        } catch (error) {
-            console.error('Error creating move estimate:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to create move estimate',
-                error: error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    }
+    // הערה: יצירת הערכה חדשה מתבצעת אך ורק דרך POST /api/move-requests
+    // (הכולל ולידציית Zod, חישוב מחיר, יצירת trackingToken ושליחת מייל אישור).
 
     static async getMoveEstimateById(req: Request, res: Response): Promise<void> {
         try {

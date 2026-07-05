@@ -4,6 +4,7 @@
 
 import { Move } from '@/types/moveTypes';
 import { MovingEstimateRequest } from '@/types/movingEstimate';
+import { adminHeaders } from '@/lib/adminApi';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -49,7 +50,7 @@ export class NotificationService {
 
     private static async fetchEstimates(): Promise<MovingEstimateRequest[]> {
         try {
-            const response = await fetch(`${API_ROOT}/api/mongo/estimates`);
+            const response = await fetch(`${API_ROOT}/api/mongo/estimates`, { headers: adminHeaders() });
             if (!response.ok) return [];
             const result = await response.json();
             return result.data || [];

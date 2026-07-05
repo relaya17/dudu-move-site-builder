@@ -122,13 +122,14 @@ export class ConsentService {
     static async updateConsent(consentId: string, updates: Partial<ConsentData>): Promise<void> {
         try {
             const consentRef = doc(db, this.COLLECTION_NAME, consentId);
-            const updateData: any = {
-                ...updates,
+            const { timestamp, ...restUpdates } = updates;
+            const updateData: Record<string, unknown> = {
+                ...restUpdates,
                 updatedAt: Timestamp.now()
             };
 
-            if (updates.timestamp) {
-                updateData.timestamp = Timestamp.fromDate(updates.timestamp);
+            if (timestamp) {
+                updateData.timestamp = Timestamp.fromDate(timestamp);
             }
 
             await updateDoc(consentRef, updateData);

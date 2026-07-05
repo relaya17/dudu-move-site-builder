@@ -1,8 +1,12 @@
 import express, { Request, Response } from 'express';
 import { AiAnalysisService } from '../services/AiAnalysisService';
 import { asyncHandler } from '../middleware/errorHandler';
+import { requireAdminKey } from '../middleware/adminAuth';
 
 const router = express.Router();
+
+// כל נתיבי ה-AI חושפים נתונים עסקיים ומפעילים קריאות בתשלום ל-OpenAI - לצוות הניהול בלבד.
+router.use(requireAdminKey);
 
 // GET /api/ai/business-insights
 router.get('/business-insights', asyncHandler(async (_req: Request, res: Response) => {

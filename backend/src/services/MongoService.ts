@@ -3,20 +3,8 @@ import { Customer, ICustomer } from '../database/models/Customer';
 
 export class MongoService {
     // Move Estimate Methods
-    static async createMoveEstimate(estimateData: Partial<IMoveEstimate>): Promise<IMoveEstimate> {
-        try {
-            const estimate = new MoveEstimate(estimateData);
-            const savedEstimate = await estimate.save();
-
-            // Update or create customer
-            await this.updateCustomerStats(estimateData.email!, estimateData.name!, estimateData.phone!, savedEstimate.totalPrice);
-
-            return savedEstimate;
-        } catch (error) {
-            console.error('Error creating move estimate:', error);
-            throw new Error('Failed to create move estimate');
-        }
-    }
+    // הערה: יצירת הערכה חדשה מתבצעת אך ורק דרך MovingEstimateService.submitEstimateRequest
+    // (הכולל ולידציה, חישוב מחיר, trackingToken ומייל אישור) - כדי למנוע נתיב כפול לא-מתועד.
 
     static async getMoveEstimateById(id: string): Promise<IMoveEstimate | null> {
         try {
@@ -136,7 +124,13 @@ export class MongoService {
     }
 
     // Analytics Methods
-    static async getAnalytics(): Promise<any> {
+    static async getAnalytics(): Promise<{
+        totalEstimates: number;
+        totalCustomers: number;
+        totalRevenue: number;
+        estimatesByStatus: Array<{ _id: string; count: number }>;
+        topCustomers: ICustomer[];
+    }> {
         try {
             const totalEstimates = await MoveEstimate.countDocuments();
             const totalCustomers = await Customer.countDocuments();

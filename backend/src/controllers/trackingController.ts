@@ -36,10 +36,11 @@ export const updateTrackingStage = async (req: Request, res: Response) => {
         }
 
         res.status(200).json({ success: true, data: view });
-    } catch (error: any) {
+    } catch (error) {
         console.error('שגיאה בעדכון שלב מעקב:', error);
-        const statusCode = error?.message === 'שלב מעקב לא תקין' ? 400 : 500;
-        res.status(statusCode).json({ success: false, message: error?.message || 'אירעה שגיאה בעדכון שלב המעקב' });
+        const message = error instanceof Error ? error.message : 'אירעה שגיאה בעדכון שלב המעקב';
+        const statusCode = message === 'שלב מעקב לא תקין' ? 400 : 500;
+        res.status(statusCode).json({ success: false, message });
     }
 };
 

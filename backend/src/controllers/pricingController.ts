@@ -6,7 +6,8 @@ export const getFurnitureItems = async (req: Request, res: Response, next: NextF
     try {
         const furnitureItems = PricingService.getAllFurniturePricing();
         res.status(200).json(furnitureItems);
-    } catch (error: any) {
-        next(createError(error.message || 'Failed to fetch furniture items', 500));
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to fetch furniture items';
+        next(createError(message, 500));
     }
 };

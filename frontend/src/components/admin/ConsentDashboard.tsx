@@ -17,13 +17,13 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { ConsentReportService } from '@/services/ConsentReportService';
-import { TermsNotificationService } from '@/services/TermsNotificationService';
+import { ConsentReportService, ConsentReport, ConsentTrend } from '@/services/ConsentReportService';
+import { TermsNotificationService, TermsUpdate } from '@/services/TermsNotificationService';
 
 export const ConsentDashboard = () => {
-  const [report, setReport] = useState<any>(null);
-  const [trends, setTrends] = useState<any[]>([]);
-  const [updates, setUpdates] = useState<any[]>([]);
+  const [report, setReport] = useState<ConsentReport | null>(null);
+  const [trends, setTrends] = useState<ConsentTrend[]>([]);
+  const [updates, setUpdates] = useState<TermsUpdate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -122,7 +122,9 @@ export const ConsentDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{report?.marketingConsents || 0}</div>
             <p className="text-sm text-gray-500">
-              {((report?.marketingConsents / report?.totalConsents) * 100)?.toFixed(1)}% מסך ההסכמות
+              {report && report.totalConsents > 0
+                ? ((report.marketingConsents / report.totalConsents) * 100).toFixed(1)
+                : '0.0'}% מסך ההסכמות
             </p>
           </CardContent>
         </Card>

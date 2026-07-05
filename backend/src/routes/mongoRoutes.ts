@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import { MongoController } from '../controllers/mongoController';
+import { requireAdminKey } from '../middleware/adminAuth';
 
 const router = Router();
 
+// כל הנתיבים כאן חושפים מידע אישי (PII) של לקוחות או מאפשרים שינוי/מחיקת נתונים -
+// שימוש בלעדי לצוות הניהול, מוגן ב-x-admin-key.
+router.use(requireAdminKey);
+
 // Move Estimate Routes
-router.post('/estimates', MongoController.createMoveEstimate);
+// יצירת הערכה חדשה מתבצעת אך ורק דרך /api/move-requests (ולידציה + מחיר + טוקן מעקב + מייל אישור).
 router.get('/estimates', MongoController.getAllMoveEstimates);
 router.get('/estimates/:id', MongoController.getMoveEstimateById);
 router.patch('/estimates/:id/status', MongoController.updateMoveEstimateStatus);

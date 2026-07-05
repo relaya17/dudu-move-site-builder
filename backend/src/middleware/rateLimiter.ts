@@ -59,14 +59,14 @@ export const createRateLimiter = (options: {
         }
 
         // Track the request
-        const originalSend = res.json;
-        res.json = function (data: any) {
+        const originalSend = res.json.bind(res);
+        res.json = ((data: unknown) => {
             // Only count failed requests if skipSuccessfulRequests is true
             if (!skipSuccessfulRequests || res.statusCode >= 400) {
                 store[key].count++;
             }
-            return originalSend.call(this, data);
-        };
+            return originalSend(data);
+        }) as Response['json'];
 
         next();
     };

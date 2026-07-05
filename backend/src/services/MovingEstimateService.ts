@@ -118,7 +118,7 @@ export class MovingEstimateService {
             }
 
             return {
-                id: savedEstimate._id.toString(),
+                id: String(savedEstimate._id),
                 trackingToken,
                 priceEstimate
             };

@@ -1,3 +1,5 @@
+import { adminHeaders } from '@/lib/adminApi';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://dudu-move-backend.onrender.com');
 
@@ -6,9 +8,7 @@ export class AiAnalysisService {
         try {
             const response = await fetch(`${API_BASE_URL}/api/ai/business-insights`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: adminHeaders({ 'Content-Type': 'application/json' }),
             });
 
             if (!response.ok) {
@@ -26,9 +26,7 @@ export class AiAnalysisService {
         try {
             const response = await fetch(`${API_BASE_URL}/api/ai/pricing-recommendations`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: adminHeaders({ 'Content-Type': 'application/json' }),
             });
 
             if (!response.ok) {
@@ -46,9 +44,7 @@ export class AiAnalysisService {
         try {
             const response = await fetch(`${API_BASE_URL}/api/ai/custom-analysis`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: adminHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ query }),
             });
 

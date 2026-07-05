@@ -14,18 +14,7 @@ export const customerSchema = z.object({
 
 // סכמת ולידציה לפרטי מעבר
 export const moveDetailsSchema = z.object({
-    apartment_type: z.enum([
-        '1.5',
-        '2',
-        '2.5',
-        '3',
-        '3.5',
-        '4',
-        '4.5',
-        '5+'
-    ], {
-        errorMap: () => ({ message: 'יש לבחור סוג דירה מהרשימה' })
-    }),
+    apartment_type: z.string().min(1, 'יש לבחור סוג הובלה'),
     preferred_move_date: z.string()
         .optional(),
     current_address: z.string()

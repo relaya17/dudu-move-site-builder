@@ -1,6 +1,29 @@
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
 import OpenAI from 'openai';
+
+interface MoveDoc extends DocumentData {
+    id: string;
+    price_estimate?: { totalPrice?: number } | number;
+    preferred_move_date?: string;
+    created_at?: { toDate?: () => Date } | string;
+    furniture_items?: Array<{ name: string; quantity: number }>;
+}
+
+function extractPrice(move: MoveDoc): number {
+    const pe = move.price_estimate;
+    if (typeof pe === 'number') return pe;
+    return pe?.totalPrice ?? 0;
+}
+
+function extractDate(move: MoveDoc): Date {
+    const raw = move.preferred_move_date ?? move.created_at;
+    if (!raw) return new Date(0);
+    if (typeof raw === 'object' && typeof (raw as { toDate?: () => Date }).toDate === 'function') {
+        return (raw as { toDate: () => Date }).toDate();
+    }
+    return new Date(raw as string);
+}
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || 'dummy-key'
@@ -26,10 +49,10 @@ export class AiAnalysisService {
             const lastMonth = new Date();
             lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-            const q = query(movesRef, where('date', '>=', lastMonth));
+            const q = query(movesRef, where('created_at', '>=', lastMonth));
             const querySnapshot = await getDocs(q);
 
-            const moves = querySnapshot.docs.map(doc => ({
+            const moves: MoveDoc[] = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
@@ -37,7 +60,7 @@ export class AiAnalysisService {
             // הכנת הנתונים לניתוח
             const analysisData = {
                 totalMoves: moves.length,
-                revenue: moves.reduce((sum, move: any) => sum + (move.price_estimate?.totalPrice || 0), 0),
+                revenue: moves.reduce((sum, move) => sum + extractPrice(move), 0),
                 popularItems: this.getPopularItems(moves),
                 busyDays: this.getBusyDays(moves),
                 customerFeedback: await this.getCustomerFeedback()
@@ -83,11 +106,11 @@ export class AiAnalysisService {
         }
     }
 
-    private static getPopularItems(moves: any[]) {
-        const itemCount: { [key: string]: number } = {};
+    private static getPopularItems(moves: MoveDoc[]) {
+        const itemCount: Record<string, number> = {};
         moves.forEach(move => {
-            move.furniture_items?.forEach((item: any) => {
-                itemCount[item.name] = (itemCount[item.name] || 0) + item.quantity;
+            move.furniture_items?.forEach(item => {
+                itemCount[item.name] = (itemCount[item.name] ?? 0) + item.quantity;
             });
         });
         return Object.entries(itemCount)
@@ -95,11 +118,11 @@ export class AiAnalysisService {
             .slice(0, 5);
     }
 
-    private static getBusyDays(moves: any[]) {
-        const dayCount: { [key: string]: number } = {};
+    private static getBusyDays(moves: MoveDoc[]) {
+        const dayCount: Record<string, number> = {};
         moves.forEach(move => {
-            const day = new Date(move.date).toLocaleDateString('he-IL', { weekday: 'long' });
-            dayCount[day] = (dayCount[day] || 0) + 1;
+            const day = extractDate(move).toLocaleDateString('he-IL', { weekday: 'long' });
+            dayCount[day] = (dayCount[day] ?? 0) + 1;
         });
         return dayCount;
     }
@@ -163,7 +186,7 @@ export class AiAnalysisService {
         }
     }
 
-    private static async getRecentMoves() {
+    private static async getRecentMoves(): Promise<MoveDoc[]> {
         const movesRef = collection(db, 'moves');
         const querySnapshot = await getDocs(movesRef);
         return querySnapshot.docs.map(doc => ({
@@ -172,24 +195,25 @@ export class AiAnalysisService {
         }));
     }
 
-    private static analyzePricing(moves: any[]) {
-        const prices = moves.map(m => m.price_estimate?.totalPrice || 0).filter(p => p > 0);
+    private static analyzePricing(moves: MoveDoc[]) {
+        const prices = moves.map(m => extractPrice(m)).filter(p => p > 0);
+        const total = prices.reduce((a, b) => a + b, 0);
         return {
-            averagePrice: prices.reduce((a, b) => a + b, 0) / prices.length,
+            averagePrice: prices.length > 0 ? total / prices.length : 0,
             priceRange: {
-                min: Math.min(...prices),
-                max: Math.max(...prices)
+                min: prices.length > 0 ? Math.min(...prices) : 0,
+                max: prices.length > 0 ? Math.max(...prices) : 0,
             },
             expensiveDays: this.getExpensiveDays(moves)
         };
     }
 
-    private static getExpensiveDays(moves: any[]) {
-        const dayPrices: { [key: string]: { total: number; count: number } } = {};
+    private static getExpensiveDays(moves: MoveDoc[]) {
+        const dayPrices: Record<string, { total: number; count: number }> = {};
         moves.forEach(move => {
-            const day = new Date(move.date).toLocaleDateString('he-IL', { weekday: 'long' });
+            const day = extractDate(move).toLocaleDateString('he-IL', { weekday: 'long' });
             if (!dayPrices[day]) dayPrices[day] = { total: 0, count: 0 };
-            dayPrices[day].total += move.price_estimate?.totalPrice || 0;
+            dayPrices[day].total += extractPrice(move);
             dayPrices[day].count++;
         });
 

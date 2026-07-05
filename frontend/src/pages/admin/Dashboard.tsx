@@ -19,10 +19,11 @@ import { ReportService } from "@/services/ReportService";
 import { AiAssistant } from "@/components/admin/AiAssistant";
 import { useToast } from "@/components/ui/use-toast";
 
-interface Move {
+interface MoveRecord {
   id: string;
   customer_id: string;
-  date: string;
+  created_at: string;
+  preferred_move_date?: string;
   totalPrice: number;
   status: string;
   customer: {
@@ -33,9 +34,9 @@ interface Move {
 
 const AdminDashboard = () => {
   const { toast } = useToast();
-  const [moves, setMoves] = useState<Move[]>([]);
+  const [moves, setMoves] = useState<MoveRecord[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<{ month: string; amount: number }[]>([]);
   const [selectedTab, setSelectedTab] = useState('overview');
 
   useEffect(() => {
@@ -59,7 +60,7 @@ const AdminDashboard = () => {
     NotificationService.subscribeToUrgentMoves((move) => {
       toast({
         title: 'הובלה דחופה!',
-        description: `הובלה מתוכננת ל-${new Date(move.date).toLocaleDateString('he-IL')} עדיין ממתינה לאישור`,
+        description: `הובלה מתוכננת ל-${new Date(move.preferred_move_date ?? move.created_at ?? Date.now()).toLocaleDateString('he-IL')} עדיין ממתינה לאישור`,
         variant: 'destructive',
       });
     });
@@ -68,7 +69,7 @@ const AdminDashboard = () => {
     NotificationService.subscribeToHighValueMoves((move) => {
       toast({
         title: 'הובלה בסכום גבוה!',
-        description: `התקבלה הזמנת הובלה בסך ${move.price_estimate.totalPrice}₪`,
+        description: `התקבלה הזמנת הובלה בסך ${move.price_estimate?.totalPrice ?? 0}₪`,
         variant: 'default',
       });
     });
@@ -77,27 +78,30 @@ const AdminDashboard = () => {
   const fetchMoves = async () => {
     try {
       const movesRef = collection(db, 'moves');
-      const q = query(movesRef, orderBy('date', 'desc'));
+      const q = query(movesRef, orderBy('created_at', 'desc'));
       const querySnapshot = await getDocs(q);
       
-      const movesData: Move[] = [];
+      const movesData: MoveRecord[] = [];
       let total = 0;
       const monthly: { [key: string]: number } = {};
 
       querySnapshot.forEach((doc) => {
         const moveData = doc.data();
-        const move = {
+        const rawDate = moveData.created_at?.toDate?.() ?? new Date(moveData.created_at ?? Date.now());
+        const move: MoveRecord = {
           id: doc.id,
-          ...moveData,
-          date: moveData.date,
-          totalPrice: moveData.price_estimate?.totalPrice || 0,
-          customer: moveData.customer || {}
-        } as Move;
+          customer_id: moveData.customer_id ?? '',
+          created_at: rawDate.toISOString(),
+          preferred_move_date: moveData.preferred_move_date,
+          totalPrice: moveData.price_estimate?.totalPrice ?? 0,
+          status: moveData.status ?? 'pending',
+          customer: moveData.customer ?? {},
+        };
 
         movesData.push(move);
         total += move.totalPrice;
 
-        const monthYear = new Date(move.date).toLocaleDateString('he-IL', { 
+        const monthYear = new Date(move.created_at).toLocaleDateString('he-IL', { 
           year: 'numeric', 
           month: 'long' 
         });
@@ -179,7 +183,7 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">{moves.filter(m => 
-                  new Date(m.date).getMonth() === new Date().getMonth()
+                  new Date(m.created_at).getMonth() === new Date().getMonth()
                 ).length}</p>
               </CardContent>
             </Card>
@@ -235,7 +239,7 @@ const AdminDashboard = () => {
                   <tbody>
                     {moves.map(move => (
                       <tr key={move.id} className="border-t">
-                        <td className="p-2">{new Date(move.date).toLocaleDateString('he-IL')}</td>
+                        <td className="p-2">{new Date(move.created_at).toLocaleDateString('he-IL')}</td>
                         <td className="p-2">{move.customer?.name}</td>
                         <td className="p-2">{move.customer?.phone}</td>
                         <td className="p-2">{move.status}</td>

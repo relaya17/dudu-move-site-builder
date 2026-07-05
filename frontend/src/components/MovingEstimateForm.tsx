@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Stepper,
@@ -34,6 +35,15 @@ interface FormData {
   notes: string;
 }
 
+interface FurnitureOption {
+  type: string;
+  basePrice: number;
+  description: string;
+  isFragile: boolean;
+  needsDisassemble: boolean;
+  maxQuantity: number;
+}
+
 interface ItemForm {
   id: number;
   type: string;
@@ -48,7 +58,8 @@ interface ItemForm {
 export const MovingEstimateForm: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [items, setItems] = useState<ItemForm[]>([]);
-  const [furnitureOptions, setFurnitureOptions] = useState<any[]>([]); // New state for dynamic furniture options
+  const navigate = useNavigate();
+  const [furnitureOptions, setFurnitureOptions] = useState<FurnitureOption[]>([]);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     phone: '',
@@ -68,16 +79,7 @@ export const MovingEstimateForm: React.FC = () => {
     toLift: false,
     notes: ''
   });
-  const [success, setSuccess] = useState(false);
-  const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null); // New state for estimated price
-  const successMessageRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null); // New ref for the form
-
-  useEffect(() => {
-    if (successMessageRef.current) {
-      successMessageRef.current.style.display = success ? 'block' : 'none';
-    }
-  }, [success]);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     // Scroll to the top of the form when the step changes
@@ -170,7 +172,7 @@ export const MovingEstimateForm: React.FC = () => {
     setItems(prev => [...prev, { id: prev.length + 1, type: '', quantity: 1, fragile: false, disassemble: false, assemble: false, note: '', img: null }]);
   };
 
-  const handleItemChange = (id: number, field: string, value: any) => {
+  const handleItemChange = (id: number, field: keyof ItemForm, value: ItemForm[keyof ItemForm]) => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   };
 
@@ -220,18 +222,16 @@ export const MovingEstimateForm: React.FC = () => {
       if (!API_URL) {
         // Mock response when backend is not available
         console.log('Mock submission - would send:', formattedData);
-        setSuccess(true);
-        setEstimatedPrice(Math.floor(Math.random() * 3000) + 1000); // Random price between 1000-4000
+        navigate('/thank-you');
         return;
       }
       
       const response = await axios.post(`${API_URL}/api/move-requests`, formattedData);
       console.log('Server response:', response.data);
-      setSuccess(true);
-      setEstimatedPrice(response.data.data.priceEstimate); // Set estimated price from backend response
-    } catch (error: any) {
-      console.error('Error submitting form:', error.response ? error.response.data : error.message);
-      setSuccess(false);
+      navigate('/thank-you');
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: unknown }; message?: string };
+      console.error('Error submitting form:', axiosError.response ? axiosError.response.data : axiosError.message);
       alert('אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.');
     }
   };
@@ -560,9 +560,6 @@ export const MovingEstimateForm: React.FC = () => {
             {currentStep === 4 && (
               <Box>
                 <Typography variant="h6" sx={{ mb: 2 }}>סיכום</Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  <strong>המחיר המשוער:</strong> <span id="estimated-price">{estimatedPrice !== null ? `₪${estimatedPrice}` : 'מחשב...'}</span>
-                </Typography>
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body1" sx={{ mb: 0.5 }}>הערות נוספות</Typography>
                   <textarea
@@ -579,11 +576,6 @@ export const MovingEstimateForm: React.FC = () => {
                   <Button variant="outlined" onClick={prevStep}>חזור</Button>
                   <Button variant="contained" type="submit">שליחה</Button>
                 </Box>
-                  {success && (
-                  <Typography ref={successMessageRef} color="success.main" sx={{ mt: 2 }}>
-                    הטופס נשלח בהצלחה!
-                  </Typography>
-                )}
               </Box>
             )}
                 </form>

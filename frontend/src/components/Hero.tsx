@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 export const Hero = () => {
   const scrollToEstimate = () => {
-    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('estimate-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const callNow = () => {

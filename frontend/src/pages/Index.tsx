@@ -12,7 +12,9 @@ const Index = () => {
       <Hero />
       <Services />
       <About />
-      <MovingEstimateForm />
+      <section id="estimate-form">
+        <MovingEstimateForm />
+      </section>
       <Testimonials />
       <Footer />
     </div>

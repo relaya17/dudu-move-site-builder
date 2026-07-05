@@ -10,8 +10,7 @@ export const connectMongoDB = async (): Promise<void> => {
         await mongoose.connect(MONGODB_URI);
         console.log('✅ MongoDB connected successfully');
     } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-        process.exit(1);
+        console.error('❌ MongoDB connection error (non-fatal, Firebase path still active):', error);
     }
 };
 

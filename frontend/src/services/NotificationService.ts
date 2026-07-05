@@ -18,7 +18,7 @@ export class NotificationService {
     private static listeners: Record<string, UnsubscribeFunction> = {};
 
     static validateMove(data: DocumentData): Move {
-        if (!data.customer?.name || !data.date || !data.status || !data.price_estimate?.totalPrice) {
+        if (!data.status) {
             throw new Error('נתוני הובלה לא תקינים');
         }
         return data as Move;
@@ -58,7 +58,7 @@ export class NotificationService {
 
         const q = query(
             movesRef,
-            where('date', '<=', Timestamp.fromDate(nextWeek)),
+            where('preferred_move_date', '<=', Timestamp.fromDate(nextWeek)),
             where('status', '==', 'pending')
         );
 

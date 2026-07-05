@@ -3,16 +3,22 @@ import { Button } from './button';
 
 export const AccessibilityButton = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [fontSize, setFontSize] = useState(16);
+  const [, setFontSize] = useState(16);
 
   const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 2, 24));
-    document.documentElement.style.fontSize = `${fontSize + 2}px`;
+    setFontSize(prev => {
+      const next = Math.min(prev + 2, 24);
+      document.documentElement.style.fontSize = `${next}px`;
+      return next;
+    });
   };
 
   const decreaseFontSize = () => {
-    setFontSize(prev => Math.max(prev - 2, 12));
-    document.documentElement.style.fontSize = `${fontSize - 2}px`;
+    setFontSize(prev => {
+      const next = Math.max(prev - 2, 12);
+      document.documentElement.style.fontSize = `${next}px`;
+      return next;
+    });
   };
 
   const toggleHighContrast = () => {

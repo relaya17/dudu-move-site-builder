@@ -85,7 +85,7 @@ export class MovingEstimateService {
                 destination_has_crane: moveData.destination_has_crane,
                 additional_notes: moveData.additional_notes,
                 furniture_items: furnitureItems,
-                price_estimate: priceEstimate,
+                price_estimate: { totalPrice: priceEstimate },
                 status: 'pending',
                 created_at: Timestamp.now()
             });

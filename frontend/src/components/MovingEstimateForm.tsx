@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
@@ -42,6 +42,7 @@ interface FurnitureOption {
   isFragile: boolean;
   needsDisassemble: boolean;
   maxQuantity: number;
+  category?: string;
 }
 
 interface ItemForm {
@@ -57,7 +58,9 @@ interface ItemForm {
 
 export const MovingEstimateForm: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [items, setItems] = useState<ItemForm[]>([]);
+  const [items, setItems] = useState<ItemForm[]>([
+    { id: 1, type: '', quantity: 1, fragile: false, disassemble: false, assemble: false, note: '', img: null }
+  ]);
   const navigate = useNavigate();
   const [furnitureOptions, setFurnitureOptions] = useState<FurnitureOption[]>([]);
   const [formData, setFormData] = useState<FormData>({
@@ -91,21 +94,11 @@ export const MovingEstimateForm: React.FC = () => {
   useEffect(() => {
     const fetchFurnitureOptions = async () => {
       try {
-        // Temporarily disable API calls until backend is deployed
-        const API_URL = import.meta.env.VITE_API_URL || 
-                         (window.location.hostname === 'localhost' ? 'http://localhost:3001' : null);
-        if (!API_URL) {
-          // Use mock data when backend is not available
-          const mockFurnitureData = [
-            { type: "sofa", basePrice: 300, description: "ספה", isFragile: false, needsDisassemble: true, maxQuantity: 3 },
-            { type: "chair", basePrice: 50, description: "כיסא", isFragile: false, needsDisassemble: false, maxQuantity: 10 },
-            { type: "bed_double", basePrice: 450, description: "מיטה זוגית", isFragile: false, needsDisassemble: true, maxQuantity: 3 },
-            { type: "wardrobe", basePrice: 250, description: "ארון בגדים", isFragile: false, needsDisassemble: true, maxQuantity: 2 },
-            { type: "table", basePrice: 150, description: "שולחן", isFragile: false, needsDisassemble: true, maxQuantity: 4 }
-          ];
-          setFurnitureOptions(mockFurnitureData);
-          return;
-        }
+        const API_URL = import.meta.env.VITE_API_URL ||
+          (window.location.hostname === 'localhost'
+            ? 'http://localhost:3001'
+            : 'https://dudu-move-backend.onrender.com');
+
         const response = await axios.get(`${API_URL}/api/pricing/furniture-items`);
         // Ensure response.data is an array
         const data = Array.isArray(response.data) ? response.data : [];
@@ -117,6 +110,19 @@ export const MovingEstimateForm: React.FC = () => {
     };
     fetchFurnitureOptions();
   }, []); // Empty dependency array means this runs once on mount
+
+  // מקבץ את רשימת סוגי הפריטים לפי קטגוריה (תת-קטגוריות), לתצוגה כ-optgroup בתפריט הבחירה.
+  const groupedFurnitureOptions = useMemo(() => {
+    const groups = new Map<string, FurnitureOption[]>();
+    for (const option of furnitureOptions) {
+      const category = option.category || 'אחר';
+      if (!groups.has(category)) {
+        groups.set(category, []);
+      }
+      groups.get(category)!.push(option);
+    }
+    return Array.from(groups.entries());
+  }, [furnitureOptions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -475,8 +481,12 @@ export const MovingEstimateForm: React.FC = () => {
                           style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                         >
                           <option disabled value="">בחר</option>
-                          {Array.isArray(furnitureOptions) && furnitureOptions.map((option) => (
-                            <option key={option.type} value={option.type}>{option.description}</option>
+                          {groupedFurnitureOptions.map(([category, options]) => (
+                            <optgroup key={category} label={category}>
+                              {options.map((option) => (
+                                <option key={option.type} value={option.type}>{option.description}</option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
                       </Box>

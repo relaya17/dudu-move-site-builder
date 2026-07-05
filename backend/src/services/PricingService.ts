@@ -23,8 +23,23 @@ interface FurniturePricing {
         needsDisassemble: boolean;
         maxQuantity: number;
         description: string;
+        category: string;
     };
 }
+
+// קטגוריות תצוגה (תת-קטגוריות) לרשימת הפריטים בטופס - לשימוש ב-optgroup בצד ה-frontend.
+export const FURNITURE_CATEGORIES = {
+    seating: 'ישיבה',
+    bedroom: 'חדר שינה',
+    storage: 'ארונות ואחסון',
+    tables: 'שולחנות ופינות אוכל',
+    large_appliances: 'מכשירי חשמל גדולים',
+    small_appliances: 'מכשירי חשמל קטנים',
+    packing: 'אריזה (קרטונים ושקיות)',
+    decor: 'אביזרים ופריטי נוי',
+    special: 'פריטים מיוחדים',
+    other: 'אחר'
+} as const;
 
 export class PricingService {
     private static readonly PRICING_CONFIG: PricingConfig = {
@@ -40,145 +55,164 @@ export class PricingService {
     };
 
     private static readonly FURNITURE_PRICING: FurniturePricing = {
-        // רהיטי ישיבה
+        // ישיבה
         sofa: {
             basePrice: 300,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
-            description: 'ספה'
+            description: 'ספה',
+            category: FURNITURE_CATEGORIES.seating
         },
         chair: {
             basePrice: 50,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 10,
-            description: 'כיסא'
+            description: 'כיסא',
+            category: FURNITURE_CATEGORIES.seating
         },
         armchair: {
             basePrice: 120,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 4,
-            description: 'כורסה'
+            description: 'כורסה',
+            category: FURNITURE_CATEGORIES.seating
         },
 
-        // רהיטי שינה
+        // חדר שינה
         bed_single: {
             basePrice: 250,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
-            description: 'מיטת יחיד'
+            description: 'מיטת יחיד',
+            category: FURNITURE_CATEGORIES.bedroom
         },
         bed_double: {
             basePrice: 450,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
-            description: 'מיטה זוגית'
+            description: 'מיטה זוגית',
+            category: FURNITURE_CATEGORIES.bedroom
         },
         bed: {
             basePrice: 350,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
-            description: 'מיטה'
+            description: 'מיטה',
+            category: FURNITURE_CATEGORIES.bedroom
         },
         mattress: {
             basePrice: 80,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 3,
-            description: 'מזרן'
+            description: 'מזרן',
+            category: FURNITURE_CATEGORIES.bedroom
         },
-        wardrobe: {
-            basePrice: 250,
+        nightstand: {
+            basePrice: 60,
             fragile: false,
-            needsDisassemble: true,
-            maxQuantity: 2,
-            description: 'ארון בגדים'
+            needsDisassemble: false,
+            maxQuantity: 4,
+            description: 'שידת לילה',
+            category: FURNITURE_CATEGORIES.bedroom
         },
 
-        // רהיטי עבודה ואוכל
+        // שולחנות ופינות אוכל
         table: {
             basePrice: 150,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 4,
-            description: 'שולחן'
+            description: 'שולחן',
+            category: FURNITURE_CATEGORIES.tables
         },
         desk: {
             basePrice: 180,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'שולחן עבודה'
+            description: 'שולחן עבודה',
+            category: FURNITURE_CATEGORIES.tables
         },
         dining_table: {
             basePrice: 200,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'שולחן אוכל'
+            description: 'שולחן אוכל',
+            category: FURNITURE_CATEGORIES.tables
         },
         dining_corner_small: {
             basePrice: 150,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'פינת אוכל קטנה'
+            description: 'פינת אוכל קטנה',
+            category: FURNITURE_CATEGORIES.tables
         },
         dining_corner_medium: {
             basePrice: 500,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'פינת אוכל בינונית'
+            description: 'פינת אוכל בינונית',
+            category: FURNITURE_CATEGORIES.tables
         },
         dining_corner_large: {
             basePrice: 700,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 1,
-            description: 'פינת אוכל גדולה'
+            description: 'פינת אוכל גדולה',
+            category: FURNITURE_CATEGORIES.tables
         },
 
-        // מכשירים אלקטרוניים
+        // מכשירי חשמל גדולים
         tv: {
             basePrice: 120,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 3,
-            description: 'טלוויזיה'
-        },
-        computer: {
-            basePrice: 80,
-            fragile: true,
-            needsDisassemble: false,
-            maxQuantity: 2,
-            description: 'מחשב'
+            description: 'טלוויזיה',
+            category: FURNITURE_CATEGORIES.large_appliances
         },
         refrigerator: {
             basePrice: 400,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 1,
-            description: 'מקרר'
+            description: 'מקרר',
+            category: FURNITURE_CATEGORIES.large_appliances
         },
         washing_machine: {
             basePrice: 200,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 1,
-            description: 'מכונת כביסה'
+            description: 'מכונת כביסה',
+            category: FURNITURE_CATEGORIES.large_appliances
         },
         dishwasher: {
             basePrice: 180,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 1,
-            description: 'מדיח כלים'
+            description: 'מדיח כלים',
+            category: FURNITURE_CATEGORIES.large_appliances
+        },
+        air_conditioner: {
+            basePrice: 150,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 3,
+            description: 'מזגן',
+            category: FURNITURE_CATEGORIES.large_appliances
         },
 
         // ארונות ואחסון
@@ -187,146 +221,250 @@ export class PricingService {
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 5,
-            description: 'ארון'
+            description: 'ארון',
+            category: FURNITURE_CATEGORIES.storage
         },
         cabinet_small: {
             basePrice: 100,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 5,
-            description: 'ארון קטן'
+            description: 'ארון קטן',
+            category: FURNITURE_CATEGORIES.storage
         },
         cabinet_large: {
             basePrice: 150,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
-            description: 'ארון גדול'
+            description: 'ארון גדול',
+            category: FURNITURE_CATEGORIES.storage
         },
         bookshelf: {
             basePrice: 100,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 3,
-            description: 'מדף ספרים'
+            description: 'מדף ספרים',
+            category: FURNITURE_CATEGORIES.storage
         },
         drawer: {
             basePrice: 80,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 4,
-            description: 'מגירה'
+            description: 'מגירה',
+            category: FURNITURE_CATEGORIES.storage
         },
-
-        // New furniture items added below
+        wardrobe: {
+            basePrice: 250,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'ארון בגדים',
+            category: FURNITURE_CATEGORIES.storage
+        },
         wardrobe_3_door: {
             basePrice: 300,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'ארון 3 דלתות'
+            description: 'ארון 3 דלתות',
+            category: FURNITURE_CATEGORIES.storage
         },
         wardrobe_4_door: {
             basePrice: 400,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'ארון 4 דלתות'
+            description: 'ארון 4 דלתות',
+            category: FURNITURE_CATEGORIES.storage
         },
         wardrobe_sliding: {
             basePrice: 350,
             fragile: false,
             needsDisassemble: true,
             maxQuantity: 2,
-            description: 'ארון הזזה'
+            description: 'ארון הזזה',
+            category: FURNITURE_CATEGORIES.storage
         },
 
-        // מכשירים קטנים
+        // מכשירי חשמל קטנים
         microwave: {
             basePrice: 60,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 1,
-            description: 'מיקרוגל'
+            description: 'מיקרוגל',
+            category: FURNITURE_CATEGORIES.small_appliances
         },
         toaster: {
             basePrice: 30,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 1,
-            description: 'טוסטר'
+            description: 'טוסטר',
+            category: FURNITURE_CATEGORIES.small_appliances
         },
         coffee_machine: {
             basePrice: 50,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 1,
-            description: 'מכונת קפה'
+            description: 'מכונת קפה',
+            category: FURNITURE_CATEGORIES.small_appliances
+        },
+        computer: {
+            basePrice: 80,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'מחשב',
+            category: FURNITURE_CATEGORIES.small_appliances
         },
 
-        // פריטים אחרים
-        mirror: {
-            basePrice: 40,
-            fragile: true,
-            needsDisassemble: false,
-            maxQuantity: 3,
-            description: 'מראה'
-        },
-        lamp: {
-            basePrice: 30,
-            fragile: true,
-            needsDisassemble: false,
-            maxQuantity: 5,
-            description: 'מנורה'
-        },
-        rug: {
-            basePrice: 40,
+        // אריזה (קרטונים ושקיות)
+        box: {
+            basePrice: 20,
             fragile: false,
             needsDisassemble: false,
-            maxQuantity: 3,
-            description: 'שטיח'
+            maxQuantity: 30,
+            description: 'קרטון (בינוני)',
+            category: FURNITURE_CATEGORIES.packing
+        },
+        box_small: {
+            basePrice: 15,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 30,
+            description: 'קרטון קטן',
+            category: FURNITURE_CATEGORIES.packing
+        },
+        box_large: {
+            basePrice: 25,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 30,
+            description: 'קרטון גדול',
+            category: FURNITURE_CATEGORIES.packing
         },
         bag: {
             basePrice: 20,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 20,
-            description: 'שקית'
+            description: 'שקית',
+            category: FURNITURE_CATEGORIES.packing
         },
-        box: {
-            basePrice: 20,
+
+        // אביזרים ופריטי נוי
+        mirror: {
+            basePrice: 40,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 3,
+            description: 'מראה',
+            category: FURNITURE_CATEGORIES.decor
+        },
+        lamp: {
+            basePrice: 30,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 5,
+            description: 'מנורה',
+            category: FURNITURE_CATEGORIES.decor
+        },
+        rug: {
+            basePrice: 40,
             fragile: false,
             needsDisassemble: false,
-            maxQuantity: 20,
-            description: 'קרטון'
+            maxQuantity: 3,
+            description: 'שטיח',
+            category: FURNITURE_CATEGORIES.decor
+        },
+        curtain: {
+            basePrice: 40,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 10,
+            description: 'וילון',
+            category: FURNITURE_CATEGORIES.decor
         },
         toilette_table: {
             basePrice: 80,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 2,
-            description: 'שולחן טואלט'
+            description: 'שולחן טואלט',
+            category: FURNITURE_CATEGORIES.decor
         },
         picture: {
             basePrice: 20,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 10,
-            description: 'תמונה'
+            description: 'תמונה',
+            category: FURNITURE_CATEGORIES.decor
         },
         large_plants: {
             basePrice: 70,
             fragile: true,
             needsDisassemble: false,
             maxQuantity: 5,
-            description: 'עצים ועציצים גדולים'
+            description: 'עצים ועציצים גדולים',
+            category: FURNITURE_CATEGORIES.decor
         },
+
+        // פריטים מיוחדים
+        piano: {
+            basePrice: 800,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'פסנתר',
+            category: FURNITURE_CATEGORIES.special
+        },
+        safe: {
+            basePrice: 400,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'כספת',
+            category: FURNITURE_CATEGORIES.special
+        },
+        bicycle: {
+            basePrice: 40,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 5,
+            description: 'אופניים',
+            category: FURNITURE_CATEGORIES.special
+        },
+        treadmill: {
+            basePrice: 200,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'מכשיר כושר / הליכון',
+            category: FURNITURE_CATEGORIES.special
+        },
+        aquarium: {
+            basePrice: 150,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'אקווריום',
+            category: FURNITURE_CATEGORIES.special
+        },
+
+        // אחר
         other: {
             basePrice: 50,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 10,
-            description: 'אחר'
+            description: 'אחר',
+            category: FURNITURE_CATEGORIES.other
         }
     };
 
@@ -502,6 +640,7 @@ export class PricingService {
         isFragile: boolean;
         needsDisassemble: boolean;
         maxQuantity: number;
+        category: string;
     }> {
         return Object.entries(this.FURNITURE_PRICING).map(([type, pricing]) => ({
             type,
@@ -509,7 +648,8 @@ export class PricingService {
             description: pricing.description,
             isFragile: pricing.fragile,
             needsDisassemble: pricing.needsDisassemble,
-            maxQuantity: pricing.maxQuantity
+            maxQuantity: pricing.maxQuantity,
+            category: pricing.category
         }));
     }
 

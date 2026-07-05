@@ -26,8 +26,39 @@ connectMongoDB();
 // Content-Security-Policy מושבת כי אותו שרת מגיש גם את קבצי ה-frontend הסטטיים
 // (Google Fonts, vite bundles) שה-CSP הדיפולטיבי של helmet היה חוסם.
 app.use(helmet({ contentSecurityPolicy: false }));
+
+// רשימת מקורות מותרים ל-CORS: כתובות ה-frontend הידועות (Netlify + אותו שרת Render
+// שמגיש גם את קבצי ה-build הסטטיים) בתוספת כל מה שמוגדר ב-FRONTEND_URL/CORS_ORIGIN
+// (אפשר כמה כתובות מופרדות בפסיק). זה מונע מצב שבו הגדרה שגויה/חסרה באחד ממשתני
+// הסביבה ב-Render "נועלת" את טופס יצירת הקשר הציבורי (כפי שקרה בפועל - 5.7.2026).
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://david-move.netlify.app',
+  'http://localhost:5173',
+  'http://localhost:3001'
+];
+
+// FRONTEND_URL הוא ערך יחיד (משמש גם לבניית קישורים בהתראות SMS/מייל - ר' SmsService/EmailService),
+// לכן הוא נוסף כמו שהוא. CORS_ORIGIN מיועד במיוחד לרשימת מקורות מרובים ל-CORS, מופרדים בפסיק.
+const corsOriginList = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(v => v.trim())
+  .filter(Boolean);
+
+const envOrigins = [process.env.FRONTEND_URL, ...corsOriginList]
+  .filter((value): value is string => Boolean(value));
+
+const allowedOrigins = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...envOrigins]));
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || true, // Allow frontend URL from environment variable or all origins in development
+  origin: (origin, callback) => {
+    // בקשות ללא origin (curl, שרת-לשרת, אפליקציות מובייל) - תמיד מותר.
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    console.warn(`⚠️  CORS: בקשה ממקור שאינו ברשימת ההיתרים נחסמה: ${origin}`);
+    callback(null, false);
+  },
   credentials: true
 }));
 

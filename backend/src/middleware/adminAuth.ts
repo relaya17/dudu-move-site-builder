@@ -9,7 +9,16 @@ export const requireAdminKey = (req: Request, res: Response, next: NextFunction)
     const expectedKey = process.env.ADMIN_API_KEY;
 
     if (!expectedKey) {
-        console.warn('⚠️  ADMIN_API_KEY לא מוגדר - נתיבי ניהול המעקב פתוחים ללא הגנה. יש להגדיר לפני production.');
+        if (process.env.NODE_ENV === 'production') {
+            // בפרודקשן ללא מפתח — חסום לחלוטין. אין הצדקה לפתוח נתיבי PII.
+            res.status(503).json({
+                success: false,
+                message: 'שירות הניהול אינו זמין — ADMIN_API_KEY לא הוגדר בסביבת ה-production.'
+            });
+            return;
+        }
+        // בפיתוח — אפשר מעבר חופשי עם אזהרה
+        console.warn('⚠️  ADMIN_API_KEY לא מוגדר — נתיבי ניהול פתוחים (סביבת פיתוח בלבד).');
         next();
         return;
     }

@@ -1,4 +1,5 @@
 
+import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 import { Truck, Phone, Mail, MapPin } from 'lucide-react';
 import { PrivacyPolicy } from '@/components/legal/PrivacyPolicy';
@@ -104,6 +105,15 @@ export const Footer = () => {
             <TermsModal />
             <AccessibilityStatement />
           </div>
+        </div>
+
+        <div className="mt-3 text-center md:text-left">
+          <Link
+            to="/admin"
+            className="text-xs text-gray-600 hover:text-gray-400 focus-visible:text-gray-400 transition-colors"
+          >
+            ניהול
+          </Link>
         </div>
       </div>
     </footer>

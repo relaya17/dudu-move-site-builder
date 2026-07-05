@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 // Load environment variables first
 dotenv.config();
 
+import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -22,7 +23,9 @@ const PORT = process.env.PORT || 3001;
 connectMongoDB();
 
 // Security middleware
-app.use(helmet());
+// Content-Security-Policy מושבת כי אותו שרת מגיש גם את קבצי ה-frontend הסטטיים
+// (Google Fonts, vite bundles) שה-CSP הדיפולטיבי של helmet היה חוסם.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || true, // Allow frontend URL from environment variable or all origins in development
   credentials: true
@@ -42,11 +45,6 @@ if (process.env.NODE_ENV === 'development') {
     next();
   });
 }
-
-// Basic root route for health check / general access
-app.get('/', (req, res) => {
-  res.status(200).json({ success: true, message: 'API is working' });
-});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -76,7 +74,19 @@ app.use('/api/mongo', mongoRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/tracking', trackingRoutes);
 
-// Handle 404 for unknown routes
+// הגשת קבצי ה-frontend הבנויים (שרת Render אחד מגיש גם את ה-API וגם את האתר)
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+// SPA fallback - כל בקשת GET שאינה API ולא תואמת קובץ סטטי קיים מקבלת את index.html
+// (כדי ש-React Router יוכל לטפל בניתוב בצד הלקוח, כולל /tracking/:token)
+app.get(/^(?!\/api\/).*/, (req, res, next) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
+
+// Handle 404 for unknown routes (בעיקר עבור /api/* שלא נתפסו)
 app.use(notFoundHandler);
 
 // Global error handler (must be last)
@@ -100,6 +110,7 @@ app.listen(PORT, () => {
   console.log(`🏠 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🗄️ MongoDB API available at http://localhost:${PORT}/api/mongo`);
   console.log(`📍 Tracking API available at http://localhost:${PORT}/api/tracking`);
+  console.log(`🖥️  Serving frontend build from ${frontendDistPath}`);
   startReminderCron();
 });
 

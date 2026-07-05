@@ -1,15 +1,18 @@
-import { db } from '../config/firebase';
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, Timestamp } from 'firebase/firestore';
+import crypto from 'crypto';
+import { MoveEstimate } from '../database/models/MoveEstimate';
 import { CreateCustomerRequest } from '../types/moveTypes';
 import { customerSchema, moveDetailsSchema, furnitureItemSchema } from '../middleware/validation';
 import { PricingService } from './PricingService';
+import { MongoService } from './MongoService';
+import { EmailService } from './EmailService';
 
 export class MovingEstimateService {
     /**
      * יצירת בקשת הערכת מעבר חדשה.
      * - מוודא תקינות הנתונים
      * - מחשב מחיר משוער
-     * - שומר את הבקשה בפיירבייס
+     * - שומר את הבקשה במסד הנתונים (MongoDB)
+     * - יוצר טוקן מעקב ושולח מייל אישור עם קישור למעקב
      */
     static async submitEstimateRequest(
         customerData: CreateCustomerRequest,
@@ -62,37 +65,61 @@ export class MovingEstimateService {
                 moveData.destination_has_crane
             );
 
-            // יצירת מסמך לקוח חדש
-            const customerRef = await addDoc(collection(db, 'customers'), {
+            const trackingToken = crypto.randomBytes(12).toString('hex');
+
+            const estimate = new MoveEstimate({
                 name: customerData.name,
                 email: customerData.email,
                 phone: customerData.phone,
-                created_at: Timestamp.now()
+                apartmentType: moveData.apartment_type,
+                preferredMoveDate: moveData.preferred_move_date,
+                currentAddress: moveData.current_address,
+                destinationAddress: moveData.destination_address,
+                additionalNotes: moveData.additional_notes,
+                originFloor: moveData.origin_floor,
+                destinationFloor: moveData.destination_floor,
+                originHasElevator: moveData.origin_has_elevator,
+                destinationHasElevator: moveData.destination_has_elevator,
+                originHasCrane: moveData.origin_has_crane,
+                destinationHasCrane: moveData.destination_has_crane,
+                inventory: furnitureItems.map(item => ({
+                    type: item.name,
+                    quantity: item.quantity,
+                    description: item.comments || '',
+                    isFragile: item.isFragile || false,
+                    needsDisassemble: item.needsDisassemble || false,
+                    needsReassemble: item.needsReassemble || false,
+                    comments: item.comments || ''
+                })),
+                totalPrice: priceEstimate,
+                status: 'pending',
+                trackingToken,
+                stage: 'order_placed',
+                stageHistory: [{ stage: 'order_placed', at: new Date() }]
             });
 
-            // יצירת מסמך מעבר חדש
-            const moveRef = await addDoc(collection(db, 'moves'), {
-                customer_id: customerRef.id,
-                apartment_type: moveData.apartment_type,
-                preferred_move_date: moveData.preferred_move_date,
-                current_address: moveData.current_address,
-                destination_address: moveData.destination_address,
-                origin_floor: moveData.origin_floor,
-                destination_floor: moveData.destination_floor,
-                origin_has_elevator: moveData.origin_has_elevator,
-                destination_has_elevator: moveData.destination_has_elevator,
-                origin_has_crane: moveData.origin_has_crane,
-                destination_has_crane: moveData.destination_has_crane,
-                additional_notes: moveData.additional_notes,
-                furniture_items: furnitureItems,
-                price_estimate: { totalPrice: priceEstimate },
-                status: 'pending',
-                created_at: Timestamp.now()
-            });
+            const savedEstimate = await estimate.save();
+
+            // עדכון/יצירת נתוני לקוח (לא קריטי - לא נכשיל את הבקשה אם זה נכשל)
+            await MongoService.updateCustomerStats(
+                customerData.email || '',
+                customerData.name,
+                customerData.phone,
+                priceEstimate
+            );
+
+            // שליחת מייל אישור עם קישור למעקב (לא קריטי - לא נכשיל את הבקשה אם זה נכשל)
+            if (customerData.email) {
+                EmailService.sendConfirmationEmail({
+                    to: customerData.email,
+                    name: customerData.name,
+                    trackingToken
+                }).catch(err => console.error('שגיאה בשליחת מייל אישור:', err));
+            }
 
             return {
-                id: moveRef.id,
-                customerId: customerRef.id,
+                id: savedEstimate._id.toString(),
+                trackingToken,
                 priceEstimate
             };
         } catch (error) {
@@ -106,25 +133,7 @@ export class MovingEstimateService {
      */
     static async getAllMoveRequests() {
         try {
-            const movesRef = collection(db, 'moves');
-            const q = query(movesRef, orderBy('created_at', 'desc'));
-            const querySnapshot = await getDocs(q);
-
-            const moves = [];
-            for (const docSnapshot of querySnapshot.docs) {
-                const moveData = docSnapshot.data();
-                const customerDoc = await getDoc(doc(db, 'customers', moveData.customer_id));
-                const customerData = customerDoc.data();
-
-                moves.push({
-                    id: docSnapshot.id,
-                    customer: customerData,
-                    ...moveData,
-                    created_at: moveData.created_at.toDate()
-                });
-            }
-
-            return moves;
+            return await MoveEstimate.find().sort({ createdAt: -1 });
         } catch (error) {
             console.error('שגיאה בשליפת בקשות הערכת מחיר:', error);
             throw error;
@@ -136,21 +145,11 @@ export class MovingEstimateService {
      */
     static async getMoveRequestById(id: string) {
         try {
-            const moveDoc = await getDoc(doc(db, 'moves', id));
-            if (!moveDoc.exists()) {
+            const estimate = await MoveEstimate.findById(id);
+            if (!estimate) {
                 throw new Error('בקשת הערכת המחיר לא נמצאה');
             }
-
-            const moveData = moveDoc.data();
-            const customerDoc = await getDoc(doc(db, 'customers', moveData.customer_id));
-            const customerData = customerDoc.data();
-
-            return {
-                id: moveDoc.id,
-                customer: customerData,
-                ...moveData,
-                created_at: moveData.created_at.toDate()
-            };
+            return estimate;
         } catch (error) {
             console.error('שגיאה בשליפת בקשת הערכת מחיר:', error);
             throw error;
@@ -160,14 +159,12 @@ export class MovingEstimateService {
     /**
      * עדכון סטטוס בקשת הערכת מחיר
      */
-    static async updateMoveRequestStatus(id: string, status: 'pending' | 'estimated' | 'accepted' | 'rejected') {
+    static async updateMoveRequestStatus(id: string, status: 'pending' | 'approved' | 'rejected' | 'completed') {
         try {
-            const moveRef = doc(db, 'moves', id);
-            await updateDoc(moveRef, {
-                status: status,
-                updated_at: Timestamp.now()
-            });
-
+            const estimate = await MoveEstimate.findByIdAndUpdate(id, { status }, { new: true });
+            if (!estimate) {
+                throw new Error('בקשת הערכת המחיר לא נמצאה');
+            }
             return { success: true };
         } catch (error) {
             console.error('שגיאה בעדכון סטטוס בקשת הערכת מחיר:', error);

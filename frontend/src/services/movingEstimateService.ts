@@ -1,83 +1,16 @@
 // src/services/movingEstimateService.ts
-import { FurnitureItem, MovingEstimateRequest } from '../types/movingEstimate';
+import { MovingEstimateRequest, EstimateStatus, TrackingStage } from '../types/movingEstimate';
+
+const API_ROOT = import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:3001'
+    : 'https://dudu-move-backend.onrender.com');
+
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_API_KEY || '';
 
 class MovingEstimateService {
-  private static readonly API_URL = 'http://localhost:3001/api/mongo/estimates';
-
-  static async submitEstimateRequest(
-    formData: {
-      fullName: string;
-      email: string;
-      phone: string;
-      apartmentType: string;
-      rooms: string;
-      moveDate: string;
-      fromAddress: string;
-      fromFloor: number;
-      fromElevator: boolean;
-      fromLift: boolean;
-      toAddress: string;
-      toFloor: number;
-      toElevator: boolean;
-      toLift: boolean;
-      notes: string;
-    },
-    items: FurnitureItem[]
-  ): Promise<MovingEstimateRequest> {
-    const requestData: MovingEstimateRequest = {
-      customerInfo: {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone.startsWith('05') ? formData.phone : `05${formData.phone}`,
-      },
-      apartmentDetails: {
-        apartmentType: formData.apartmentType,
-        rooms: formData.rooms,
-        moveDate: formData.moveDate,
-        fromAddress: formData.fromAddress,
-        toAddress: formData.toAddress,
-        notes: formData.notes,
-        fromFloor: formData.fromFloor,
-        fromElevator: formData.fromElevator,
-        fromLift: formData.fromLift,
-        toFloor: formData.toFloor,
-        toElevator: formData.toElevator,
-        toLift: formData.toLift,
-      },
-      inventory: items.map(item => ({
-        type: item.type,
-        quantity: item.quantity,
-        description: item.description || '',
-        fragile: item.fragile || false,
-        disassemble: item.disassemble || false,
-        assemble: item.assemble || false,
-        note: item.note || '',
-        // Note: Image handling (File object) would require special backend logic (e.g., FormData) for actual upload.
-        // For now, it's excluded from the JSON payload.
-      })),
-      status: 'pending',
-      timestamp: new Date().toISOString() // Add timestamp when sending
-    };
-
-    const response = await fetch(this.API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(requestData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server response:', errorText);
-      console.error('Request data sent:', JSON.stringify(requestData, null, 2));
-      throw new Error(`שגיאה בשליחת בקשת הערכת מחיר: ${response.status} ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data || result;
-  }
+  private static readonly API_URL = `${API_ROOT}/api/mongo/estimates`;
+  private static readonly TRACKING_URL = `${API_ROOT}/api/tracking`;
 
   static async getAllEstimates(): Promise<MovingEstimateRequest[]> {
     const response = await fetch(this.API_URL);
@@ -101,7 +34,7 @@ class MovingEstimateService {
     return result.data || result;
   }
 
-  static async updateEstimateStatus(id: string, status: 'pending' | 'estimated' | 'accepted' | 'rejected'): Promise<void> {
+  static async updateEstimateStatus(id: string, status: EstimateStatus): Promise<void> {
     const response = await fetch(`${this.API_URL}/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -111,6 +44,38 @@ class MovingEstimateService {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`שגיאה בעדכון סטטוס הערכת מחיר: ${errorText}`);
+    }
+  }
+
+  static async updateTrackingStage(trackingToken: string, stage: TrackingStage, note?: string): Promise<void> {
+    const response = await fetch(`${this.TRACKING_URL}/${trackingToken}/stage`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(ADMIN_KEY ? { 'x-admin-key': ADMIN_KEY } : {})
+      },
+      body: JSON.stringify({ stage, note })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בעדכון שלב מעקב: ${errorText}`);
+    }
+  }
+
+  static async updateTrackingLocation(trackingToken: string, lat: number, lng: number, address?: string): Promise<void> {
+    const response = await fetch(`${this.TRACKING_URL}/${trackingToken}/location`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(ADMIN_KEY ? { 'x-admin-key': ADMIN_KEY } : {})
+      },
+      body: JSON.stringify({ lat, lng, address })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בעדכון מיקום: ${errorText}`);
     }
   }
 }

@@ -1,5 +1,30 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+// שלבי המעקב אחרי ההובלה, לפי סדר כרונולוגי
+export const TRACKING_STAGES = [
+    'order_placed',        // ההזמנה התקבלה
+    'confirmed',           // ההזמנה אושרה
+    'packing_disassembly', // פירוק ואריזה
+    'in_transit',          // בדרך ליעד
+    'unloading_assembly',  // פריקה והרכבה
+    'completed'            // ההובלה הושלמה
+] as const;
+
+export type TrackingStage = typeof TRACKING_STAGES[number];
+
+export interface IStageHistoryEntry {
+    stage: TrackingStage;
+    at: Date;
+    note?: string;
+}
+
+export interface ITrackingLocation {
+    lat: number;
+    lng: number;
+    address?: string;
+    updatedAt: Date;
+}
+
 export interface IMoveEstimate extends Document {
     name: string;
     email: string;
@@ -26,6 +51,13 @@ export interface IMoveEstimate extends Document {
     }>;
     totalPrice: number;
     status: 'pending' | 'approved' | 'rejected' | 'completed';
+    // --- מעקב הובלה ---
+    trackingToken: string;
+    stage: TrackingStage;
+    stageHistory: IStageHistoryEntry[];
+    location?: ITrackingLocation;
+    reminderEmailSentAt?: Date;
+    reminderSmsSentAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -130,7 +162,39 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
         type: String,
         enum: ['pending', 'approved', 'rejected', 'completed'],
         default: 'pending'
-    }
+    },
+    // --- מעקב הובלה ---
+    trackingToken: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
+    stage: {
+        type: String,
+        enum: TRACKING_STAGES,
+        default: 'order_placed'
+    },
+    stageHistory: [{
+        stage: {
+            type: String,
+            enum: TRACKING_STAGES,
+            required: true
+        },
+        at: {
+            type: Date,
+            default: Date.now
+        },
+        note: String
+    }],
+    location: {
+        lat: Number,
+        lng: Number,
+        address: String,
+        updatedAt: Date
+    },
+    reminderEmailSentAt: Date,
+    reminderSmsSentAt: Date
 }, {
     timestamps: true
 });
@@ -141,4 +205,4 @@ MoveEstimateSchema.index({ phone: 1 });
 MoveEstimateSchema.index({ status: 1 });
 MoveEstimateSchema.index({ createdAt: -1 });
 
-export const MoveEstimate = mongoose.model<IMoveEstimate>('MoveEstimate', MoveEstimateSchema); 
+export const MoveEstimate = mongoose.model<IMoveEstimate>('MoveEstimate', MoveEstimateSchema);

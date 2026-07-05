@@ -1,39 +1,82 @@
+// טיפוסים אלו תואמים במדויק למבנה השטוח שמוחזר מהשרת (Mongoose IMoveEstimate),
+// כולל שדות המעקב אחרי ההובלה (trackingToken, stage, location וכו').
+
 export interface FurnitureItem {
-  id?: number; // Added for frontend mapping consistency
   type: string;
   quantity: number;
   description?: string;
-  fragile?: boolean; // Changed from isFragile
-  disassemble?: boolean; // Changed from needsDisassemble
-  assemble?: boolean; // Changed from needsReassemble
-  note?: string; // Changed from comments
-  img?: File | null; // New field for image
+  isFragile?: boolean;
+  needsDisassemble?: boolean;
+  needsReassemble?: boolean;
+  comments?: string;
+}
+
+export type EstimateStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+
+export type TrackingStage =
+  | 'order_placed'
+  | 'confirmed'
+  | 'packing_disassembly'
+  | 'in_transit'
+  | 'unloading_assembly'
+  | 'completed';
+
+export const TRACKING_STAGES: TrackingStage[] = [
+  'order_placed',
+  'confirmed',
+  'packing_disassembly',
+  'in_transit',
+  'unloading_assembly',
+  'completed'
+];
+
+export const TRACKING_STAGE_LABELS: Record<TrackingStage, string> = {
+  order_placed: 'ההזמנה התקבלה',
+  confirmed: 'ההזמנה אושרה',
+  packing_disassembly: 'פירוק ואריזה',
+  in_transit: 'בדרך ליעד',
+  unloading_assembly: 'פריקה והרכבה',
+  completed: 'ההובלה הושלמה'
+};
+
+export interface StageHistoryEntry {
+  stage: TrackingStage;
+  at: string;
+  note?: string;
+}
+
+export interface TrackingLocation {
+  lat: number;
+  lng: number;
+  address?: string;
+  updatedAt: string;
 }
 
 export interface MovingEstimateRequest {
-  id?: string; // Optional for new requests
-  timestamp?: string; // Optional for new requests
-  customerInfo: {
-    fullName: string; // Changed from name
-    email: string;
-    phone: string;
-  };
-  apartmentDetails: {
-    apartmentType: string;
-    rooms: string; // New field
-    moveDate: string; // Changed from preferredMoveDate
-    fromAddress: string; // Changed from currentAddress
-    toAddress: string; // Changed from destinationAddress
-    notes: string; // Changed from additionalNotes
-    fromFloor?: number; // Changed from originFloor
-    fromElevator?: boolean; // Changed from originHasElevator
-    fromLift?: boolean; // Changed from originHasCrane
-    toFloor?: number; // Changed from destinationFloor
-    toElevator?: boolean; // Changed from destinationHasElevator
-    toLift?: boolean; // Changed from destinationHasCrane
-  };
-  inventory: FurnitureItem[]; // Using the updated FurnitureItem
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  apartmentType: string;
+  preferredMoveDate: string;
+  currentAddress: string;
+  destinationAddress: string;
+  additionalNotes?: string;
+  originFloor: number;
+  destinationFloor: number;
+  originHasElevator: boolean;
+  destinationHasElevator: boolean;
+  originHasCrane: boolean;
+  destinationHasCrane: boolean;
+  inventory: FurnitureItem[];
+  totalPrice: number;
   status: EstimateStatus;
+  trackingToken: string;
+  stage: TrackingStage;
+  stageHistory: StageHistoryEntry[];
+  location?: TrackingLocation;
+  reminderEmailSentAt?: string;
+  reminderSmsSentAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
-
-export type EstimateStatus = 'pending' | 'estimated' | 'accepted' | 'rejected';

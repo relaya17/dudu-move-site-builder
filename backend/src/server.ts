@@ -9,9 +9,11 @@ import moveRequestRouter from './routes/moveRequestRoutes';
 import aiRouter from './routes/aiRoutes';
 import mongoRoutes from './routes/mongoRoutes';
 import pricingRoutes from './routes/pricingRoutes';
+import trackingRoutes from './routes/trackingRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
 import { connectMongoDB } from './database/mongoConnection';
+import { startReminderCron } from './services/ReminderCronService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -72,6 +74,7 @@ app.use('/api/move-requests', moveRequestRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/mongo', mongoRoutes);
 app.use('/api/pricing', pricingRoutes);
+app.use('/api/tracking', trackingRoutes);
 
 // Handle 404 for unknown routes
 app.use(notFoundHandler);
@@ -96,6 +99,8 @@ app.listen(PORT, () => {
   console.log(`📊 Health check available at http://localhost:${PORT}/health`);
   console.log(`🏠 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🗄️ MongoDB API available at http://localhost:${PORT}/api/mongo`);
+  console.log(`📍 Tracking API available at http://localhost:${PORT}/api/tracking`);
+  startReminderCron();
 });
 
 export default app;

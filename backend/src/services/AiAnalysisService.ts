@@ -1,27 +1,21 @@
-import { db } from '../config/firebase';
-import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
+import { MoveEstimate } from '../database/models/MoveEstimate';
 import OpenAI from 'openai';
 
-interface MoveDoc extends DocumentData {
+interface MoveDoc {
     id: string;
-    price_estimate?: { totalPrice?: number } | number;
-    preferred_move_date?: string;
-    created_at?: { toDate?: () => Date } | string;
-    furniture_items?: Array<{ name: string; quantity: number }>;
+    totalPrice?: number;
+    preferredMoveDate?: string;
+    createdAt?: Date | string;
+    inventory?: Array<{ type: string; quantity: number }>;
 }
 
 function extractPrice(move: MoveDoc): number {
-    const pe = move.price_estimate;
-    if (typeof pe === 'number') return pe;
-    return pe?.totalPrice ?? 0;
+    return move.totalPrice ?? 0;
 }
 
 function extractDate(move: MoveDoc): Date {
-    const raw = move.preferred_move_date ?? move.created_at;
+    const raw = move.preferredMoveDate ?? move.createdAt;
     if (!raw) return new Date(0);
-    if (typeof raw === 'object' && typeof (raw as { toDate?: () => Date }).toDate === 'function') {
-        return (raw as { toDate: () => Date }).toDate();
-    }
     return new Date(raw as string);
 }
 
@@ -45,16 +39,16 @@ export class AiAnalysisService {
             }
 
             // שליפת נתוני הובלות מהחודש האחרון
-            const movesRef = collection(db, 'moves');
             const lastMonth = new Date();
             lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-            const q = query(movesRef, where('created_at', '>=', lastMonth));
-            const querySnapshot = await getDocs(q);
-
-            const moves: MoveDoc[] = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
+            const estimates = await MoveEstimate.find({ createdAt: { $gte: lastMonth } });
+            const moves: MoveDoc[] = estimates.map(e => ({
+                id: e._id.toString(),
+                totalPrice: e.totalPrice,
+                preferredMoveDate: e.preferredMoveDate,
+                createdAt: e.createdAt,
+                inventory: e.inventory
             }));
 
             // הכנת הנתונים לניתוח
@@ -109,8 +103,8 @@ export class AiAnalysisService {
     private static getPopularItems(moves: MoveDoc[]) {
         const itemCount: Record<string, number> = {};
         moves.forEach(move => {
-            move.furniture_items?.forEach(item => {
-                itemCount[item.name] = (itemCount[item.name] ?? 0) + item.quantity;
+            move.inventory?.forEach(item => {
+                itemCount[item.type] = (itemCount[item.type] ?? 0) + item.quantity;
             });
         });
         return Object.entries(itemCount)
@@ -187,11 +181,13 @@ export class AiAnalysisService {
     }
 
     private static async getRecentMoves(): Promise<MoveDoc[]> {
-        const movesRef = collection(db, 'moves');
-        const querySnapshot = await getDocs(movesRef);
-        return querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
+        const estimates = await MoveEstimate.find().sort({ createdAt: -1 }).limit(500);
+        return estimates.map(e => ({
+            id: e._id.toString(),
+            totalPrice: e.totalPrice,
+            preferredMoveDate: e.preferredMoveDate,
+            createdAt: e.createdAt,
+            inventory: e.inventory
         }));
     }
 

@@ -12,8 +12,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { db } from '@/config/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { NotificationService } from "@/services/NotificationService";
 import { ReportService } from "@/services/ReportService";
 import { AiAssistant } from "@/components/admin/AiAssistant";
@@ -75,38 +73,44 @@ const AdminDashboard = () => {
     });
   };
 
+  const API_ROOT = import.meta.env.VITE_API_URL ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://localhost:3001'
+      : 'https://dudu-move-backend.onrender.com');
+
   const fetchMoves = async () => {
     try {
-      const movesRef = collection(db, 'moves');
-      const q = query(movesRef, orderBy('created_at', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
+      const response = await fetch(`${API_ROOT}/api/mongo/estimates`);
+      const result = await response.json();
+      const estimates: Array<{
+        _id: string; name: string; phone: string; createdAt: string;
+        preferredMoveDate?: string; totalPrice: number; status: string;
+      }> = result.data || [];
+
       const movesData: MoveRecord[] = [];
       let total = 0;
       const monthly: { [key: string]: number } = {};
 
-      querySnapshot.forEach((doc) => {
-        const moveData = doc.data();
-        const rawDate = moveData.created_at?.toDate?.() ?? new Date(moveData.created_at ?? Date.now());
+      for (const estimate of estimates) {
         const move: MoveRecord = {
-          id: doc.id,
-          customer_id: moveData.customer_id ?? '',
-          created_at: rawDate.toISOString(),
-          preferred_move_date: moveData.preferred_move_date,
-          totalPrice: moveData.price_estimate?.totalPrice ?? 0,
-          status: moveData.status ?? 'pending',
-          customer: moveData.customer ?? {},
+          id: estimate._id,
+          customer_id: estimate._id,
+          created_at: new Date(estimate.createdAt).toISOString(),
+          preferred_move_date: estimate.preferredMoveDate,
+          totalPrice: estimate.totalPrice ?? 0,
+          status: estimate.status ?? 'pending',
+          customer: { name: estimate.name, phone: estimate.phone },
         };
 
         movesData.push(move);
         total += move.totalPrice;
 
-        const monthYear = new Date(move.created_at).toLocaleDateString('he-IL', { 
-          year: 'numeric', 
-          month: 'long' 
+        const monthYear = new Date(move.created_at).toLocaleDateString('he-IL', {
+          year: 'numeric',
+          month: 'long'
         });
         monthly[monthYear] = (monthly[monthYear] || 0) + move.totalPrice;
-      });
+      }
 
       setMoves(movesData);
       setTotalRevenue(total);

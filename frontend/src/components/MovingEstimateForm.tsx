@@ -228,7 +228,8 @@ export const MovingEstimateForm: React.FC = () => {
       
       const response = await axios.post(`${API_URL}/api/move-requests`, formattedData);
       console.log('Server response:', response.data);
-      navigate('/thank-you');
+      const trackingToken = response.data?.data?.trackingToken;
+      navigate('/thank-you', { state: { trackingToken } });
     } catch (error: unknown) {
       const axiosError = error as { response?: { data?: unknown }; message?: string };
       console.error('Error submitting form:', axiosError.response ? axiosError.response.data : axiosError.message);

@@ -5,6 +5,7 @@ import NotFound from '@/pages/NotFound';
 import Dashboard from '@/pages/admin/Dashboard';
 import MovingEstimatesAdminPage from '@/pages/admin/MovingEstimatesAdminPage';
 import { ThankYou } from '@/pages/ThankYou';
+import { Tracking } from '@/pages/Tracking';
 
 export const AppRouter = () => {
   return (
@@ -14,6 +15,7 @@ export const AppRouter = () => {
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/admin/moving-estimates" element={<MovingEstimatesAdminPage />} />
         <Route path="/thank-you" element={<ThankYou />} />
+        <Route path="/tracking/:token" element={<Tracking />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

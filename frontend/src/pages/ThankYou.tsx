@@ -1,9 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Mail, Phone, Clock, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { CheckCircle, Mail, Phone, Clock, ArrowLeft, MapPin } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 export const ThankYou = () => {
+  const location = useLocation();
+  const trackingToken = (location.state as { trackingToken?: string } | null)?.trackingToken;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl mx-auto">
@@ -96,6 +99,24 @@ export const ThankYou = () => {
               </div>
             </div>
           </div>
+
+          {trackingToken && (
+            <div className="bg-green-50 p-6 rounded-lg text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center justify-center gap-2">
+                <MapPin className="w-5 h-5 text-green-600" />
+                מעקב אחרי ההובלה שלך
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                שלחנו לך גם במייל קישור אישי למעקב אחרי ההובלה - כולל תזכורת יומיים לפני, וסטטוס חי ביום ההובלה עצמו.
+              </p>
+              <Button asChild className="bg-green-600 hover:bg-green-700">
+                <Link to={`/tracking/${trackingToken}`}>
+                  <MapPin className="w-4 h-4 mr-2" />
+                  מעקב אחרי ההובלה שלי
+                </Link>
+              </Button>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild className="flex-1">

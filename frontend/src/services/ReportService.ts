@@ -1,19 +1,36 @@
-import { db } from '@/config/firebase';
-import { collection, query, where, getDocs, Timestamp, DocumentData } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 
-interface MoveDoc extends DocumentData {
-  id: string;
-  status?: string;
-  price_estimate?: { totalPrice?: number };
-  created_at?: { toDate?: () => Date } | string;
-  preferred_move_date?: string;
-  furniture_items?: Array<{ name: string; quantity: number }>;
+const API_ROOT = import.meta.env.VITE_API_URL ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:3001'
+        : 'https://dudu-move-backend.onrender.com');
+
+interface MoveDoc {
+    id: string;
+    status?: string;
+    totalPrice?: number;
+    createdAt?: string;
+    preferredMoveDate?: string;
+    inventory?: Array<{ type: string; quantity: number }>;
 }
 
 export class ReportService {
     private static extractRevenue(move: MoveDoc): number {
-        return move.price_estimate?.totalPrice ?? 0;
+        return move.totalPrice ?? 0;
+    }
+
+    private static async fetchAllMoves(): Promise<MoveDoc[]> {
+        const response = await fetch(`${API_ROOT}/api/mongo/estimates?limit=1000`);
+        const result = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (result.data || []).map((e: any) => ({
+            id: e._id,
+            status: e.status,
+            totalPrice: e.totalPrice,
+            createdAt: e.createdAt,
+            preferredMoveDate: e.preferredMoveDate,
+            inventory: e.inventory
+        }));
     }
 
     static async generateDailyReport(date: Date) {
@@ -22,18 +39,12 @@ export class ReportService {
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999);
 
-        const movesRef = collection(db, 'moves');
-        const q = query(
-            movesRef,
-            where('created_at', '>=', Timestamp.fromDate(startOfDay)),
-            where('created_at', '<=', Timestamp.fromDate(endOfDay))
-        );
-
-        const querySnapshot = await getDocs(q);
-        const moves: MoveDoc[] = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const allMoves = await this.fetchAllMoves();
+        const moves = allMoves.filter(move => {
+            if (!move.createdAt) return false;
+            const createdAt = new Date(move.createdAt);
+            return createdAt >= startOfDay && createdAt <= endOfDay;
+        });
 
         return {
             date: date.toLocaleDateString('he-IL'),
@@ -47,20 +58,14 @@ export class ReportService {
 
     static async generateMonthlyReport(year: number, month: number) {
         const startOfMonth = new Date(year, month, 1);
-        const endOfMonth = new Date(year, month + 1, 0);
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
-        const movesRef = collection(db, 'moves');
-        const q = query(
-            movesRef,
-            where('created_at', '>=', Timestamp.fromDate(startOfMonth)),
-            where('created_at', '<=', Timestamp.fromDate(endOfMonth))
-        );
-
-        const querySnapshot = await getDocs(q);
-        const moves: MoveDoc[] = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const allMoves = await this.fetchAllMoves();
+        const moves = allMoves.filter(move => {
+            if (!move.createdAt) return false;
+            const createdAt = new Date(move.createdAt);
+            return createdAt >= startOfMonth && createdAt <= endOfMonth;
+        });
         const totalRevenue = moves.reduce((sum, move) => sum + this.extractRevenue(move), 0);
 
         return {
@@ -84,8 +89,8 @@ export class ReportService {
     private static getPopularItems(moves: MoveDoc[]) {
         const itemCount: Record<string, number> = {};
         moves.forEach(move => {
-            move.furniture_items?.forEach(item => {
-                itemCount[item.name] = (itemCount[item.name] ?? 0) + item.quantity;
+            move.inventory?.forEach(item => {
+                itemCount[item.type] = (itemCount[item.type] ?? 0) + item.quantity;
             });
         });
         return Object.entries(itemCount)
@@ -96,10 +101,8 @@ export class ReportService {
     private static getBusyDays(moves: MoveDoc[]) {
         const dayCount: Record<string, number> = {};
         moves.forEach(move => {
-            const rawDate = move.preferred_move_date ?? move.created_at;
-            const date = typeof rawDate === 'object' && rawDate && typeof (rawDate as { toDate?: () => Date }).toDate === 'function'
-            ? (rawDate as { toDate: () => Date }).toDate()
-            : new Date(typeof rawDate === 'string' ? rawDate : Date.now());
+            const rawDate = move.preferredMoveDate ?? move.createdAt;
+            const date = new Date(rawDate || Date.now());
             const day = date.toLocaleDateString('he-IL', { weekday: 'long' });
             dayCount[day] = (dayCount[day] ?? 0) + 1;
         });

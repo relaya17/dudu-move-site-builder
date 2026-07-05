@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ESTIMATE_STATUSES, EstimateStatus } from 'shared';
 import { MongoService } from '../services/MongoService';
 
 export class MongoController {
@@ -71,16 +72,15 @@ export class MongoController {
             const { id } = req.params;
             const { status } = req.body;
 
-            const validStatuses = ['pending', 'approved', 'rejected', 'completed'];
-            if (!validStatuses.includes(status)) {
+            if (!ESTIMATE_STATUSES.includes(status)) {
                 res.status(400).json({
                     success: false,
-                    message: 'Invalid status. Must be one of: pending, approved, rejected, completed'
+                    message: `Invalid status. Must be one of: ${ESTIMATE_STATUSES.join(', ')}`
                 });
                 return;
             }
 
-            const estimate = await MongoService.updateMoveEstimateStatus(id, status);
+            const estimate = await MongoService.updateMoveEstimateStatus(id, status as EstimateStatus);
 
             if (!estimate) {
                 res.status(404).json({

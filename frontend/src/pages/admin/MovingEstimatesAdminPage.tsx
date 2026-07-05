@@ -88,114 +88,120 @@ const MovingEstimatesAdminPage = () => {
     <div className="p-4" dir="rtl">
       <h1 className="text-2xl font-bold mb-4 text-blue-800">ניהול הערכות מחיר להובלות דירה</h1>
 
-      {loading && <p>טוען...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      {!loading && estimates.length === 0 && <p>אין בקשות להערכת מחיר כרגע</p>}
+      <main>
+        {loading && <p role="status" aria-live="polite">טוען...</p>}
+        {error && <p className="text-red-600" role="alert">{error}</p>}
+        {!loading && estimates.length === 0 && <p>אין בקשות להערכת מחיר כרגע</p>}
 
-      {estimates.map((estimate) => (
-        <div key={estimate._id} className="border p-4 mb-4 rounded shadow-md bg-white">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h2 className="text-lg font-semibold mb-2">פרטי לקוח</h2>
-              <p><strong>שם:</strong> {estimate.name}</p>
-              <p><strong>טלפון:</strong> {estimate.phone}</p>
-              <p><strong>אימייל:</strong> {estimate.email}</p>
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold mb-2">פרטי הדירה</h2>
-              <p><strong>סוג דירה:</strong> {estimate.apartmentType}</p>
-              <p><strong>קומה מ:</strong> {estimate.originFloor ?? 'לא צוין'}</p>
-              <p><strong>קומה אל:</strong> {estimate.destinationFloor ?? 'לא צוין'}</p>
-              <p><strong>מעלית מ:</strong> {estimate.originHasElevator ? 'יש' : 'אין'}</p>
-              <p><strong>מעלית אל:</strong> {estimate.destinationHasElevator ? 'יש' : 'אין'}</p>
-              <p><strong>מנוף מ:</strong> {estimate.originHasCrane ? 'נדרש' : 'לא נדרש'}</p>
-              <p><strong>מנוף אל:</strong> {estimate.destinationHasCrane ? 'נדרש' : 'לא נדרש'}</p>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <h2 className="text-lg font-semibold mb-2">פרטי ההובלה</h2>
-            <p><strong>תאריך מועדף:</strong> {estimate.preferredMoveDate}</p>
-            <p><strong>כתובת נוכחית:</strong> {estimate.currentAddress}</p>
-            <p><strong>כתובת יעד:</strong> {estimate.destinationAddress}</p>
-            {estimate.additionalNotes && <p><strong>הערות נוספות:</strong> {estimate.additionalNotes}</p>}
-            <p><strong>מחיר משוער:</strong> ₪{estimate.totalPrice}</p>
-          </div>
-
-          <div className="mt-4">
-            <h2 className="text-lg font-semibold mb-2">מצאי רהיטים</h2>
-            <p><strong>סה"כ פריטים:</strong> {estimate.inventory.length}</p>
-            <div className="mt-2">
-              {estimate.inventory.map((item, idx) => (
-                <div key={idx} className="border p-2 mb-2 rounded bg-gray-50">
-                  <p><strong>סוג:</strong> {item.type}</p>
-                  <p><strong>כמות:</strong> {item.quantity}</p>
-                  {item.description && <p><strong>תיאור:</strong> {item.description}</p>}
-                  <p><strong>שביר:</strong> {item.isFragile ? 'כן' : 'לא'}</p>
-                  <p><strong>פירוק:</strong> {item.needsDisassemble ? 'כן' : 'לא'}</p>
-                  <p><strong>הרכבה:</strong> {item.needsReassemble ? 'כן' : 'לא'}</p>
-                  {item.comments && <p><strong>הערות:</strong> {item.comments}</p>}
+        <ul className="list-none p-0 m-0">
+          {estimates.map((estimate) => (
+            <li key={estimate._id}>
+              <article aria-label={`בקשת הערכת מחיר של ${estimate.name}`} className="border p-4 mb-4 rounded shadow-md bg-white">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold mb-2">פרטי לקוח</h2>
+                    <p><strong>שם:</strong> {estimate.name}</p>
+                    <p><strong>טלפון:</strong> <a className="underline" href={`tel:${estimate.phone}`}>{estimate.phone}</a></p>
+                    <p><strong>אימייל:</strong> <a className="underline" href={`mailto:${estimate.email}`}>{estimate.email}</a></p>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold mb-2">פרטי הדירה</h2>
+                    <p><strong>סוג דירה:</strong> {estimate.apartmentType}</p>
+                    <p><strong>קומה מ:</strong> {estimate.originFloor ?? 'לא צוין'}</p>
+                    <p><strong>קומה אל:</strong> {estimate.destinationFloor ?? 'לא צוין'}</p>
+                    <p><strong>מעלית מ:</strong> {estimate.originHasElevator ? 'יש' : 'אין'}</p>
+                    <p><strong>מעלית אל:</strong> {estimate.destinationHasElevator ? 'יש' : 'אין'}</p>
+                    <p><strong>מנוף מ:</strong> {estimate.originHasCrane ? 'נדרש' : 'לא נדרש'}</p>
+                    <p><strong>מנוף אל:</strong> {estimate.destinationHasCrane ? 'נדרש' : 'לא נדרש'}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="mt-4 flex justify-between items-center flex-wrap gap-2">
-            <p><strong>סטטוס:</strong> {estimate.status}</p>
-            <div className="flex gap-2">
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                disabled={busyId === estimate._id || estimate.status === 'approved'}
-                onClick={() => handleStatusChange(estimate._id, 'approved')}
-              >
-                אשר הערכת מחיר
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-                disabled={busyId === estimate._id || estimate.status === 'rejected'}
-                onClick={() => handleStatusChange(estimate._id, 'rejected')}
-              >
-                דחה בקשה
-              </button>
-            </div>
-          </div>
+                <div className="mt-4">
+                  <h2 className="text-lg font-semibold mb-2">פרטי ההובלה</h2>
+                  <p><strong>תאריך מועדף:</strong> {estimate.preferredMoveDate}</p>
+                  <p><strong>כתובת נוכחית:</strong> {estimate.currentAddress}</p>
+                  <p><strong>כתובת יעד:</strong> {estimate.destinationAddress}</p>
+                  {estimate.additionalNotes && <p><strong>הערות נוספות:</strong> {estimate.additionalNotes}</p>}
+                  <p><strong>מחיר משוער:</strong> ₪{estimate.totalPrice}</p>
+                </div>
 
-          <div className="mt-4 border-t pt-4">
-            <h2 className="text-lg font-semibold mb-2">מעקב הובלה</h2>
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <label htmlFor={`stage-${estimate._id}`} className="text-sm font-medium">שלב נוכחי:</label>
-              <select
-                id={`stage-${estimate._id}`}
-                className="border rounded px-2 py-1"
-                value={estimate.stage}
-                disabled={busyId === estimate._id}
-                onChange={(e) => handleStageChange(estimate, e.target.value as TrackingStage)}
-              >
-                {TRACKING_STAGES.map((stage) => (
-                  <option key={stage} value={stage}>{TRACKING_STAGE_LABELS[stage]}</option>
-                ))}
-              </select>
-              <button
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
-                disabled={busyId === estimate._id}
-                onClick={() => handleUpdateLocation(estimate)}
-              >
-                עדכן את מיקומי הנוכחי (GPS)
-              </button>
-            </div>
-            {estimate.location && (
-              <p className="text-sm text-gray-600">
-                מיקום אחרון: {estimate.location.lat.toFixed(5)}, {estimate.location.lng.toFixed(5)} · עודכן: {new Date(estimate.location.updatedAt).toLocaleString('he-IL')}
-              </p>
-            )}
-            <p className="text-sm text-gray-600 mt-1">
-              קישור מעקב ללקוח: <a className="text-blue-600 underline" href={`/tracking/${estimate.trackingToken}`} target="_blank" rel="noreferrer">
-                /tracking/{estimate.trackingToken}
-              </a>
-            </p>
-          </div>
-        </div>
-      ))}
+                <div className="mt-4">
+                  <h2 className="text-lg font-semibold mb-2">מצאי רהיטים</h2>
+                  <p><strong>סה"כ פריטים:</strong> {estimate.inventory.length}</p>
+                  <ul className="mt-2 list-none p-0 m-0">
+                    {estimate.inventory.map((item, idx) => (
+                      <li key={idx} className="border p-2 mb-2 rounded bg-gray-50">
+                        <p><strong>סוג:</strong> {item.type}</p>
+                        <p><strong>כמות:</strong> {item.quantity}</p>
+                        {item.description && <p><strong>תיאור:</strong> {item.description}</p>}
+                        <p><strong>שביר:</strong> {item.isFragile ? 'כן' : 'לא'}</p>
+                        <p><strong>פירוק:</strong> {item.needsDisassemble ? 'כן' : 'לא'}</p>
+                        <p><strong>הרכבה:</strong> {item.needsReassemble ? 'כן' : 'לא'}</p>
+                        {item.comments && <p><strong>הערות:</strong> {item.comments}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center flex-wrap gap-2">
+                  <p><strong>סטטוס:</strong> {estimate.status}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      disabled={busyId === estimate._id || estimate.status === 'approved'}
+                      onClick={() => handleStatusChange(estimate._id, 'approved')}
+                    >
+                      אשר הערכת מחיר
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      disabled={busyId === estimate._id || estimate.status === 'rejected'}
+                      onClick={() => handleStatusChange(estimate._id, 'rejected')}
+                    >
+                      דחה בקשה
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t pt-4">
+                  <h2 className="text-lg font-semibold mb-2">מעקב הובלה</h2>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <label htmlFor={`stage-${estimate._id}`} className="text-sm font-medium">שלב נוכחי:</label>
+                    <select
+                      id={`stage-${estimate._id}`}
+                      className="border rounded px-2 py-1"
+                      value={estimate.stage}
+                      disabled={busyId === estimate._id}
+                      onChange={(e) => handleStageChange(estimate, e.target.value as TrackingStage)}
+                    >
+                      {TRACKING_STAGES.map((stage) => (
+                        <option key={stage} value={stage}>{TRACKING_STAGE_LABELS[stage]}</option>
+                      ))}
+                    </select>
+                    <button
+                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      disabled={busyId === estimate._id}
+                      onClick={() => handleUpdateLocation(estimate)}
+                    >
+                      עדכן את מיקומי הנוכחי (GPS)
+                    </button>
+                  </div>
+                  {estimate.location && (
+                    <p className="text-sm text-gray-600">
+                      מיקום אחרון: {estimate.location.lat.toFixed(5)}, {estimate.location.lng.toFixed(5)} · עודכן: {new Date(estimate.location.updatedAt).toLocaleString('he-IL')}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600 mt-1 break-all">
+                    קישור מעקב ללקוח: <a className="text-blue-600 underline" href={`/tracking/${estimate.trackingToken}`} target="_blank" rel="noreferrer">
+                      /tracking/{estimate.trackingToken}
+                    </a>
+                  </p>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
+      </main>
     </div>
   );
 };

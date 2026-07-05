@@ -9,6 +9,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  build: {
+    commonjsOptions: {
+      // חבילת "shared" מקושרת דרך pnpm workspace symlink, כך שהנתיב האמיתי שלה
+      // נמצא מחוץ ל-node_modules - יש לכלול אותה במפורש כדי ש-Rollup ינתח נכון
+      // את הייצוא בעת build (אחרת מתקבל "X is not exported by shared/dist/index.js").
+      include: [/shared/, /node_modules/]
+    }
+  },
   server: {
     port: 5173,
     host: true,

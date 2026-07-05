@@ -4,10 +4,10 @@ import { Award, Users, MapPin, Star } from 'lucide-react';
 
 export const About = () => {
   const stats = [
-    { icon: <Award className="h-8 w-8 text-blue-600" />, number: "7+", label: "שנות ניסיון" },
-    { icon: <Users className="h-8 w-8 text-blue-600" />, number: "5000+", label: "לקוחות מרוצים" },
-    { icon: <MapPin className="h-8 w-8 text-blue-600" />, number: "50+", label: "ערים בשירות" },
-    { icon: <Star className="h-8 w-8 text-blue-600" />, number: "4.9", label: "דירוג כוכבים" }
+    { icon: <Award className="h-8 w-8 text-blue-600" aria-hidden="true" />, number: "7+", label: "שנות ניסיון" },
+    { icon: <Users className="h-8 w-8 text-blue-600" aria-hidden="true" />, number: "5000+", label: "לקוחות מרוצים" },
+    { icon: <MapPin className="h-8 w-8 text-blue-600" aria-hidden="true" />, number: "50+", label: "ערים בשירות" },
+    { icon: <Star className="h-8 w-8 text-blue-600" aria-hidden="true" />, number: "4.9", label: "דירוג כוכבים" }
   ];
 
   return (

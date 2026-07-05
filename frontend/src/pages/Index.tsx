@@ -9,13 +9,18 @@ import { Footer } from '../components/Footer';
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <a href="#main-content" className="skip-to-content">
+        דלג לתוכן העיקרי
+      </a>
       <Hero />
-      <Services />
-      <About />
-      <section id="estimate-form">
-        <MovingEstimateForm />
-      </section>
-      <Testimonials />
+      <main id="main-content">
+        <Services />
+        <About />
+        <section id="estimate-form">
+          <MovingEstimateForm />
+        </section>
+        <Testimonials />
+      </main>
       <Footer />
     </div>
   );

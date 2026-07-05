@@ -1,6 +1,26 @@
 
 import { Separator } from '@/components/ui/separator';
-import { Truck, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Truck, Phone, Mail, MapPin } from 'lucide-react';
+import { PrivacyPolicy } from '@/components/legal/PrivacyPolicy';
+import { TermsModal } from '@/components/legal/TermsModal';
+import { AccessibilityStatement } from '@/components/legal/AccessibilityStatement';
+
+const PHONE_NUMBER = '0547777623';
+const EMAIL_ADDRESS = 'info@davidmoving.co.il';
+
+const serviceLinks = [
+  { label: 'הובלות דירה', href: '#services' },
+  { label: 'הובלות משרדים', href: '#services' },
+  { label: 'הובלות למרחקים ארוכים', href: '#services' },
+  { label: 'שירותי אריזה', href: '#services' },
+  { label: 'הובלות חירום', href: '#services' },
+];
+
+const quickLinks = [
+  { label: 'אודותינו', href: '#about' },
+  { label: 'קבלת הצעת מחיר', href: '#estimate-form' },
+  { label: 'ביקורות', href: '#testimonials' },
+];
 
 export const Footer = () => {
   return (
@@ -9,62 +29,65 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2 space-x-reverse">
-              <Truck className="h-8 w-8 text-blue-400" />
+              <Truck className="h-8 w-8 text-blue-400" aria-hidden="true" />
               <span className="text-2xl font-bold">דויד הובלות</span>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              השותף המהימן שלכם לשירותי הובלה ואריזה מקצועיים. 
+              השותף המהימן שלכם לשירותי הובלה ואריזה מקצועיים.
               הופכים את המעבר שלכם לחוויה ללא לחץ מאז 2014.
             </p>
-            <div className="flex space-x-4 space-x-reverse">
-              <Facebook className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
-              <Twitter className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
-              <Instagram className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
-              <Linkedin className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
-            </div>
           </div>
 
-          <div className="space-y-4">
+          <nav aria-label="השירותים שלנו" className="space-y-4">
             <h3 className="text-xl font-semibold">השירותים שלנו</h3>
             <ul className="space-y-2 text-gray-300">
-              <li className="hover:text-white cursor-pointer transition-colors">הובלות דירה</li>
-              <li className="hover:text-white cursor-pointer transition-colors">הובלות משרדים</li>
-              <li className="hover:text-white cursor-pointer transition-colors">הובלות למרחקים ארוכים</li>
-              <li className="hover:text-white cursor-pointer transition-colors">שירותי אריזה</li>
-              <li className="hover:text-white cursor-pointer transition-colors">פתרונות אחסון</li>
-              <li className="hover:text-white cursor-pointer transition-colors">הובלות חירום</li>
+              {serviceLinks.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="hover:text-white focus-visible:text-white transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
-          </div>
+          </nav>
 
-          <div className="space-y-4">
+          <nav aria-label="קישורים מהירים" className="space-y-4">
             <h3 className="text-xl font-semibold">קישורים מהירים</h3>
             <ul className="space-y-2 text-gray-300">
-              <li className="hover:text-white cursor-pointer transition-colors">אודותינו</li>
-              <li className="hover:text-white cursor-pointer transition-colors">קבלת הצעת מחיר</li>
-              <li className="hover:text-white cursor-pointer transition-colors">טיפים למעבר דירה</li>
-              <li className="hover:text-white cursor-pointer transition-colors">שאלות נפוצות</li>
-              <li className="hover:text-white cursor-pointer transition-colors">קריירה</li>
-              <li className="hover:text-white cursor-pointer transition-colors">ביקורות</li>
+              {quickLinks.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="hover:text-white focus-visible:text-white transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
-          </div>
+          </nav>
 
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">פרטי יצירת קשר</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3 space-x-reverse">
-                <Phone className="h-5 w-5 text-blue-400" />
-                <span className="text-gray-300">0547777623</span>
+                <Phone className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                <a href={`tel:${PHONE_NUMBER}`} className="text-gray-300 hover:text-white focus-visible:text-white transition-colors">
+                  {PHONE_NUMBER}
+                </a>
               </div>
               <div className="flex items-center space-x-3 space-x-reverse">
-                <Mail className="h-5 w-5 text-blue-400" />
-                <span className="text-gray-300">info@davidmoving.co.il</span>
+                <Mail className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                <a href={`mailto:${EMAIL_ADDRESS}`} className="text-gray-300 hover:text-white focus-visible:text-white transition-colors">
+                  {EMAIL_ADDRESS}
+                </a>
               </div>
               <div className="flex items-start space-x-3 space-x-reverse">
-                <MapPin className="h-5 w-5 text-blue-400 mt-1" />
-                <span className="text-gray-300">
-                <br />
-                  אילת, ישראל
-                </span>
+                <MapPin className="h-5 w-5 text-blue-400 mt-1" aria-hidden="true" />
+                <span className="text-gray-300">אילת, ישראל</span>
               </div>
             </div>
           </div>
@@ -72,14 +95,14 @@ export const Footer = () => {
 
         <Separator className="my-8 bg-gray-700" />
 
-        <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-sm">
             © 2024 דויד הובלות. כל הזכויות שמורות.
           </p>
-          <div className="flex space-x-6 space-x-reverse mt-4 md:mt-0">
-            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">מדיניות פרטיות</span>
-            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">תנאי שירות</span>
-            <span className="text-gray-400 hover:text-white cursor-pointer transition-colors text-sm">מדיניות עוגיות</span>
+          <div className="flex flex-wrap items-center gap-4 [&_button]:text-gray-400 [&_button]:hover:text-white">
+            <PrivacyPolicy />
+            <TermsModal />
+            <AccessibilityStatement />
           </div>
         </div>
       </div>

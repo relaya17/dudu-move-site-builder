@@ -1,29 +1,19 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import {
+    TRACKING_STAGES,
+    TrackingStage,
+    StageHistoryEntry,
+    TrackingLocation,
+    EstimateStatus,
+    ESTIMATE_STATUSES,
+    FurnitureItem
+} from 'shared';
 
-// שלבי המעקב אחרי ההובלה, לפי סדר כרונולוגי
-export const TRACKING_STAGES = [
-    'order_placed',        // ההזמנה התקבלה
-    'confirmed',           // ההזמנה אושרה
-    'packing_disassembly', // פירוק ואריזה
-    'in_transit',          // בדרך ליעד
-    'unloading_assembly',  // פריקה והרכבה
-    'completed'            // ההובלה הושלמה
-] as const;
+// מקור האמת לשלבי המעקב ולסטטוסים מוגדר בחבילת shared (נצרך גם ב-frontend).
+export { TRACKING_STAGES, TrackingStage, ESTIMATE_STATUSES };
 
-export type TrackingStage = typeof TRACKING_STAGES[number];
-
-export interface IStageHistoryEntry {
-    stage: TrackingStage;
-    at: Date;
-    note?: string;
-}
-
-export interface ITrackingLocation {
-    lat: number;
-    lng: number;
-    address?: string;
-    updatedAt: Date;
-}
+export type IStageHistoryEntry = StageHistoryEntry<Date>;
+export type ITrackingLocation = TrackingLocation<Date>;
 
 export interface IMoveEstimate extends Document {
     name: string;
@@ -40,17 +30,9 @@ export interface IMoveEstimate extends Document {
     destinationHasElevator: boolean;
     originHasCrane: boolean;
     destinationHasCrane: boolean;
-    inventory: Array<{
-        type: string;
-        quantity: number;
-        description?: string;
-        isFragile: boolean;
-        needsDisassemble: boolean;
-        needsReassemble: boolean;
-        comments?: string;
-    }>;
+    inventory: Array<Required<Omit<FurnitureItem, 'description' | 'comments'>> & Pick<FurnitureItem, 'description' | 'comments'>>;
     totalPrice: number;
-    status: 'pending' | 'approved' | 'rejected' | 'completed';
+    status: EstimateStatus;
     // --- מעקב הובלה ---
     trackingToken: string;
     stage: TrackingStage;
@@ -160,7 +142,7 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'completed'],
+        enum: ESTIMATE_STATUSES,
         default: 'pending'
     },
     // --- מעקב הובלה ---

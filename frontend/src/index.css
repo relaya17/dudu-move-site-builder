@@ -110,12 +110,72 @@
     direction: rtl;
     text-align: right;
   }
-  
+
   [dir="rtl"] .text-left {
     text-align: right;
   }
-  
+
   [dir="rtl"] .text-right {
     text-align: left;
+  }
+}
+
+/* נגישות: מסלול מקלדת (WCAG 2.1 AA - 2.4.7 Focus Visible) */
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 3px solid #1a73e8;
+    outline-offset: 2px;
+  }
+}
+
+/* קישור "דלג לתוכן הראשי" - גלוי רק בפוקוס מקלדת (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */
+.skip-to-content {
+  position: absolute;
+  right: 1rem;
+  top: -3rem;
+  z-index: 100;
+  background: #1a73e8;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  transition: top 0.2s ease-in-out;
+}
+.skip-to-content:focus {
+  top: 1rem;
+}
+
+/* מצב ניגודיות גבוהה - מופעל דרך כפתור הנגישות הצף */
+body.high-contrast {
+  background: #000 !important;
+  color: #fff !important;
+}
+body.high-contrast * {
+  background-color: #000 !important;
+  color: #ffeb3b !important;
+  border-color: #ffeb3b !important;
+}
+body.high-contrast a,
+body.high-contrast button {
+  color: #ffeb3b !important;
+  text-decoration: underline;
+}
+body.high-contrast img {
+  filter: grayscale(1) contrast(1.2);
+}
+
+/* כיבוד prefers-reduced-motion (WCAG 2.1 AA - 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

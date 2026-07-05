@@ -41,13 +41,16 @@ export const NumberInputWithControls: React.FC<NumberInputWithControlsProps> = (
     }
   };
 
+  const inputId = React.useId();
+
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-      <Typography variant="body1" sx={{ mr: 1, minWidth: '80px' }}>{label}</Typography>
-      <IconButton onClick={handleDecrement} disabled={value <= min} size="small">
+    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+      <Typography component="label" htmlFor={inputId} variant="body1" sx={{ mr: 1, minWidth: '80px' }}>{label}</Typography>
+      <IconButton onClick={handleDecrement} disabled={value <= min} size="small" aria-label={`הקטן ${label}`}>
         <RemoveIcon />
       </IconButton>
       <TextField
+        id={inputId}
         type="number"
         value={value}
         onChange={handleInputChange}
@@ -61,7 +64,7 @@ export const NumberInputWithControls: React.FC<NumberInputWithControlsProps> = (
         variant="outlined"
         size="small"
       />
-      <IconButton onClick={handleIncrement} disabled={value >= max} size="small">
+      <IconButton onClick={handleIncrement} disabled={value >= max} size="small" aria-label={`הגדל ${label}`}>
         <AddIcon />
       </IconButton>
       {unit && <Typography variant="body1" sx={{ ml: 1 }}>{unit}</Typography>} {/* Display unit if provided */}

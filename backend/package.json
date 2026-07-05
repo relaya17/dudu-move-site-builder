@@ -18,6 +18,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^7.0.5",
     "openai": "^4.28.0",
+    "shared": "workspace:*",
     "twilio": "^5.0.4",
     "zod": "^3.22.4"
   },

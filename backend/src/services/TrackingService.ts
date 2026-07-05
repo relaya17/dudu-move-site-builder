@@ -1,4 +1,5 @@
-import { MoveEstimate, IMoveEstimate, TRACKING_STAGES, TrackingStage } from '../database/models/MoveEstimate';
+import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
+import { TRACKING_STAGES, TrackingStage } from 'shared';
 
 export class TrackingService {
     static isValidStage(stage: string): stage is TrackingStage {

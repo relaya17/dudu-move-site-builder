@@ -5,32 +5,32 @@ import { Truck, Package, Home, Building, Clock } from 'lucide-react';
 export const Services = () => {
   const services = [
     {
-      icon: <Home className="h-12 w-12 text-blue-600" />,
+      icon: <Home className="h-12 w-12 text-blue-600" aria-hidden="true" />,
       title: "הובלות דירה",
       description: "שירותי הובלת דירה מקצועיים למשפחות ויחידים. אנו מטפלים בהכל מאריזה ועד פריקה.",
       features: ["אריזה ופריקה", "הרכבת רהיטים", "טיפול בחפצים שבירים"]
     },
     {
-      icon: <Building className="h-12 w-12 text-blue-600" />,
+      icon: <Building className="h-12 w-12 text-blue-600" aria-hidden="true" />,
       title: "הובלות משרדים",
       description: "העברת משרדים ועסקים עם זמן השבתה מינימלי. אנו מבינים את החשיבות של המשך פעילות העסק.",
       features: ["ציוד משרדי", "זמן השבתה מינימלי", "הובלות בסופי שבוע"]
     },
     {
-      icon: <Package className="h-12 w-12 text-blue-600" />,
+      icon: <Package className="h-12 w-12 text-blue-600" aria-hidden="true" />,
       title: "שירותי אריזה",
       description: "שירותי אריזה מקצועיים עם חומרים איכותיים להבטחת הגעה בטוחה של חפציכם.",
       features: ["חומרים איכותיים", "קופסאות מותאמות", "מעקב מלאי"]
     },
     {
-      icon: <Truck className="h-12 w-12 text-blue-600" />,
+      icon: <Truck className="h-12 w-12 text-blue-600" aria-hidden="true" />,
       title: "הובלות למרחקים ארוכים",
       description: "הובלות בין־עירוניות וארציות המטופלות בזהירות ובדייקנות. מורשים להובלות בין־עירוניות.",
       features: ["מעקב GPS", "אפשרויות אחסון", "זמנים גמישים"]
     },
   
     {
-      icon: <Clock className="h-12 w-12 text-blue-600" />,
+      icon: <Clock className="h-12 w-12 text-blue-600" aria-hidden="true" />,
       title: "הובלות חירום",
       description: "שירותי הובלה דחופים זמינים 24/7. אנחנו כאן כשאתם הכי צריכים אותנו.",
       features: ["זמינות 24/7", "תגובה מהירה", "אריזה דחופה"]

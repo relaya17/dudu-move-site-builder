@@ -4,8 +4,10 @@ services:
     name: dudu-move-backend
     env: node
     plan: free
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npm start
+    # הבנייה חייבת לרוץ משורש המונו-רפו (pnpm workspace) כדי שחבילת "shared"
+    # תיבנה ותקושר לפני ה-backend (התלוי בה דרך "shared": "workspace:*").
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter shared build && pnpm --filter backend build
+    startCommand: cd backend && node dist/server.js
     envVars:
       - key: NODE_ENV
         value: production

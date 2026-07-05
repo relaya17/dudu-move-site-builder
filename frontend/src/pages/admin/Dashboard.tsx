@@ -157,12 +157,13 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-8" dir="rtl">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 sm:p-8" dir="rtl">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">דשבורד ניהול</h1>
         <Button onClick={handleExportReport}>ייצא דוח חודשי</Button>
       </div>
-      
+
+      <main>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="mb-8">
           <TabsTrigger value="overview">סקירה כללית</TabsTrigger>
@@ -234,11 +235,11 @@ const AdminDashboard = () => {
                 <table className="w-full">
                   <thead>
                     <tr>
-                      <th className="text-right p-2">תאריך</th>
-                      <th className="text-right p-2">לקוח</th>
-                      <th className="text-right p-2">טלפון</th>
-                      <th className="text-right p-2">סטטוס</th>
-                      <th className="text-right p-2">מחיר</th>
+                      <th scope="col" className="text-right p-2">תאריך</th>
+                      <th scope="col" className="text-right p-2">לקוח</th>
+                      <th scope="col" className="text-right p-2">טלפון</th>
+                      <th scope="col" className="text-right p-2">סטטוס</th>
+                      <th scope="col" className="text-right p-2">מחיר</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -288,6 +289,7 @@ const AdminDashboard = () => {
           </div>
         </TabsContent>
       </Tabs>
+      </main>
     </div>
   );
 };

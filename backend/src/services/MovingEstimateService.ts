@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { EstimateStatus } from 'shared';
 import { MoveEstimate } from '../database/models/MoveEstimate';
 import { CreateCustomerRequest } from '../types/moveTypes';
 import { customerSchema, moveDetailsSchema, furnitureItemSchema } from '../middleware/validation';
@@ -159,9 +160,9 @@ export class MovingEstimateService {
     /**
      * עדכון סטטוס בקשת הערכת מחיר
      */
-    static async updateMoveRequestStatus(id: string, status: 'pending' | 'approved' | 'rejected' | 'completed') {
+    static async updateMoveRequestStatus(id: string, status: EstimateStatus) {
         try {
-            const estimate = await MoveEstimate.findByIdAndUpdate(id, { status }, { new: true });
+            const estimate = await MoveEstimate.findByIdAndUpdate(id, { status }, { new: true, runValidators: true });
             if (!estimate) {
                 throw new Error('בקשת הערכת המחיר לא נמצאה');
             }

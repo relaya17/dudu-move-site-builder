@@ -1,3 +1,4 @@
+import { EstimateStatus } from 'shared';
 import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
 import { Customer, ICustomer } from '../database/models/Customer';
 
@@ -39,12 +40,12 @@ export class MongoService {
         }
     }
 
-    static async updateMoveEstimateStatus(id: string, status: string): Promise<IMoveEstimate | null> {
+    static async updateMoveEstimateStatus(id: string, status: EstimateStatus): Promise<IMoveEstimate | null> {
         try {
             return await MoveEstimate.findByIdAndUpdate(
                 id,
                 { status },
-                { new: true }
+                { new: true, runValidators: true }
             );
         } catch (error) {
             console.error('Error updating move estimate status:', error);

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { ESTIMATE_STATUSES } from 'shared';
 import { MovingEstimateService } from '../services/MovingEstimateService';
 import { estimateRequestSchema } from '../middleware/validation';
 
@@ -73,6 +74,14 @@ export const updateMoveRequestStatus = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
+
+        if (!ESTIMATE_STATUSES.includes(status)) {
+            res.status(400).json({
+                success: false,
+                message: `סטטוס לא תקין. ערכים אפשריים: ${ESTIMATE_STATUSES.join(', ')}`
+            });
+            return;
+        }
 
         await MovingEstimateService.updateMoveRequestStatus(id, status);
 

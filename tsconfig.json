@@ -21,10 +21,12 @@
     "paths": {
       "@/*": ["./src/*"],
       "@frontend/*": ["frontend/src/*"],
-      "@backend/*": ["backend/src/*"]
+      "@backend/*": ["backend/src/*"],
+      "shared": ["shared/src/index.ts"],
+      "shared/*": ["shared/src/*"]
     }
   },
-  "include": ["frontend/src", "backend/src"],
+  "include": ["frontend/src", "backend/src", "shared/src"],
   "exclude": ["node_modules", "dist", "build"],
-  "references": [{ "path": "./frontend" }, { "path": "./backend" }]
+  "references": [{ "path": "./shared" }, { "path": "./frontend" }, { "path": "./backend" }]
 }

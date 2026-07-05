@@ -1,0 +1,64 @@
+/**
+ * שלבי המעקב אחרי ההובלה, לפי סדר כרונולוגי.
+ * מקור אמת יחיד - נצרך הן ב-backend (מודל Mongoose, שירות המעקב) והן ב-frontend (UI המעקב/הניהול).
+ */
+export const TRACKING_STAGES = [
+    'order_placed', // ההזמנה התקבלה
+    'confirmed', // ההזמנה אושרה
+    'packing_disassembly', // פירוק ואריזה
+    'in_transit', // בדרך ליעד
+    'unloading_assembly', // פריקה והרכבה
+    'completed' // ההובלה הושלמה
+] as const;
+
+export type TrackingStage = typeof TRACKING_STAGES[number];
+
+export const TRACKING_STAGE_LABELS: Record<TrackingStage, string> = {
+    order_placed: 'ההזמנה התקבלה',
+    confirmed: 'ההזמנה אושרה',
+    packing_disassembly: 'פירוק ואריזה',
+    in_transit: 'בדרך ליעד',
+    unloading_assembly: 'פריקה והרכבה',
+    completed: 'ההובלה הושלמה'
+};
+
+/**
+ * ערך גנרי לתאריך/שעה כפי שהוא מיוצג בפועל בכל שכבה:
+ * - במסד הנתונים (Mongoose): אובייקט Date.
+ * - במעטפת ה-API / ב-frontend: מחרוזת ISO (כפי שמגיעה מ-JSON.stringify).
+ */
+export type DateLike = Date | string;
+
+export interface StageHistoryEntry<TDate extends DateLike = string> {
+    stage: TrackingStage;
+    at: TDate;
+    note?: string;
+}
+
+export interface TrackingLocation<TDate extends DateLike = string> {
+    lat: number;
+    lng: number;
+    address?: string;
+    updatedAt: TDate;
+}
+
+/**
+ * תצוגה ציבורית ומצומצמת של מעקב הובלה - מוחזרת מ-GET /api/tracking/:token,
+ * ללא חשיפת מזהי מסד הנתונים הפנימיים או פרטי לקוח רגישים מעבר לנדרש.
+ */
+export interface TrackingViewDTO {
+    trackingToken: string;
+    name: string;
+    apartmentType: string;
+    preferredMoveDate: string;
+    currentAddress: string;
+    destinationAddress: string;
+    status: string;
+    stage: TrackingStage;
+    stages: readonly TrackingStage[];
+    stageHistory: StageHistoryEntry[];
+    location: TrackingLocation | null;
+    reminderEmailSentAt: string | null;
+    reminderSmsSentAt: string | null;
+    createdAt: string;
+}

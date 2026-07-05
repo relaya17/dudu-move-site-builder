@@ -56,10 +56,11 @@ export const Testimonials = () => {
                 <CardContent className="p-6">
                   <div
                     className="flex items-center mb-4"
+                    role="img"
                     aria-label={`דירוג ${testimonial.rating} מתוך 5 כוכבים`}
                   >
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" aria-hidden="true" />
                     ))}
                   </div>
                   <p className="text-gray-600 mb-4 leading-relaxed">"{testimonial.text}"</p>
@@ -75,9 +76,9 @@ export const Testimonials = () => {
 
         <div className="text-center mt-12">
           <div className="inline-flex items-center space-x-4 space-x-reverse bg-blue-50 px-8 py-4 rounded-lg">
-            <div className="flex items-center">
+            <div className="flex items-center" role="img" aria-label="דירוג 4.9 מתוך 5 כוכבים">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
+                <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" aria-hidden="true" />
               ))}
             </div>
             <div className="text-right">

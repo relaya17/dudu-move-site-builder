@@ -50,8 +50,19 @@
 
 ## מבנה הפרויקט
 
+מונו-רפו מבוסס **pnpm workspaces**, עם חבילת טיפוסים משותפת (`shared`) שמהווה
+מקור אמת יחיד לחוזה ה-API בין ה-frontend וה-backend (סטטוסים, שלבי מעקב, צורת
+בקשת ההערכה וכו') - כדי למנוע כפילות טיפוסים וסטייה בין השכבות.
+
 ```
 dudu-move-site-builder/
+├── shared/            # טיפוסים משותפים (backend + frontend) - נבנה ראשון
+│   └── src/
+│       ├── estimateStatus.ts
+│       ├── tracking.ts
+│       ├── furniture.ts
+│       ├── moveEstimate.ts
+│       └── apiResponse.ts
 ├── frontend/          # React + Vite
 │   ├── src/
 │   │   ├── components/
@@ -66,6 +77,9 @@ dudu-move-site-builder/
 │   └── ...
 └── ...
 ```
+
+`pnpm build` (מהשורש) בונה את החבילות לפי סדר התלויות - קודם `shared`, ואז
+`backend`/`frontend` שתלויים בה דרך `"shared": "workspace:*"`.
 
 ## טכנולוגיות
 

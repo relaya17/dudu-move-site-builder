@@ -10,5 +10,7 @@ export type {
   FurnitureItem,
   StageHistoryEntry,
   TrackingLocation,
+  QuoteDocumentInfo,
+  InvoiceDocumentInfo,
   MoveEstimateDTO as MovingEstimateRequest
 } from 'shared';

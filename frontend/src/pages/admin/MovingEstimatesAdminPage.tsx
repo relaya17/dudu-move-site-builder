@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import MovingEstimateService from '@/services/movingEstimateService';
 import { MovingEstimateRequest, TRACKING_STAGES, TRACKING_STAGE_LABELS, TrackingStage } from '@/types/movingEstimate';
+import { printQuote } from '@/lib/quotePrint';
 
 const MovingEstimatesAdminPage = () => {
   const [estimates, setEstimates] = useState<MovingEstimateRequest[]>([]);
@@ -82,6 +83,36 @@ const MovingEstimatesAdminPage = () => {
         setBusyId(null);
       }
     );
+  };
+
+  const handleIssueQuote = async (estimate: MovingEstimateRequest) => {
+    try {
+      setBusyId(estimate._id);
+      const updated = await MovingEstimateService.issueQuote(estimate._id);
+      setEstimates(prev => prev.map(e => (e._id === estimate._id ? updated : e)));
+      printQuote(updated);
+    } catch (err) {
+      console.error('Error issuing quote:', err);
+      alert('שגיאה בהפקת הצעת המחיר');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleIssueInvoice = async (estimate: MovingEstimateRequest) => {
+    if (!window.confirm('הפקת חשבונית היא פעולה חד-פעמית ובלתי הפיכה מול רשות המסים. להמשיך?')) {
+      return;
+    }
+    try {
+      setBusyId(estimate._id);
+      const updated = await MovingEstimateService.issueInvoice(estimate._id);
+      setEstimates(prev => prev.map(e => (e._id === estimate._id ? updated : e)));
+    } catch (err) {
+      console.error('Error issuing invoice:', err);
+      alert(err instanceof Error ? err.message : 'שגיאה בהפקת החשבונית');
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
@@ -196,6 +227,44 @@ const MovingEstimatesAdminPage = () => {
                       /tracking/{estimate.trackingToken}
                     </a>
                   </p>
+                </div>
+
+                <div className="mt-4 border-t pt-4">
+                  <h2 className="text-lg font-semibold mb-2">מסמכים</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      className="px-3 py-1 bg-slate-600 text-white rounded hover:bg-slate-700 disabled:opacity-50 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      disabled={busyId === estimate._id}
+                      onClick={() => handleIssueQuote(estimate)}
+                    >
+                      הפק הצעת מחיר (PDF)
+                    </button>
+                    <button
+                      className="px-3 py-1 bg-emerald-700 text-white rounded hover:bg-emerald-800 disabled:opacity-50 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      disabled={busyId === estimate._id || Boolean(estimate.invoice?.providerId)}
+                      onClick={() => handleIssueInvoice(estimate)}
+                    >
+                      {estimate.invoice?.providerId ? 'חשבונית הופקה' : 'הפק חשבונית/קבלה'}
+                    </button>
+                  </div>
+                  {estimate.quote?.quoteNumber && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      מס&apos; הצעת מחיר: {estimate.quote.quoteNumber} · הופקה: {new Date(estimate.quote.generatedAt).toLocaleDateString('he-IL')}
+                      <span className="block text-xs text-gray-400">(מסמך שיווקי בלבד, אינו חשבונית מס)</span>
+                    </p>
+                  )}
+                  {estimate.invoice?.providerId && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      חשבונית מס&apos; {estimate.invoice.documentNumber}
+                      {estimate.invoice.allocationNumber && ` · מס' הקצאה: ${estimate.invoice.allocationNumber}`}
+                      {' · '}
+                      {estimate.invoice.documentUrl ? (
+                        <a className="text-blue-600 underline" href={estimate.invoice.documentUrl} target="_blank" rel="noreferrer">
+                          צפייה במסמך
+                        </a>
+                      ) : 'ללא קישור זמין'}
+                    </p>
+                  )}
                 </div>
               </article>
             </li>

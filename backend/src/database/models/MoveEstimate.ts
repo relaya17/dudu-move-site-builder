@@ -6,7 +6,9 @@ import {
     TrackingLocation,
     EstimateStatus,
     ESTIMATE_STATUSES,
-    FurnitureItem
+    FurnitureItem,
+    QuoteDocumentInfo,
+    InvoiceDocumentInfo
 } from 'shared';
 
 // מקור האמת לשלבי המעקב ולסטטוסים מוגדר בחבילת shared (נצרך גם ב-frontend).
@@ -14,6 +16,8 @@ export { TRACKING_STAGES, TrackingStage, ESTIMATE_STATUSES };
 
 export type IStageHistoryEntry = StageHistoryEntry<Date>;
 export type ITrackingLocation = TrackingLocation<Date>;
+export type IQuoteDocumentInfo = QuoteDocumentInfo<Date>;
+export type IInvoiceDocumentInfo = InvoiceDocumentInfo<Date>;
 
 export interface IMoveEstimate extends Document {
     name: string;
@@ -40,6 +44,9 @@ export interface IMoveEstimate extends Document {
     location?: ITrackingLocation;
     reminderEmailSentAt?: Date;
     reminderSmsSentAt?: Date;
+    // --- מסמכי חשבונאות ---
+    quote?: IQuoteDocumentInfo;
+    invoice?: IInvoiceDocumentInfo;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -176,7 +183,25 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
         updatedAt: Date
     },
     reminderEmailSentAt: Date,
-    reminderSmsSentAt: Date
+    reminderSmsSentAt: Date,
+    // --- מסמכי חשבונאות ---
+    // הצעת מחיר: מסמך לא-פיסקלי, מופק ומאוחסן מקומית בלבד.
+    quote: {
+        quoteNumber: String,
+        generatedAt: Date
+    },
+    // חשבונית/קבלה: מסמך מס מוסדר - מופק אך ורק דרך ספק חשבוניות מורשה חיצוני (ר' shared/src/billing.ts).
+    invoice: {
+        docType: {
+            type: String,
+            enum: ['invoice_receipt', 'invoice', 'receipt']
+        },
+        providerId: String,
+        documentNumber: String,
+        allocationNumber: String,
+        documentUrl: String,
+        issuedAt: Date
+    }
 }, {
     timestamps: true
 });

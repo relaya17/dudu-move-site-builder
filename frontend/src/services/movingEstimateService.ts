@@ -71,6 +71,44 @@ class MovingEstimateService {
       throw new Error(`שגיאה בעדכון מיקום: ${errorText}`);
     }
   }
+
+  /**
+   * מנפיק (או מחזיר, אם כבר קיים) מספר הצעת מחיר - מסמך לא-פיסקלי.
+   * ה-PDF עצמו מופק ומודפס בצד הלקוח דרך חלון הדפסה (ר' quotePrint.ts).
+   */
+  static async issueQuote(id: string): Promise<MovingEstimateRequest> {
+    const response = await fetch(`${this.API_URL}/${id}/quote`, {
+      method: 'POST',
+      headers: adminHeaders()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בהפקת הצעת מחיר: ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result.data || result;
+  }
+
+  /**
+   * מפיק חשבונית מס קבלה (מסמך מס) דרך ספק חשבוניות מורשה חיצוני (Green Invoice).
+   * ייכשל עם הודעה ברורה אם השירות טרם הוגדר (ר' backend/src/services/InvoiceService.ts).
+   */
+  static async issueInvoice(id: string): Promise<MovingEstimateRequest> {
+    const response = await fetch(`${this.API_URL}/${id}/invoice`, {
+      method: 'POST',
+      headers: adminHeaders()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בהפקת חשבונית: ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result.data || result;
+  }
 }
 
 export default MovingEstimateService;

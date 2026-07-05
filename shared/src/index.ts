@@ -18,3 +18,5 @@ export { FurnitureItem } from './furniture';
 export { MoveEstimateDTO } from './moveEstimate';
 
 export { ApiResponse } from './apiResponse';
+
+export { QuoteDocumentInfo, InvoiceDocumentInfo } from './billing';

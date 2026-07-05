@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { ESTIMATE_STATUSES, EstimateStatus } from 'shared';
 import { MongoService } from '../services/MongoService';
+import { QuoteService } from '../services/QuoteService';
+import { InvoiceService } from '../services/InvoiceService';
 
 export class MongoController {
     // Move Estimate Controllers
@@ -100,6 +102,62 @@ export class MongoController {
             res.status(500).json({
                 success: false,
                 message: 'Failed to update move estimate status',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    // הפקת מספר הצעת מחיר (מסמך לא-פיסקלי) - ה-PDF עצמו נוצר ומודפס בצד הלקוח (frontend).
+    static async issueQuote(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const estimate = await QuoteService.issueQuote(id);
+
+            if (!estimate) {
+                res.status(404).json({
+                    success: false,
+                    message: 'Move estimate not found'
+                });
+                return;
+            }
+
+            res.status(200).json({
+                success: true,
+                data: estimate
+            });
+        } catch (error) {
+            console.error('Error issuing quote:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to issue quote',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    // הפקת חשבונית מס קבלה (מסמך מס) דרך ספק חשבוניות מורשה חיצוני (Green Invoice).
+    static async issueInvoice(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const estimate = await InvoiceService.issueInvoiceReceipt(id);
+
+            if (!estimate) {
+                res.status(404).json({
+                    success: false,
+                    message: 'Move estimate not found'
+                });
+                return;
+            }
+
+            res.status(200).json({
+                success: true,
+                data: estimate
+            });
+        } catch (error) {
+            console.error('Error issuing invoice:', error);
+            res.status(error instanceof Error && error.message.includes('לא זמינה') ? 503 : 500).json({
+                success: false,
+                message: 'Failed to issue invoice',
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
         }

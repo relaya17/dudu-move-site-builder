@@ -6,6 +6,7 @@ import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import moveRequestRouter from './routes/moveRequestRoutes';
 import aiRouter from './routes/aiRoutes';
 import mongoRoutes from './routes/mongoRoutes';
@@ -26,6 +27,10 @@ connectMongoDB();
 // Content-Security-Policy מושבת כי אותו שרת מגיש גם את קבצי ה-frontend הסטטיים
 // (Google Fonts, vite bundles) שה-CSP הדיפולטיבי של helmet היה חוסם.
 app.use(helmet({ contentSecurityPolicy: false }));
+
+// דחיסת gzip/brotli לכל התגובות (JS/CSS/JSON) - חינמי לגמרי, מקטין תעבורה
+// ומאיץ טעינה משמעותית, במיוחד עבור ה-bundle של ה-frontend שאותו שרת מגיש.
+app.use(compression());
 
 // רשימת מקורות מותרים ל-CORS: כתובות ה-frontend הידועות (Netlify + אותו שרת Render
 // שמגיש גם את קבצי ה-build הסטטיים) בתוספת כל מה שמוגדר ב-FRONTEND_URL/CORS_ORIGIN

@@ -14,6 +14,7 @@ router.get('/estimates', MongoController.getAllMoveEstimates);
 router.get('/estimates/:id', MongoController.getMoveEstimateById);
 router.patch('/estimates/:id/status', MongoController.updateMoveEstimateStatus);
 router.post('/estimates/:id/quote', MongoController.issueQuote);
+router.post('/estimates/:id/send-quote-email', MongoController.sendQuoteEmail);
 router.post('/estimates/:id/invoice', MongoController.issueInvoice);
 router.delete('/estimates/:id', MongoController.deleteMoveEstimate);
 

@@ -3,6 +3,7 @@ import { ESTIMATE_STATUSES, EstimateStatus } from 'shared';
 import { MongoService } from '../services/MongoService';
 import { QuoteService } from '../services/QuoteService';
 import { InvoiceService } from '../services/InvoiceService';
+import { EmailService } from '../services/EmailService';
 
 export class MongoController {
     // Move Estimate Controllers
@@ -158,6 +159,45 @@ export class MongoController {
             res.status(error instanceof Error && error.message.includes('לא זמינה') ? 503 : 500).json({
                 success: false,
                 message: 'Failed to issue invoice',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    // שולח הצעת מחיר במייל ללקוח (מנפיק מספר הצעה אם עדיין לא קיים)
+    static async sendQuoteEmail(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const estimate = await QuoteService.issueQuote(id);
+
+            if (!estimate) {
+                res.status(404).json({ success: false, message: 'הזמנה לא נמצאה' });
+                return;
+            }
+
+            if (!estimate.email) {
+                res.status(400).json({ success: false, message: 'אין כתובת מייל ללקוח' });
+                return;
+            }
+
+            await EmailService.sendQuoteEmail({
+                to: estimate.email,
+                name: estimate.name,
+                quoteNumber: estimate.quote!.quoteNumber,
+                totalPrice: estimate.totalPrice ?? 0,
+                fromAddress: estimate.currentAddress ?? '',
+                toAddress: estimate.destinationAddress ?? '',
+                moveDate: estimate.preferredMoveDate
+                    ? new Date(estimate.preferredMoveDate).toLocaleDateString('he-IL')
+                    : 'לא נקבע',
+            });
+
+            res.status(200).json({ success: true, quoteNumber: estimate.quote!.quoteNumber });
+        } catch (error) {
+            console.error('Error sending quote email:', error);
+            res.status(500).json({
+                success: false,
+                message: 'שגיאה בשליחת הצעת המחיר',
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
         }

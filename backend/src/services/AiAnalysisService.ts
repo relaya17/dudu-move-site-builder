@@ -23,14 +23,29 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || 'dummy-key'
 });
 
+// מודל זול ועדכני (יולי 2026) - הפיצ'ר הזה הוא "תן 3 טיפים עסקיים", לא ניתוח כבד,
+// אז אין שום סיבה לשלם על מודל יקר. יש לוודא מול https://openai.com/api/pricing
+// שהמודל עדיין זמין, כי OpenAI מחליפים דורות מודלים בתדירות גבוהה.
+const AI_MODEL = 'gpt-4.1-nano';
+
+// שמירת התוצאה במטמון בזיכרון למשך יום - כך שכל כניסה לטאב "AI" בדשבורד לא
+// מפעילה קריאה בתשלום מחדש; זה מקטין עלות בפועל בסדר גודל (מ"כל טעינת עמוד" ל"פעם ביום").
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const insightsCache: { data: unknown; expiresAt: number } = { data: null, expiresAt: 0 };
+const pricingCache: { data: unknown; expiresAt: number } = { data: null, expiresAt: 0 };
+
 export class AiAnalysisService {
     static async generateBusinessInsights() {
+        if (insightsCache.data && insightsCache.expiresAt > Date.now()) {
+            return insightsCache.data;
+        }
+
         try {
             // בדיקה אם יש API key
             if (!process.env.OPENAI_API_KEY) {
                 return {
                     insights: `המלצות עסקיות לדוגמה:
-                    
+
                     1. הרחבת שירותים - הוסף שירותי אריזה ואריזה מחדש
                     2. שיפור השיווק - השתמש ברשתות חברתיות להגיע ללקוחות חדשים
                     3. אופטימיזציה - נצל את שעות השפל להצעות מיוחדות`,
@@ -79,13 +94,16 @@ export class AiAnalysisService {
                             אנא תן 3 המלצות עסקיות מעשיות.`
                     }
                 ],
-                model: "gpt-4-turbo-preview",
+                model: AI_MODEL,
             });
 
-            return {
+            const result = {
                 insights: completion.choices[0].message.content,
                 data: analysisData
             };
+            insightsCache.data = result;
+            insightsCache.expiresAt = Date.now() + CACHE_TTL_MS;
+            return result;
         } catch (error) {
             console.error('שגיאה בניתוח AI:', error);
             // Fallback response
@@ -127,6 +145,10 @@ export class AiAnalysisService {
     }
 
     static async generatePricingRecommendations() {
+        if (pricingCache.data && pricingCache.expiresAt > Date.now()) {
+            return pricingCache.data;
+        }
+
         try {
             // בדיקה אם יש API key
             if (!process.env.OPENAI_API_KEY) {
@@ -159,13 +181,16 @@ export class AiAnalysisService {
                             אנא תן המלצות לאופטימיזציית מחירים.`
                     }
                 ],
-                model: "gpt-4-turbo-preview",
+                model: AI_MODEL,
             });
 
-            return {
+            const result = {
                 recommendations: completion.choices[0].message.content,
                 data: priceData
             };
+            pricingCache.data = result;
+            pricingCache.expiresAt = Date.now() + CACHE_TTL_MS;
+            return result;
         } catch (error) {
             console.error('שגיאה בניתוח מחירים:', error);
             // Fallback response

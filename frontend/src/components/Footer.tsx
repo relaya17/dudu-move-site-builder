@@ -7,7 +7,7 @@ import { TermsModal } from '@/components/legal/TermsModal';
 import { AccessibilityStatement } from '@/components/legal/AccessibilityStatement';
 
 const PHONE_NUMBER = '0547777623';
-const EMAIL_ADDRESS = 'info@davidmoving.co.il';
+const EMAIL_ADDRESS = 'davidgueta3232@gmail.com';
 
 const serviceLinks = [
   { label: 'הובלות דירה', href: '#services' },

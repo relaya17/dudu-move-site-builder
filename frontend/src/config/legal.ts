@@ -78,7 +78,7 @@ export const legalConfig = {
         ],
         contact: {
             name: 'רכז נגישות',
-            email: 'accessibility@davidmoving.co.il',
+            email: 'davidgueta3232@gmail.com',
             phone: '0547777623'
         }
     },
@@ -161,6 +161,6 @@ export const legalConfig = {
         commercialUse: 'Requires written permission',
         modification: 'Allowed for personal use only',
         distribution: 'Prohibited without license',
-        contact: 'legal@davidmoving.co.il'
+        contact: 'davidgueta3232@gmail.com'
     }
 };

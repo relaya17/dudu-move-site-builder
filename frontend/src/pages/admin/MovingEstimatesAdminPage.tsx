@@ -1,13 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import MovingEstimateService from '@/services/movingEstimateService';
 import { MovingEstimateRequest, TRACKING_STAGES, TRACKING_STAGE_LABELS, TrackingStage } from '@/types/movingEstimate';
 import { printQuote } from '@/lib/quotePrint';
+
+// מעקב חי (רציף) - מרווח מינימלי בין שליחות מיקום לשרת, כדי לא להעמיס רשת/סוללה.
+const LIVE_TRACKING_MIN_INTERVAL_MS = 20000;
 
 const MovingEstimatesAdminPage = () => {
   const [estimates, setEstimates] = useState<MovingEstimateRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [liveTrackingEstimateId, setLiveTrackingEstimateId] = useState<string | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const lastSentAtRef = useRef<number>(0);
+
+  // עוצר מעקב חי בעת יציאה מהעמוד/סגירת הטאב, כדי לא להשאיר watch פעיל בלי צורך.
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
   const fetchEstimates = async () => {
     try {
@@ -82,6 +97,67 @@ const MovingEstimatesAdminPage = () => {
         alert('לא ניתן היה לאתר את המיקום הנוכחי');
         setBusyId(null);
       }
+    );
+  };
+
+  /**
+   * מעקב חי (רציף): שולח מיקום אוטומטית כל עוד העמוד פתוח ומסך הטלפון דלוק -
+   * בלי צורך ללחוץ בכל פעם. נעצר אוטומטית אם סוגרים את הטאב/עוברים אפליקציה
+   * (מגבלת דפדפן - למעקב שממשיך גם עם מסך כבוי/ברקע נדרשת אפליקציה נייטיבית).
+   */
+  const handleToggleLiveTracking = (estimate: MovingEstimateRequest) => {
+    if (liveTrackingEstimateId === estimate._id) {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      setLiveTrackingEstimateId(null);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      alert('הדפדפן לא תומך באיתור מיקום');
+      return;
+    }
+
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+
+    lastSentAtRef.current = 0;
+    setLiveTrackingEstimateId(estimate._id);
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      async (position) => {
+        const now = Date.now();
+        if (now - lastSentAtRef.current < LIVE_TRACKING_MIN_INTERVAL_MS) {
+          return; // עדיין בתוך חלון ה-throttle - מדלגים על השליחה הזו
+        }
+        lastSentAtRef.current = now;
+
+        try {
+          const { latitude, longitude } = position.coords;
+          await MovingEstimateService.updateTrackingLocation(estimate.trackingToken, latitude, longitude);
+          setEstimates(prev => prev.map(e => (
+            e._id === estimate._id
+              ? { ...e, location: { lat: latitude, lng: longitude, updatedAt: new Date().toISOString() } }
+              : e
+          )));
+        } catch (err) {
+          console.error('Error updating live location:', err);
+        }
+      },
+      (geoError) => {
+        console.error('Geolocation watch error:', geoError);
+        alert('מעקב חי הופסק - ודא שהמסך דלוק ושאישרת גישה למיקום בדפדפן');
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+        setLiveTrackingEstimateId(null);
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
     );
   };
 
@@ -211,12 +287,28 @@ const MovingEstimatesAdminPage = () => {
                     </select>
                     <button
                       className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      disabled={busyId === estimate._id}
+                      disabled={busyId === estimate._id || liveTrackingEstimateId === estimate._id}
                       onClick={() => handleUpdateLocation(estimate)}
                     >
-                      עדכן את מיקומי הנוכחי (GPS)
+                      עדכן מיקום חד-פעמי
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded disabled:opacity-50 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                        liveTrackingEstimateId === estimate._id
+                          ? 'bg-red-600 text-white hover:bg-red-700'
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      }`}
+                      disabled={busyId === estimate._id || (liveTrackingEstimateId !== null && liveTrackingEstimateId !== estimate._id)}
+                      onClick={() => handleToggleLiveTracking(estimate)}
+                    >
+                      {liveTrackingEstimateId === estimate._id ? '⏹ עצור מעקב חי' : '▶ התחל מעקב חי (רציף)'}
                     </button>
                   </div>
+                  {liveTrackingEstimateId === estimate._id && (
+                    <p className="text-xs text-emerald-700 mb-2">
+                      🟢 מעקב חי פעיל - יש להשאיר את הדף הזה פתוח ומסך הטלפון דלוק לאורך ההובלה. המיקום נשלח אוטומטית בערך כל 20 שניות.
+                    </p>
+                  )}
                   {estimate.location && (
                     <p className="text-sm text-gray-600">
                       מיקום אחרון: {estimate.location.lat.toFixed(5)}, {estimate.location.lng.toFixed(5)} · עודכן: {new Date(estimate.location.updatedAt).toLocaleString('he-IL')}

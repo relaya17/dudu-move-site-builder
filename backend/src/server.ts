@@ -62,8 +62,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
-app.use(generalRateLimit);
+// Rate limiting - רק על נתיבי API, כדי לא להאט/להגביל בטעות טעינת קבצים סטטיים (JS/CSS/תמונות)
+// של ה-frontend שאותו שרת מגיש (ר' express.static למטה).
+app.use('/api', generalRateLimit);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -105,9 +106,12 @@ app.use('/api/mongo', mongoRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/tracking', trackingRoutes);
 
-// הגשת קבצי ה-frontend הבנויים (שרת Render אחד מגיש גם את ה-API וגם את האתר)
+// הגשת קבצי ה-frontend הבנויים (שרת Render אחד מגיש גם את ה-API וגם את האתר).
+// maxAge ארוך זול/מהיר לגמרי: Vite מוסיף hash לשם כל קובץ JS/CSS, כך שקובץ עם
+// hash מסוים לעולם לא משתנה בתוכן - דפדפן שמור אותו במטמון לשנה זה בטוח ומאיץ טעינות חוזרות.
+// index.html עצמו לא נכלל ב-maxAge הזה כי הוא מוגש בנפרד ב-SPA fallback למטה.
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
-app.use(express.static(frontendDistPath));
+app.use(express.static(frontendDistPath, { maxAge: '1y', index: false }));
 
 // SPA fallback - כל בקשת GET שאינה API ולא תואמת קובץ סטטי קיים מקבלת את index.html
 // (כדי ש-React Router יוכל לטפל בניתוב בצד הלקוח, כולל /tracking/:token)

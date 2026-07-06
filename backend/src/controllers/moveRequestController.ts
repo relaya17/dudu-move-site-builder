@@ -6,10 +6,16 @@ import { estimateRequestSchema } from '../middleware/validation';
 
 export const submitMoveRequest = async (req: Request, res: Response) => {
     try {
-        console.log('Received request data:', JSON.stringify(req.body, null, 2));
+        // לוג מפורט (כולל שם/טלפון/אימייל הלקוח) רק בפיתוח - אין להדפיס PII ללוגים בפרודקשן.
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Received request data:', JSON.stringify(req.body, null, 2));
+        }
 
         const validatedData = await estimateRequestSchema.parseAsync(req.body);
-        console.log('Validated data:', JSON.stringify(validatedData, null, 2));
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Validated data:', JSON.stringify(validatedData, null, 2));
+        }
 
         const { customerData, moveData, furnitureItems } = validatedData;
         const result = await MovingEstimateService.submitEstimateRequest(customerData, {

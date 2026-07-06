@@ -50,7 +50,7 @@ export class NotificationService {
 
     private static async fetchEstimates(): Promise<MovingEstimateRequest[]> {
         try {
-            const response = await fetch(`${API_ROOT}/api/mongo/estimates`, { headers: adminHeaders() });
+            const response = await fetch(`${API_ROOT}/api/mongo/estimates?limit=500`, { headers: adminHeaders() });
             if (!response.ok) return [];
             const result = await response.json();
             return result.data || [];

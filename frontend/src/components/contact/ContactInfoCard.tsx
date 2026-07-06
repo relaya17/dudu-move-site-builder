@@ -24,7 +24,7 @@ export const ContactInfoCard = () => {
           <Mail className="h-5 w-5 text-blue-600" />
           <div>
             <p className="font-semibold">אימייל</p>
-            <p className="text-gray-600">info@davidmoving.co.il</p>
+            <p className="text-gray-600">davidgueta3232@gmail.com</p>
           </div>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">

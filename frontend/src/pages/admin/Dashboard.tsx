@@ -81,7 +81,7 @@ const AdminDashboard = () => {
 
   const fetchMoves = async () => {
     try {
-      const response = await fetch(`${API_ROOT}/api/mongo/estimates`, { headers: adminHeaders() });
+      const response = await fetch(`${API_ROOT}/api/mongo/estimates?limit=500`, { headers: adminHeaders() });
       const result = await response.json();
       const estimates: Array<{
         _id: string; name: string; phone: string; createdAt: string;

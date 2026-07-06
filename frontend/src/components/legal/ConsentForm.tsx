@@ -201,7 +201,7 @@ export const ConsentForm = ({ onConsent, onDecline, loading = false }: ConsentFo
         {/* מידע נוסף */}
         <div className="text-xs text-gray-500 text-center">
           <p>עדכון אחרון: {legalConfig.termsOfService.lastUpdated}</p>
-          <p>לשאלות: legal@davidmoving.co.il</p>
+          <p>לשאלות: davidgueta3232@gmail.com</p>
         </div>
       </CardContent>
     </Card>

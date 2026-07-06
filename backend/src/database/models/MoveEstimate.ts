@@ -211,5 +211,7 @@ MoveEstimateSchema.index({ email: 1 });
 MoveEstimateSchema.index({ phone: 1 });
 MoveEstimateSchema.index({ status: 1 });
 MoveEstimateSchema.index({ createdAt: -1 });
+// נדרש ל-ReminderCronService שמריץ שאילתה יומית לפי תאריך הובלה מועדף.
+MoveEstimateSchema.index({ preferredMoveDate: 1 });
 
 export const MoveEstimate = mongoose.model<IMoveEstimate>('MoveEstimate', MoveEstimateSchema);

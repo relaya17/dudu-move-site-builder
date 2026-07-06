@@ -3,7 +3,7 @@ import { MovingEstimateRequest } from '@/types/movingEstimate';
 // פרטי הקשר של העסק - תואמים לאלו שמופיעים בפוטר/בדף הבית (מקור האמת התוכני).
 const COMPANY_NAME = 'דוד הובלות';
 const COMPANY_PHONE = '0547777623';
-const COMPANY_EMAIL = 'info@davidmoving.co.il';
+const COMPANY_EMAIL = 'davidgueta3232@gmail.com';
 const COMPANY_ADDRESS = 'אילת, ישראל';
 
 /**

@@ -12,7 +12,10 @@ class MovingEstimateService {
   private static readonly TRACKING_URL = `${API_ROOT}/api/tracking`;
 
   static async getAllEstimates(): Promise<MovingEstimateRequest[]> {
-    const response = await fetch(this.API_URL, { headers: adminHeaders() });
+    // ה-API מגביל כברירת מחדל ל-50 תוצאות אם לא מציינים limit - בלי זה, ברגע שיש
+    // יותר מ-50 בקשות אי פעם, הבקשות הישנות פשוט "נעלמות" משקט מפאנל הניהול.
+    // 500 מספיק בנוחות לעסק בגודל בינוני; כשיהיה צורך אמיתי בעוד, כדאי להוסיף עימוד (pagination) אמיתי.
+    const response = await fetch(`${this.API_URL}?limit=500`, { headers: adminHeaders() });
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`שגיאה בשליפת הערכות מחיר: ${errorText}`);

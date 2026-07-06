@@ -91,7 +91,7 @@ export const ThankYou = () => {
               </div>
               <div className="text-center">
                 <p className="font-medium text-gray-900">אימייל</p>
-                <a href="mailto:info@davidmoving.co.il" className="text-blue-600 font-semibold hover:underline">info@davidmoving.co.il</a>
+                <a href="mailto:davidgueta3232@gmail.com" className="text-blue-600 font-semibold hover:underline">davidgueta3232@gmail.com</a>
               </div>
             </div>
             <div className="mt-4 text-center">

@@ -40,12 +40,15 @@ export class AiAnalysisService {
         }
     }
 
-    static async generateCustomAnalysis(query: string) {
+    static async generateCustomAnalysis(
+        query: string,
+        history: { role: 'user' | 'assistant'; content: string }[] = []
+    ) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/ai/custom-analysis`, {
                 method: 'POST',
                 headers: adminHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ query }),
+                body: JSON.stringify({ query, history }),
             });
 
             if (!response.ok) {

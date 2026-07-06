@@ -9,7 +9,7 @@ export const Hero = () => {
   };
 
   return (
-    <section dir="rtl" className="relative text-white bg-gray-900">
+    <section id="hero" dir="rtl" className="relative text-white bg-gray-900">
       <img
         src="/images/moving-bg.jpg"
         alt="תמונה של הובלה"

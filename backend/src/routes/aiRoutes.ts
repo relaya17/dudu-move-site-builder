@@ -37,27 +37,23 @@ router.get('/pricing-recommendations', asyncHandler(async (_req: Request, res: R
 }));
 
 // POST /api/ai/custom-analysis
+// body: { query: string, history?: {role:'user'|'assistant', content:string}[] }
 router.post('/custom-analysis', asyncHandler(async (req: Request, res: Response) => {
     try {
-        const { query } = req.body;
+        const { query, history } = req.body as {
+            query?: string;
+            history?: { role: 'user' | 'assistant'; content: string }[];
+        };
 
-        if (!query) {
+        if (!query || typeof query !== 'string' || query.trim().length === 0) {
             return res.status(400).json({ error: 'Query is required' });
         }
 
-        // For now, return a mock response since we don't have a custom analysis method
-        const mockResponse = {
-            analysis: `ניתוח מותאם אישית עבור: "${query}"
-            
-            המלצות כלליות:
-            - בדוק את המחירים בשוק
-            - שפר את השירות ללקוחות
-            - הרחב את הצוות במידת הצורך`,
-            query: query,
-            timestamp: new Date().toISOString()
-        };
-
-        res.json(mockResponse);
+        const result = await AiAnalysisService.generateCustomAnalysis(
+            query.trim(),
+            Array.isArray(history) ? history : []
+        );
+        res.json(result);
     } catch (error) {
         console.error('Error generating custom analysis:', error);
         res.status(500).json({

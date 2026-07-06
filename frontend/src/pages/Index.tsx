@@ -1,5 +1,6 @@
 
 import { Hero } from '../components/Hero';
+import { Navbar } from '../components/Navbar';
 import { Services } from '../components/Services';
 import { About } from '../components/About';
 import MovingEstimateForm from '../components/MovingEstimateForm';
@@ -12,6 +13,7 @@ const Index = () => {
       <a href="#main-content" className="skip-to-content">
         דלג לתוכן העיקרי
       </a>
+      <Navbar />
       <Hero />
       <main id="main-content">
         <Services />

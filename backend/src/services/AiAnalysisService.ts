@@ -144,6 +144,58 @@ export class AiAnalysisService {
         return "חיובי ברובו, עם דגש על מקצועיות הצוות";
     }
 
+    static async generateCustomAnalysis(
+        query: string,
+        conversationHistory: { role: 'user' | 'assistant'; content: string }[] = []
+    ) {
+        try {
+            // שליפת קונטקסט עסקי בסיסי לתת לAI רקע
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            const estimates = await MoveEstimate.find({ createdAt: { $gte: lastMonth } }).limit(100);
+            const totalRevenue = estimates.reduce((s, e) => s + (e.totalPrice ?? 0), 0);
+            const pending = estimates.filter(e => e.status === 'pending').length;
+            const businessContext = `נתוני חברת "דוד הובלות" (חודש אחרון): ${estimates.length} הובלות, הכנסות ${totalRevenue.toLocaleString('he-IL')}₪, ${pending} ממתינות לאישור.`;
+
+            if (!process.env.OPENAI_API_KEY) {
+                return {
+                    analysis: `שלום! אני לאה, המזכירה החכמה של דוד הובלות 🤝\n\nשאלתך: "${query}"\n\n${businessContext}\n\nתשובה: אין לי כרגע גישה למנוע AI חיצוני (OPENAI_API_KEY לא הוגדר), אבל אני יכולה לעזור בשאלות על:\n• ניהול הובלות וסטטוסים\n• לוח זמנים ותיאום\n• הצעות מחיר ולקוחות\n\nהגדר OPENAI_API_KEY ב-.env כדי לפתוח את מלוא יכולות ה-AI.`,
+                    query,
+                    timestamp: new Date().toISOString()
+                };
+            }
+
+            const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+                {
+                    role: 'system',
+                    content: `אתה לאה — מזכירה חכמה ועוזרת ניהול של חברת "דוד הובלות" באילת. את עוזרת למנהל עם ניהול יומי, הובלות, לקוחות, מחירים וכל שאלה עסקית. את מנומסת, ישירה ועניינית. תמיד עונה בעברית. ${businessContext}`
+                },
+                ...conversationHistory.map(m => ({ role: m.role, content: m.content })),
+                { role: 'user', content: query }
+            ];
+
+            const completion = await openai.chat.completions.create({
+                model: AI_MODEL,
+                messages,
+                max_tokens: 600,
+                temperature: 0.7
+            });
+
+            return {
+                analysis: completion.choices[0].message.content ?? 'לא התקבלה תשובה',
+                query,
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            console.error('שגיאה בניתוח מותאם אישית:', error);
+            return {
+                analysis: 'מצטערת, נתקלתי בשגיאה. אנא נסה שוב.',
+                query,
+                timestamp: new Date().toISOString()
+            };
+        }
+    }
+
     static async generatePricingRecommendations() {
         if (pricingCache.data && pricingCache.expiresAt > Date.now()) {
             return pricingCache.data;

@@ -156,139 +156,216 @@ const AdminDashboard = () => {
     }
   };
 
+  const thisMonthMoves = moves.filter(m =>
+    new Date(m.created_at).getMonth() === new Date().getMonth() &&
+    new Date(m.created_at).getFullYear() === new Date().getFullYear()
+  );
+  const pendingMoves = moves.filter(m => m.status === 'pending');
+
+  const STATUS_LABELS: Record<string, string> = {
+    pending: 'ממתין',
+    confirmed: 'מאושר',
+    in_progress: 'בביצוע',
+    completed: 'הושלם',
+    cancelled: 'בוטל',
+  };
+  const STATUS_COLORS: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    confirmed: 'bg-blue-100 text-blue-800',
+    in_progress: 'bg-purple-100 text-purple-800',
+    completed: 'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800',
+  };
+
   return (
-    <div className="p-4 sm:p-8" dir="rtl">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-        <h1 className="text-3xl font-bold">דשבורד ניהול</h1>
-        <Button onClick={handleExportReport}>ייצא דוח חודשי</Button>
-      </div>
-
-      <main>
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="mb-8">
-          <TabsTrigger value="overview">סקירה כללית</TabsTrigger>
-          <TabsTrigger value="moves">הובלות</TabsTrigger>
-          <TabsTrigger value="ai">המלצות AI</TabsTrigger>
-          <TabsTrigger value="reports">דוחות</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>סה"כ הכנסות</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">₪{totalRevenue.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>הובלות החודש</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{moves.filter(m => 
-                  new Date(m.created_at).getMonth() === new Date().getMonth()
-                ).length}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>הובלות ממתינות</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{moves.filter(m => m.status === 'pending').length}</p>
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* כותרת */}
+      <header className="bg-gradient-to-l from-blue-700 to-indigo-800 text-white px-4 sm:px-8 py-6 shadow-lg">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+              🚛 דוד הובלות — מרכז ניהול
+            </h1>
+            <p className="text-blue-200 text-sm mt-0.5">
+              {new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           </div>
+          <Button
+            onClick={handleExportReport}
+            variant="outline"
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 gap-2"
+          >
+            ייצא דוח חודשי
+          </Button>
+        </div>
+      </header>
 
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>הכנסות חודשיות</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="amount" name="הכנסות" stroke="#8884d8" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      <main className="max-w-7xl mx-auto p-4 sm:p-6">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="mb-6 bg-white shadow-sm border w-full sm:w-auto">
+            <TabsTrigger value="overview" className="flex-1 sm:flex-none">סקירה</TabsTrigger>
+            <TabsTrigger value="moves" className="flex-1 sm:flex-none">הובלות</TabsTrigger>
+            <TabsTrigger value="ai" className="flex-1 sm:flex-none">🤖 לאה AI</TabsTrigger>
+            <TabsTrigger value="reports" className="flex-1 sm:flex-none">דוחות</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="moves">
-          <Card>
-            <CardHeader>
-              <CardTitle>רשימת הובלות</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr>
-                      <th scope="col" className="text-right p-2">תאריך</th>
-                      <th scope="col" className="text-right p-2">לקוח</th>
-                      <th scope="col" className="text-right p-2">טלפון</th>
-                      <th scope="col" className="text-right p-2">סטטוס</th>
-                      <th scope="col" className="text-right p-2">מחיר</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {moves.map(move => (
-                      <tr key={move.id} className="border-t">
-                        <td className="p-2">{new Date(move.created_at).toLocaleDateString('he-IL')}</td>
-                        <td className="p-2">{move.customer?.name}</td>
-                        <td className="p-2">{move.customer?.phone}</td>
-                        <td className="p-2">{move.status}</td>
-                        <td className="p-2">₪{move.totalPrice.toLocaleString()}</td>
+          {/* סקירה כללית */}
+          <TabsContent value="overview">
+            {/* כרטיסי KPI */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <Card className="border-r-4 border-r-green-500 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">סה"כ הכנסות</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-gray-900">₪{totalRevenue.toLocaleString('he-IL')}</p>
+                  <p className="text-xs text-gray-400 mt-1">מ-{moves.length} הובלות</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-r-4 border-r-blue-500 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">הובלות החודש</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-gray-900">{thisMonthMoves.length}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    ממוצע ₪{thisMonthMoves.length > 0
+                      ? Math.round(thisMonthMoves.reduce((s, m) => s + m.totalPrice, 0) / thisMonthMoves.length).toLocaleString('he-IL')
+                      : 0} לכל הובלה
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-r-4 border-r-yellow-500 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">ממתינות לאישור</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-gray-900">{pendingMoves.length}</p>
+                  <p className="text-xs text-gray-400 mt-1">מתוך {moves.length} סה"כ</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* גרף הכנסות */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base">הכנסות חודשיות</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₪${(v/1000).toFixed(0)}K`} />
+                      <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'הכנסות']} />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="amount"
+                        name="הכנסות"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* הובלות */}
+          <TabsContent value="moves">
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base">רשימת הובלות ({moves.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th scope="col" className="text-right px-4 py-3 font-medium text-gray-600">תאריך</th>
+                        <th scope="col" className="text-right px-4 py-3 font-medium text-gray-600">לקוח</th>
+                        <th scope="col" className="text-right px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">טלפון</th>
+                        <th scope="col" className="text-right px-4 py-3 font-medium text-gray-600">סטטוס</th>
+                        <th scope="col" className="text-right px-4 py-3 font-medium text-gray-600">מחיר</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ai">
-          <AiAssistant />
-        </TabsContent>
-
-        <TabsContent value="reports">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>דוח יומי</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => ReportService.generateDailyReport(new Date())}>
-                  הורד דוח יומי
-                </Button>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {moves.map(move => (
+                        <tr key={move.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 text-gray-600">
+                            {new Date(move.created_at).toLocaleDateString('he-IL')}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{move.customer?.name}</td>
+                          <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{move.customer?.phone}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[move.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                              {STATUS_LABELS[move.status] ?? move.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-gray-900">
+                            ₪{move.totalPrice.toLocaleString('he-IL')}
+                          </td>
+                        </tr>
+                      ))}
+                      {moves.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                            אין הובלות להצגה
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>דוח חודשי</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={handleExportReport}>
-                  הורד דוח חודשי
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          {/* מזכירה AI */}
+          <TabsContent value="ai">
+            <AiAssistant />
+          </TabsContent>
+
+          {/* דוחות */}
+          <TabsContent value="reports">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base">דוח יומי</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500 mb-4">הורד סיכום הובלות להיום</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => ReportService.generateDailyReport(new Date())}
+                    className="w-full"
+                  >
+                    הורד דוח יומי
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base">דוח חודשי</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500 mb-4">ייצא Excel עם כל הובלות החודש</p>
+                  <Button onClick={handleExportReport} className="w-full">
+                    ייצא לאקסל
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

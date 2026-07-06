@@ -6,15 +6,16 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      // מפנה ישירות למקורות TS של shared — מונע בעיית CJS/ESM בסביבת dev
+      // (ב-production build, Rollup קורא מ-dist דרך package.json "main")
+      'shared': path.resolve(__dirname, '../shared/src/index.ts')
     }
   },
   build: {
     commonjsOptions: {
-      // חבילת "shared" מקושרת דרך pnpm workspace symlink, כך שהנתיב האמיתי שלה
-      // נמצא מחוץ ל-node_modules - יש לכלול אותה במפורש כדי ש-Rollup ינתח נכון
-      // את הייצוא בעת build (אחרת מתקבל "X is not exported by shared/dist/index.js").
-      include: [/shared/, /node_modules/]
+      // נדרש רק עבור תלויות CJS בתוך node_modules (לא shared, שכבר מנוטרל ע"י alias)
+      include: [/node_modules/]
     }
   },
   server: {

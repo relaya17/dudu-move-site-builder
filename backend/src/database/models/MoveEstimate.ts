@@ -153,11 +153,12 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
         default: 'pending'
     },
     // --- מעקב הובלה ---
+    // unique: true כבר יוצר אינדקס - אין צורך גם ב-index: true (זה בדיוק מה שגרם
+    // לאזהרת "Duplicate schema index" של Mongoose).
     trackingToken: {
         type: String,
         unique: true,
-        sparse: true,
-        index: true
+        sparse: true
     },
     stage: {
         type: String,

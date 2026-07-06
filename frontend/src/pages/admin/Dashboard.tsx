@@ -10,7 +10,7 @@ import { ReportService } from "@/services/ReportService";
 import { AiAssistant } from "@/components/admin/AiAssistant";
 import { useToast } from "@/components/ui/use-toast";
 import { adminHeaders } from "@/lib/adminApi";
-import { Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText } from 'lucide-react';
+import { Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText, Receipt } from 'lucide-react';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -253,6 +253,7 @@ const AdminDashboard = () => {
   const [monthlyData, setMonthlyData] = useState<{ month: string; amount: number }[]>([]);
   const [selectedTab, setSelectedTab] = useState('overview');
   const [sendingQuoteId, setSendingQuoteId] = useState<string | null>(null);
+  const [issuingInvoiceId, setIssuingInvoiceId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMoves();
@@ -344,6 +345,39 @@ const AdminDashboard = () => {
       toast({ title: 'שגיאה', description: 'שליחת המייל נכשלה', variant: 'destructive' });
     } finally {
       setSendingQuoteId(null);
+    }
+  };
+
+  const handleIssueInvoice = async (move: MoveRecord) => {
+    setIssuingInvoiceId(move.id);
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/estimates/${move.id}/invoice`, {
+        method: 'POST',
+        headers: adminHeaders({ 'Content-Type': 'application/json' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const inv = data.data?.invoice;
+        toast({
+          title: '✅ חשבונית הופקה בהצלחה!',
+          description: inv?.documentUrl
+            ? `מספר מסמך: ${inv.documentNumber} — `
+            : `מספר מסמך: ${inv?.documentNumber ?? '—'}`,
+        });
+        if (inv?.documentUrl) {
+          window.open(inv.documentUrl, '_blank');
+        }
+      } else {
+        toast({
+          title: 'לא ניתן להפיק חשבונית',
+          description: data.error || 'יש להגדיר GREEN_INVOICE_API_KEY ב-Render',
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({ title: 'שגיאה', description: 'הפקת החשבונית נכשלה', variant: 'destructive' });
+    } finally {
+      setIssuingInvoiceId(null);
     }
   };
 
@@ -459,7 +493,7 @@ const AdminDashboard = () => {
                         <th className="text-right px-3 py-3 font-medium text-gray-600 hidden lg:table-cell">מועד הובלה</th>
                         <th className="text-right px-3 py-3 font-medium text-gray-600">סטטוס</th>
                         <th className="text-right px-3 py-3 font-medium text-gray-600">מחיר</th>
-                        <th className="text-right px-3 py-3 font-medium text-gray-600">פעולות</th>
+                        <th className="text-right px-3 py-3 font-medium text-gray-600" colSpan={2}>פעולות</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -483,11 +517,24 @@ const AdminDashboard = () => {
                               variant="outline"
                               disabled={sendingQuoteId === move.id || !move.email}
                               onClick={() => handleSendQuoteEmail(move)}
-                              className="flex items-center gap-1 text-xs h-7"
+                              className="flex items-center gap-1 text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
                               title={!move.email ? 'אין מייל ללקוח' : 'שלח הצעת מחיר במייל'}
                             >
                               <Mail size={12} aria-hidden="true" />
                               {sendingQuoteId === move.id ? 'שולח...' : 'הצעת מחיר'}
+                            </Button>
+                          </td>
+                          <td className="px-3 py-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={issuingInvoiceId === move.id}
+                              onClick={() => handleIssueInvoice(move)}
+                              className="flex items-center gap-1 text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
+                              title="הפק חשבונית מס קבלה דרך Green Invoice"
+                            >
+                              <Receipt size={12} aria-hidden="true" />
+                              {issuingInvoiceId === move.id ? 'מפיק...' : 'חשבונית'}
                             </Button>
                           </td>
                         </tr>

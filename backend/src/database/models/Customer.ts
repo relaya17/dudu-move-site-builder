@@ -57,7 +57,7 @@ const CustomerSchema = new Schema<ICustomer>({
 });
 
 // Indexes for better query performance
-CustomerSchema.index({ email: 1 });
+// Note: email index is already created by `unique: true` in the schema definition
 CustomerSchema.index({ phone: 1 });
 CustomerSchema.index({ name: 1 });
 CustomerSchema.index({ createdAt: -1 });

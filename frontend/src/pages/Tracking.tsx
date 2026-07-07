@@ -57,7 +57,7 @@ export const Tracking = () => {
             <p className="text-red-600" role="alert">{error || 'לא נמצאו נתוני מעקב'}</p>
             <Button asChild variant="outline">
               <Link to="/">
-                <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                 חזרה לדף הבית
               </Link>
             </Button>

@@ -136,7 +136,7 @@ export class MongoController {
         }
     }
 
-    // הפקת חשבונית מס קבלה (מסמך מס) דרך ספק חשבוניות מורשה חיצוני (Green Invoice).
+    // הפקת חשבונית מס/קבלה - עצמאית (built_in) או דרך ספק חשבוניות חיצוני, לפי BusinessSettings.
     static async issueInvoice(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
@@ -156,7 +156,7 @@ export class MongoController {
             });
         } catch (error) {
             console.error('Error issuing invoice:', error);
-            res.status(error instanceof Error && error.message.includes('לא זמינה') ? 503 : 500).json({
+            res.status(500).json({
                 success: false,
                 message: 'Failed to issue invoice',
                 error: error instanceof Error ? error.message : 'Unknown error'

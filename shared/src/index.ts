@@ -13,3 +13,4 @@ export type { FurnitureItem } from './furniture';
 export type { MoveEstimateDTO } from './moveEstimate';
 export type { ApiResponse } from './apiResponse';
 export type { QuoteDocumentInfo, InvoiceDocumentInfo } from './billing';
+export type { InvoiceProvider, BusinessType, BusinessSettingsDTO, BusinessSettingsUpdateInput } from './businessSettings';

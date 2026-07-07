@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { MongoController } from '../controllers/mongoController';
+import { SettingsController } from '../controllers/settingsController';
 import { requireAdminKey } from '../middleware/adminAuth';
 
 const router = Router();
@@ -33,5 +34,10 @@ router.get('/search/customers', MongoController.searchCustomers);
 router.get('/calendar-notes', MongoController.getCalendarNotes);
 router.post('/calendar-notes', MongoController.createCalendarNote);
 router.delete('/calendar-notes/:id', MongoController.deleteCalendarNote);
+
+// Business Settings Routes - פרטי עסק ואופן הפקת חשבוניות (עצמאי / ספק חיצוני)
+router.get('/settings', SettingsController.getSettings);
+router.put('/settings', SettingsController.updateSettings);
+router.post('/settings/test-green-invoice', SettingsController.testGreenInvoiceConnection);
 
 export default router; 

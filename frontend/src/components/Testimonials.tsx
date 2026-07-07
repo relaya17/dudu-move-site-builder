@@ -42,7 +42,7 @@ export const Testimonials = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             מה הלקוחות שלנו אומרים
-            <span className="inline-block animate-pulse text-blue-600 ml-2 text-4xl">؟</span>
+            <span className="inline-block animate-pulse text-blue-600 mr-2 text-4xl">؟</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             אל תסתמכו רק על המילה שלנו - שמעו מאלפי לקוחות מרוצים

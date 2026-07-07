@@ -113,7 +113,7 @@ export const ThankYou = () => {
               </p>
               <Button asChild className="bg-green-600 hover:bg-green-700">
                 <Link to={`/tracking/${trackingToken}`}>
-                  <MapPin className="w-4 h-4 mr-2" aria-hidden="true" />
+                  <MapPin className="w-4 h-4" aria-hidden="true" />
                   מעקב אחרי ההובלה שלי
                 </Link>
               </Button>
@@ -123,13 +123,13 @@ export const ThankYou = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild className="flex-1">
               <Link to="/">
-                <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                 חזרה לדף הבית
               </Link>
             </Button>
             <Button variant="outline" asChild className="flex-1">
               <a href="tel:0547777623">
-                <Phone className="w-4 h-4 mr-2" aria-hidden="true" />
+                <Phone className="w-4 h-4" aria-hidden="true" />
                 התקשר עכשיו
               </a>
             </Button>

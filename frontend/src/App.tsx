@@ -19,6 +19,9 @@ import { Tracking } from "./pages/Tracking";
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const MovingEstimatesAdminPage = lazy(() => import("./pages/admin/MovingEstimatesAdminPage"));
 
+// דף שיווקי למובילים פוטנציאליים (לא ללקוחות של דוד הובלות) - טעינה עצלה מאותה סיבה.
+const ForMovers = lazy(() => import("./pages/ForMovers"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -32,6 +35,14 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/thank-you" element={<ThankYou />} />
           <Route path="/tracking/:token" element={<Tracking />} />
+          <Route
+            path="/for-movers"
+            element={
+              <Suspense fallback={<div className="p-8 text-center">...</div>}>
+                <ForMovers />
+              </Suspense>
+            }
+          />
           <Route
             path="/admin"
             element={

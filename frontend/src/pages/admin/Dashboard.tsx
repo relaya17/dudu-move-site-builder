@@ -10,7 +10,12 @@ import { ReportService } from "@/services/ReportService";
 import { AiAssistant } from "@/components/admin/AiAssistant";
 import { useToast } from "@/components/ui/use-toast";
 import { adminHeaders } from "@/lib/adminApi";
-import { Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText, Receipt, Plus, Trash2, Wallet } from 'lucide-react';
+import {
+  Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText, Receipt, Plus, Trash2, Wallet,
+  Settings as SettingsIcon, Link2, CheckCircle2, Loader2,
+} from 'lucide-react';
+import type { BusinessSettingsDTO } from 'shared';
+import { printBuiltInInvoice } from '@/lib/printInvoice';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -26,7 +31,9 @@ interface MoveRecord {
   status: string;
   customer: { name: string; phone: string };
   quote?: { quoteNumber: string; issuedAt: string };
-  invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string };
+  invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string; providerId?: string };
+  currentAddress?: string;
+  destinationAddress?: string;
 }
 
 interface CalendarNote {
@@ -334,9 +341,10 @@ interface BillingPanelProps {
   moves: MoveRecord[];
   issuingInvoiceId: string | null;
   onIssueInvoice: (move: MoveRecord) => void;
+  onReprintInvoice: (move: MoveRecord) => void;
 }
 
-const BillingPanel = ({ moves, issuingInvoiceId, onIssueInvoice }: BillingPanelProps) => {
+const BillingPanel = ({ moves, issuingInvoiceId, onIssueInvoice, onReprintInvoice }: BillingPanelProps) => {
   const invoicedMoves = moves.filter(m => m.invoice?.documentNumber);
   const quotedOnlyMoves = moves.filter(m => m.quote?.quoteNumber && !m.invoice?.documentNumber);
   const noDocumentMoves = moves.filter(m => !m.quote?.quoteNumber && !m.invoice?.documentNumber);
@@ -400,7 +408,7 @@ const BillingPanel = ({ moves, issuingInvoiceId, onIssueInvoice }: BillingPanelP
                         ? (
                           move.invoice.documentUrl
                             ? <a href={move.invoice.documentUrl} target="_blank" rel="noreferrer" className="inline-flex px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 hover:underline">#{move.invoice.documentNumber}</a>
-                            : <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">#{move.invoice.documentNumber}</span>
+                            : <button onClick={() => onReprintInvoice(move)} className="inline-flex px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 hover:underline">#{move.invoice.documentNumber}</button>
                         )
                         : <span className="text-gray-300">—</span>}
                     </td>
@@ -432,12 +440,260 @@ const BillingPanel = ({ moves, issuingInvoiceId, onIssueInvoice }: BillingPanelP
   );
 };
 
+// ─── הגדרות עסק וחשבונות ─────────────────────────────────────────────────────
+interface SettingsForm {
+  businessName: string;
+  businessId: string;
+  businessType: 'exempt' | 'licensed' | 'company';
+  address: string;
+  phone: string;
+  email: string;
+  vatRate: number;
+  invoiceProvider: 'built_in' | 'green_invoice';
+  greenInvoiceApiKey: string;
+  greenInvoiceApiSecret: string;
+  greenInvoiceEnv: 'sandbox' | 'production';
+}
+
+const EMPTY_SETTINGS_FORM: SettingsForm = {
+  businessName: '', businessId: '', businessType: 'licensed', address: '', phone: '', email: '',
+  vatRate: 18, invoiceProvider: 'built_in', greenInvoiceApiKey: '', greenInvoiceApiSecret: '', greenInvoiceEnv: 'sandbox',
+};
+
+const BusinessSettingsPanel = ({ onSaved }: { onSaved: (settings: BusinessSettingsDTO) => void }) => {
+  const { toast } = useToast();
+  const [form, setForm] = useState<SettingsForm>(EMPTY_SETTINGS_FORM);
+  const [greenInvoiceConfigured, setGreenInvoiceConfigured] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+
+  useEffect(() => { fetchSettings(); }, []);
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/settings`, { headers: adminHeaders() });
+      const result = await res.json();
+      if (result.success) {
+        const s: BusinessSettingsDTO = result.data;
+        setForm(prev => ({
+          ...prev,
+          businessName: s.businessName, businessId: s.businessId, businessType: s.businessType,
+          address: s.address, phone: s.phone, email: s.email, vatRate: s.vatRate,
+          invoiceProvider: s.invoiceProvider, greenInvoiceEnv: s.greenInvoiceEnv || 'sandbox',
+        }));
+        setGreenInvoiceConfigured(s.greenInvoiceConfigured);
+        onSaved(s);
+      }
+    } catch {
+      toast({ title: 'שגיאה', description: 'טעינת הגדרות העסק נכשלה', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const body: Record<string, unknown> = {
+        businessName: form.businessName, businessId: form.businessId, businessType: form.businessType,
+        address: form.address, phone: form.phone, email: form.email, vatRate: form.vatRate,
+        invoiceProvider: form.invoiceProvider, greenInvoiceEnv: form.greenInvoiceEnv,
+      };
+      if (form.greenInvoiceApiKey) body.greenInvoiceApiKey = form.greenInvoiceApiKey;
+      if (form.greenInvoiceApiSecret) body.greenInvoiceApiSecret = form.greenInvoiceApiSecret;
+
+      const res = await fetch(`${API_ROOT}/api/mongo/settings`, {
+        method: 'PUT',
+        headers: adminHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast({ title: 'ההגדרות נשמרו בהצלחה' });
+        setForm(prev => ({ ...prev, greenInvoiceApiKey: '', greenInvoiceApiSecret: '' }));
+        await fetchSettings();
+      } else {
+        toast({ title: 'שגיאה', description: result.message, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'שגיאה', description: 'שמירת ההגדרות נכשלה', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!form.greenInvoiceApiKey || !form.greenInvoiceApiSecret) {
+      toast({ title: 'שגיאה', description: 'יש להזין מפתח API וסוד API', variant: 'destructive' });
+      return;
+    }
+    setTesting(true);
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/settings/test-green-invoice`, {
+        method: 'POST',
+        headers: adminHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ apiKey: form.greenInvoiceApiKey, apiSecret: form.greenInvoiceApiSecret, env: form.greenInvoiceEnv }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast({ title: '✅ החיבור תקין!', description: 'ניתן לשמור את ההגדרות' });
+      } else {
+        toast({ title: 'החיבור נכשל', description: result.message, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'שגיאה', description: 'בדיקת החיבור נכשלה', variant: 'destructive' });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const inputClass = "w-full text-sm border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 className="animate-spin" size={20} /></div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><SettingsIcon size={16} /> פרטי העסק</CardTitle>
+          <p className="text-xs text-gray-500 mt-1">מוצגים על גבי חשבוניות/קבלות שיופקו במצב "הפקה עצמאית"</p>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">שם העסק</label>
+            <input className={inputClass} value={form.businessName} onChange={e => setForm({ ...form, businessName: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">מספר עוסק מורשה / ח.פ</label>
+            <input className={inputClass} value={form.businessId} onChange={e => setForm({ ...form, businessId: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">סוג העסק</label>
+            <select className={inputClass} value={form.businessType} onChange={e => setForm({ ...form, businessType: e.target.value as SettingsForm['businessType'] })}>
+              <option value="licensed">עוסק מורשה</option>
+              <option value="exempt">עוסק פטור (ללא מע"מ)</option>
+              <option value="company">חברה בע"מ</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">אחוז מע"מ</label>
+            <input type="number" min={0} max={100} className={inputClass} value={form.vatRate}
+              disabled={form.businessType === 'exempt'}
+              onChange={e => setForm({ ...form, vatRate: Number(e.target.value) })} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">כתובת</label>
+            <input className={inputClass} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">טלפון</label>
+            <input className={inputClass} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs font-medium text-gray-600 block mb-1">אימייל</label>
+            <input className={inputClass} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Receipt size={16} /> אופן הפקת חשבוניות</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => setForm({ ...form, invoiceProvider: 'built_in' })}
+              className={`text-right p-4 rounded-lg border-2 transition-colors ${form.invoiceProvider === 'built_in' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
+            >
+              <p className="font-semibold text-gray-900">הפקה עצמאית (מובנית באפליקציה)</p>
+              <p className="text-xs text-gray-500 mt-1">חינמית, ללא ספק חיצוני. מתאימה לרוב הובלות מול לקוחות פרטיים.</p>
+            </button>
+            <button
+              onClick={() => setForm({ ...form, invoiceProvider: 'green_invoice' })}
+              className={`text-right p-4 rounded-lg border-2 transition-colors ${form.invoiceProvider === 'green_invoice' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
+            >
+              <p className="font-semibold text-gray-900 flex items-center gap-1.5">
+                <Link2 size={14} /> חיבור לספק חיצוני (Green Invoice)
+                {greenInvoiceConfigured && <span className="inline-flex items-center gap-0.5 text-green-600 text-xs"><CheckCircle2 size={12} /> מחובר</span>}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">שירות SaaS מלא, מתאים גם ללקוחות עוסקים מורשים בסכומים גבוהים.</p>
+            </button>
+          </div>
+
+          {form.invoiceProvider === 'built_in' && (
+            <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed">
+              שימו לב: זו אינה יעוץ משפטי/מיסויי. הפקה עצמאית מתאימה בעיקר לעסקאות מול לקוחות פרטיים
+              (B2C) - עבורן כרגע לא חלה חובת "מספר הקצאה" ברפורמת "חשבוניות ישראל". אם מונפקות
+              חשבוניות ללקוחות עוסקים מורשים בסכומים גבוהים (מעל 5,000 ₪ לפני מע"מ), מומלץ להתחבר
+              לספק חיצוני, ובכל מקרה מומלץ לאמת עם רואה חשבון/יועץ מס בהתאם לאופי העסק.
+            </div>
+          )}
+
+          {form.invoiceProvider === 'green_invoice' && (
+            <div className="space-y-3 border-t pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 block mb-1">API Key</label>
+                  <input
+                    type="password"
+                    className={inputClass}
+                    placeholder={greenInvoiceConfigured ? '•••••••• (מוגדר)' : 'הדבק כאן את מפתח ה-API'}
+                    value={form.greenInvoiceApiKey}
+                    onChange={e => setForm({ ...form, greenInvoiceApiKey: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 block mb-1">API Secret</label>
+                  <input
+                    type="password"
+                    className={inputClass}
+                    placeholder={greenInvoiceConfigured ? '•••••••• (מוגדר)' : 'הדבק כאן את הסוד'}
+                    value={form.greenInvoiceApiSecret}
+                    onChange={e => setForm({ ...form, greenInvoiceApiSecret: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">סביבה</label>
+                <select className={`${inputClass} max-w-xs`} value={form.greenInvoiceEnv} onChange={e => setForm({ ...form, greenInvoiceEnv: e.target.value as 'sandbox' | 'production' })}>
+                  <option value="sandbox">בדיקה (sandbox)</option>
+                  <option value="production">אמת (production)</option>
+                </select>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleTestConnection} disabled={testing} className="flex items-center gap-1.5">
+                {testing ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                {testing ? 'בודק חיבור...' : 'בדוק חיבור'}
+              </Button>
+              <p className="text-xs text-gray-400">
+                הרשמה לשירות: <a href="https://www.greeninvoice.co.il" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">greeninvoice.co.il</a>
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5">
+              {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+              {saving ? 'שומר...' : 'שמור הגדרות'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // ─── Dashboard ראשי ───────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [moves, setMoves] = useState<MoveRecord[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [notes, setNotes] = useState<CalendarNote[]>([]);
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettingsDTO | null>(null);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [monthlyData, setMonthlyData] = useState<{ month: string; amount: number }[]>([]);
   const [selectedTab, setSelectedTab] = useState('overview');
@@ -448,9 +704,20 @@ const AdminDashboard = () => {
     fetchMoves();
     fetchCustomers();
     fetchCalendarNotes();
+    fetchBusinessSettings();
     setupNotifications();
     return () => { NotificationService.unsubscribeAll(); };
   }, []);
+
+  const fetchBusinessSettings = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/settings`, { headers: adminHeaders() });
+      const result = await res.json();
+      if (result.success) setBusinessSettings(result.data);
+    } catch (err) {
+      console.error('שגיאה בטעינת הגדרות העסק:', err);
+    }
+  };
 
   const setupNotifications = () => {
     NotificationService.subscribeToNewMoves((move) => {
@@ -475,8 +742,9 @@ const AdminDashboard = () => {
       const raw: Array<{
         _id: string; name: string; phone: string; email?: string;
         createdAt: string; preferredMoveDate?: string; totalPrice: number; status: string;
+        currentAddress?: string; destinationAddress?: string;
         quote?: { quoteNumber: string; issuedAt: string };
-        invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string };
+        invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string; providerId?: string };
       }> = result.data || [];
 
       let total = 0;
@@ -492,6 +760,8 @@ const AdminDashboard = () => {
           customer: { name: e.name, phone: e.phone },
           quote: e.quote,
           invoice: e.invoice,
+          currentAddress: e.currentAddress,
+          destinationAddress: e.destinationAddress,
         };
         total += move.totalPrice;
         const key = new Date(move.created_at).toLocaleDateString('he-IL', { year: 'numeric', month: 'long' });
@@ -587,6 +857,21 @@ const AdminDashboard = () => {
     }
   };
 
+  const printInvoiceForMove = (move: MoveRecord, inv: { documentNumber: string; issuedAt: string }) => {
+    if (!businessSettings) return;
+    printBuiltInInvoice(businessSettings, {
+      documentNumber: inv.documentNumber,
+      issuedAt: inv.issuedAt,
+      customerName: move.customer?.name || '',
+      customerPhone: move.customer?.phone || '',
+      customerEmail: move.email,
+      fromAddress: move.currentAddress || '—',
+      toAddress: move.destinationAddress || '—',
+      moveDate: move.preferred_move_date,
+      totalPrice: move.totalPrice,
+    });
+  };
+
   const handleIssueInvoice = async (move: MoveRecord) => {
     setIssuingInvoiceId(move.id);
     try {
@@ -599,17 +884,18 @@ const AdminDashboard = () => {
         const inv = data.data?.invoice;
         toast({
           title: '✅ חשבונית הופקה בהצלחה!',
-          description: inv?.documentUrl
-            ? `מספר מסמך: ${inv.documentNumber} — `
-            : `מספר מסמך: ${inv?.documentNumber ?? '—'}`,
+          description: `מספר מסמך: ${inv?.documentNumber ?? '—'}`,
         });
+        setMoves(prev => prev.map(m => m.id === move.id ? { ...m, invoice: inv } : m));
         if (inv?.documentUrl) {
           window.open(inv.documentUrl, '_blank');
+        } else if (inv?.providerId === 'built_in') {
+          printInvoiceForMove(move, inv);
         }
       } else {
         toast({
           title: 'לא ניתן להפיק חשבונית',
-          description: data.error || 'יש להגדיר GREEN_INVOICE_API_KEY ב-Render',
+          description: data.error || data.message || 'שגיאה בהפקת החשבונית',
           variant: 'destructive',
         });
       }
@@ -665,6 +951,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="stats" className="flex-1 sm:flex-none flex items-center gap-1"><BarChart2 size={13} />סטטיסטיקות</TabsTrigger>
             <TabsTrigger value="ai" className="flex-1 sm:flex-none">🤖 לאה AI</TabsTrigger>
             <TabsTrigger value="reports" className="flex-1 sm:flex-none flex items-center gap-1"><FileText size={13} />דוחות</TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1 sm:flex-none flex items-center gap-1"><SettingsIcon size={13} />הגדרות</TabsTrigger>
           </TabsList>
 
           {/* ─── סקירה ─── */}
@@ -769,12 +1056,16 @@ const AdminDashboard = () => {
                               size="sm"
                               variant="outline"
                               disabled={issuingInvoiceId === move.id}
-                              onClick={() => handleIssueInvoice(move)}
+                              onClick={() => {
+                                if (move.invoice?.documentUrl) window.open(move.invoice.documentUrl, '_blank');
+                                else if (move.invoice?.documentNumber) printInvoiceForMove(move, move.invoice as { documentNumber: string; issuedAt: string });
+                                else handleIssueInvoice(move);
+                              }}
                               className="flex items-center gap-1 text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
-                              title="הפק חשבונית מס קבלה דרך Green Invoice"
+                              title={move.invoice?.documentNumber ? 'הצג/הדפס חשבונית שהופקה' : 'הפק חשבונית מס/קבלה'}
                             >
                               <Receipt size={12} aria-hidden="true" />
-                              {issuingInvoiceId === move.id ? 'מפיק...' : 'חשבונית'}
+                              {issuingInvoiceId === move.id ? 'מפיק...' : move.invoice?.documentNumber ? 'הדפס חשבונית' : 'הפק חשבונית'}
                             </Button>
                           </td>
                         </tr>
@@ -846,7 +1137,12 @@ const AdminDashboard = () => {
 
           {/* ─── הנהלת חשבונות ─── */}
           <TabsContent value="billing">
-            <BillingPanel moves={moves} issuingInvoiceId={issuingInvoiceId} onIssueInvoice={handleIssueInvoice} />
+            <BillingPanel
+              moves={moves}
+              issuingInvoiceId={issuingInvoiceId}
+              onIssueInvoice={handleIssueInvoice}
+              onReprintInvoice={(move) => move.invoice?.documentNumber && printInvoiceForMove(move, move.invoice as { documentNumber: string; issuedAt: string })}
+            />
           </TabsContent>
 
           {/* ─── סטטיסטיקות ─── */}
@@ -877,6 +1173,11 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* ─── הגדרות עסק וחשבונות ─── */}
+          <TabsContent value="settings">
+            <BusinessSettingsPanel onSaved={setBusinessSettings} />
           </TabsContent>
         </Tabs>
       </main>

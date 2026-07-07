@@ -1,5 +1,4 @@
 
-import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 import { Truck, Phone, Mail, MapPin } from 'lucide-react';
 import { PrivacyPolicy } from '@/components/legal/PrivacyPolicy';
@@ -94,27 +93,20 @@ export const Footer = () => {
           </div>
         </div>
 
-        <Separator className="my-8 bg-gray-700" />
+        <Separator className="my-6 bg-gray-700" />
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} דויד הובלות. כל הזכויות שמורות.
-          </p>
-          <div className="flex flex-wrap items-center gap-4 [&_button]:text-gray-400 [&_button]:hover:text-white">
+        <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-2">
+          <div className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 sm:flex-nowrap [&_button]:text-gray-400 [&_button]:hover:text-white">
             <PrivacyPolicy />
             <TermsModal />
             <AccessibilityStatement />
           </div>
         </div>
-
-        <div className="mt-3 text-center md:text-left">
-          <Link
-            to="/admin"
-            className="text-xs text-gray-600 hover:text-gray-400 focus-visible:text-gray-400 transition-colors"
-          >
-            ניהול
-          </Link>
-        </div>
+      </div>
+      <div className="w-full bg-white border-t border-gray-200">
+        <p className="text-center text-xs text-gray-800 py-1">
+          © 2026 כל הזכויות שמורות ל-<span dir="ltr" className="inline-block">relaya</span>.
+        </p>
       </div>
     </footer>
   );

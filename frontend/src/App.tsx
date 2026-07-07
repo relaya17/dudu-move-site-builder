@@ -1,5 +1,4 @@
 import { lazy, Suspense } from "react";
-import { ThemeProvider } from "@mui/material/styles";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,6 @@ import { AccessibilityButton } from "@/components/ui/accessibility-button";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { muiTheme } from "@/lib/muiTheme";
 import ForMovers from "./pages/ForMovers";
 import NotFound from "./pages/NotFound";
 import { ThankYou } from "./pages/ThankYou";
@@ -50,7 +48,6 @@ const Spinner = () => <div className="min-h-screen flex items-center justify-cen
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider theme={muiTheme}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -122,7 +119,6 @@ const App = () => (
       </BrowserRouter>
       <AccessibilityButton />
     </TooltipProvider>
-    </ThemeProvider>
   </QueryClientProvider>
 );
 

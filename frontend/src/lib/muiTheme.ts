@@ -1,18 +1,6 @@
-import { createTheme } from '@mui/material/styles';
-
-// טופס הערכת המחיר (MovingEstimateForm) בנוי עם רכיבי MUI, בזמן שכל שאר האתר
-// בנוי עם Tailwind/shadcn. בלי theme משלנו, MUI מרנדר בגופן וצבע ברירת המחדל
-// שלו (Roboto, כחול #1976d2) שלא תואמים לשאר האתר (Open Sans, כחול Tailwind).
-// ה-theme הזה רק מיישר גופן/צבע כדי שהטופס יראה חלק מאותו אתר - בלי לשנות
-// מבנה, פריסה או עיצוב בפועל של רכיבי ה-MUI עצמם.
-export const muiTheme = createTheme({
-  direction: 'rtl',
-  typography: {
-    fontFamily: '"Open Sans", sans-serif',
-  },
-  palette: {
-    primary: {
-      main: '#2563eb', // Tailwind blue-600 - אותו כחול שמשמש בכל שאר האתר
-    },
-  },
-});
+// קובץ זה כבר לא בשימוש - האתר לא טוען יותר את ספריית Material UI (MUI) בכלל.
+// היא הוסרה כי היא הייתה ספריית עיצוב שנייה שלמה שנטענה במקביל ל-shadcn/Tailwind
+// (שמשמשת בפועל כמעט בכל האתר), רק כדי לתמוך ברכיב טופס בודד (MovingEstimateForm.tsx)
+// ששוחזר מאז עם shadcn/Tailwind במקום - ר' ההיסטוריה של הקובץ ההוא.
+// אפשר למחוק את הקובץ הזה לגמרי בבטחה - הוא לא מיובא משום מקום יותר.
+export {};

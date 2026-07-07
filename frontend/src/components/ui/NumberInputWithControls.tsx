@@ -1,7 +1,7 @@
-import React from 'react';
-import { TextField, Box, IconButton, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import { useId } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Plus, Minus } from 'lucide-react';
 
 interface NumberInputWithControlsProps {
   label: string;
@@ -10,18 +10,23 @@ interface NumberInputWithControlsProps {
   min?: number;
   max?: number;
   step?: number;
-  unit?: string; // New prop for unit
+  unit?: string;
 }
 
-export const NumberInputWithControls: React.FC<NumberInputWithControlsProps> = ({
+/**
+ * שוחזר בלי MUI (היה הרכיב היחיד באתר, מלבד MovingEstimateForm.tsx, שהשתמש
+ * ב-@mui/material) - עכשיו בנוי עם shadcn/Tailwind כמו כל שאר האתר, כדי
+ * שלא נטען שתי ספריות עיצוב שלמות במקביל. אותה התנהגות בדיוק כמו קודם.
+ */
+export const NumberInputWithControls = ({
   label,
   value,
   onChange,
   min = 0,
   max = Infinity,
   step = 1,
-  unit, // Destructure new prop
-}) => {
+  unit,
+}: NumberInputWithControlsProps) => {
   const handleIncrement = () => {
     const newValue = value + step;
     onChange(newValue <= max ? newValue : max);
@@ -37,38 +42,51 @@ export const NumberInputWithControls: React.FC<NumberInputWithControlsProps> = (
     if (!isNaN(newValue)) {
       onChange(newValue);
     } else if (event.target.value === '') {
-      onChange(min); // Or null, depending on desired behavior for empty input
+      onChange(min);
     }
   };
 
-  const inputId = React.useId();
+  const inputId = useId();
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-      <Typography component="label" htmlFor={inputId} variant="body1" sx={{ mr: 1, minWidth: '80px' }}>{label}</Typography>
-      <IconButton onClick={handleDecrement} disabled={value <= min} size="small" aria-label={`הקטן ${label}`}>
-        <RemoveIcon />
-      </IconButton>
-      <TextField
+    <div className="flex items-center flex-wrap gap-2 mb-4">
+      <label htmlFor={inputId} className="min-w-[80px] text-sm text-gray-700">
+        {label}
+      </label>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="h-8 w-8 shrink-0"
+        onClick={handleDecrement}
+        disabled={value <= min}
+        aria-label={`הקטן ${label}`}
+      >
+        <Minus className="h-4 w-4" />
+      </Button>
+      <Input
         id={inputId}
         type="number"
         value={value}
         onChange={handleInputChange}
-        inputProps={{
-          min,
-          max,
-          step,
-          style: { textAlign: 'center', padding: '8px 4px' },
-        }}
-        sx={{ width: '80px', mx: 1 }}
-        variant="outlined"
-        size="small"
+        min={min}
+        max={max === Infinity ? undefined : max}
+        step={step}
+        className="w-20 text-center h-8 px-1"
       />
-      <IconButton onClick={handleIncrement} disabled={value >= max} size="small" aria-label={`הגדל ${label}`}>
-        <AddIcon />
-      </IconButton>
-      {unit && <Typography variant="body1" sx={{ ml: 1 }}>{unit}</Typography>} {/* Display unit if provided */}
-    </Box>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="h-8 w-8 shrink-0"
+        onClick={handleIncrement}
+        disabled={value >= max}
+        aria-label={`הגדל ${label}`}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+      {unit && <span className="text-sm text-gray-700">{unit}</span>}
+    </div>
   );
 };
 

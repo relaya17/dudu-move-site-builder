@@ -42,14 +42,6 @@ export const Footer = () => {
       <div className="container mx-auto px-6 py-10 sm:py-12">
         <div className="max-w-4xl mx-auto">
 
-        {/* שם העסק + לוגו — ממורכז מעל העמודות */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2">
-            <Truck className="h-7 w-7 text-blue-400 shrink-0" aria-hidden="true" />
-            <span className="text-xl font-bold leading-tight" dir="auto">{businessName}</span>
-          </div>
-        </div>
-
         {/* שלוש עמודות זה לצד זה - רוחב שווה, מיושרות לימין, גובה עמודות מיושר (items-start) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-8 text-right">
 

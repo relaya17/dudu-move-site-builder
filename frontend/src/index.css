@@ -111,13 +111,11 @@
     text-align: right;
   }
 
-  [dir="rtl"] .text-left {
-    text-align: right;
-  }
-
-  [dir="rtl"] .text-right {
-    text-align: left;
-  }
+  /* הערה: בעבר הייתה כאן חוקה שהפכה את המשמעות של text-right/text-left בכל
+     פעם שהן נמצאות בתוך dir="rtl" (כלומר text-right הפך בפועל ל-text-align:left!).
+     זו הייתה הסיבה האמיתית לכך שתוכן במחלקות text-right (למשל בפוטר) הופיע
+     מיושר לשמאל במקום לימין. הוסר - text-right/text-left אמורות תמיד לשמור על
+     המשמעות המילולית/הפיזית שלהן, בלי קשר לכיווניות האב. */
 }
 
 /* נגישות: מסלול מקלדת (WCAG 2.1 AA - 2.4.7 Focus Visible) */

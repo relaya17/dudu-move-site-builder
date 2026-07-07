@@ -41,6 +41,7 @@ export const FURNITURE_CATEGORIES = {
     packing: 'אריזה (קרטונים ושקיות)',
     decor: 'אביזרים ופריטי נוי',
     garden: 'ריהוט גינה וחוץ',
+    baby: 'תינוקות וילדים',
     special: 'פריטים מיוחדים',
     other: 'אחר'
 } as const;
@@ -111,6 +112,22 @@ export class PricingService {
             description: 'מיטה',
             category: FURNITURE_CATEGORIES.bedroom
         },
+        bed_with_storage: {
+            basePrice: 400, // מיטה עם ארגז מצעים - מנגנון הרמה נוסף מייקר את הפירוק/הרכבה
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 3,
+            description: 'מיטה עם ארגז מצעים',
+            category: FURNITURE_CATEGORIES.bedroom
+        },
+        kids_bed: {
+            basePrice: 220,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 3,
+            description: 'מיטת ילד',
+            category: FURNITURE_CATEGORIES.bedroom
+        },
         mattress: {
             basePrice: 80,
             fragile: true,
@@ -125,6 +142,14 @@ export class PricingService {
             needsDisassemble: false,
             maxQuantity: 4,
             description: 'שידת לילה',
+            category: FURNITURE_CATEGORIES.bedroom
+        },
+        dresser: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 3,
+            description: 'קומודה',
             category: FURNITURE_CATEGORIES.bedroom
         },
 
@@ -317,6 +342,22 @@ export class PricingService {
             description: 'מזנון / ויטרינת מטבח',
             category: FURNITURE_CATEGORIES.storage
         },
+        shoe_cabinet: {
+            basePrice: 90,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'ארונית נעליים',
+            category: FURNITURE_CATEGORIES.storage
+        },
+        tv_unit: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'מזנון טלוויזיה',
+            category: FURNITURE_CATEGORIES.storage
+        },
 
         // מכשירי חשמל קטנים
         microwave: {
@@ -467,6 +508,22 @@ export class PricingService {
             description: 'עצים ועציצים גדולים',
             category: FURNITURE_CATEGORIES.decor
         },
+        wall_clock: {
+            basePrice: 25,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 5,
+            description: 'שעון קיר',
+            category: FURNITURE_CATEGORIES.decor
+        },
+        laundry_basket: {
+            basePrice: 25,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 5,
+            description: 'סל כביסה',
+            category: FURNITURE_CATEGORIES.decor
+        },
 
         // פריטים מיוחדים
         piano: {
@@ -574,6 +631,40 @@ export class PricingService {
             maxQuantity: 2,
             description: 'ספסל / ספת גינה',
             category: FURNITURE_CATEGORIES.garden
+        },
+
+        // תינוקות וילדים
+        baby_crib: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'מיטת תינוק / עריסה',
+            category: FURNITURE_CATEGORIES.baby
+        },
+        stroller: {
+            basePrice: 60,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'עגלת תינוק',
+            category: FURNITURE_CATEGORIES.baby
+        },
+        baby_swing: {
+            basePrice: 50,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'נדנדת תינוק',
+            category: FURNITURE_CATEGORIES.baby
+        },
+        high_chair: {
+            basePrice: 40,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'כיסא אוכל לתינוק',
+            category: FURNITURE_CATEGORIES.baby
         },
 
         // אחר - פריט שלא ברשימה: יש לתאר אותו בשדה "הערות" (למשל פסנתר ישן,

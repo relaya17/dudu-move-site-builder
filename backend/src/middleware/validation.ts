@@ -44,6 +44,7 @@ export const furnitureItemSchema = z.object({
     isFragile: z.boolean().optional(),
     needsDisassemble: z.boolean().optional(),
     needsReassemble: z.boolean().optional(),
+    needsDoorRemoval: z.boolean().optional(),
     comments: z.string().optional()
 });
 

@@ -36,6 +36,7 @@ export class MovingEstimateService {
             isFragile?: boolean;
             needsDisassemble?: boolean;
             needsReassemble?: boolean;
+            needsDoorRemoval?: boolean;
             comments?: string;
         }>
     ) {
@@ -54,7 +55,8 @@ export class MovingEstimateService {
             const mappedFurnitureItems = furnitureItems.map(item => ({
                 type: item.name,
                 quantity: item.quantity,
-                description: item.comments || ''
+                description: item.comments || '',
+                needsDoorRemoval: item.needsDoorRemoval || false
             }));
 
             const priceEstimate = PricingService.calculateTotalPrice(
@@ -90,6 +92,7 @@ export class MovingEstimateService {
                     isFragile: item.isFragile || false,
                     needsDisassemble: item.needsDisassemble || false,
                     needsReassemble: item.needsReassemble || false,
+                    needsDoorRemoval: item.needsDoorRemoval || false,
                     comments: item.comments || ''
                 })),
                 totalPrice: priceEstimate,

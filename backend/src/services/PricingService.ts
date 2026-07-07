@@ -8,12 +8,15 @@ interface PricingConfig {
     distancePrice: number;
     elevatorDiscount: number;
     cranePrice: number;
+    doorRemovalPrice: number;
 }
 
 interface FurnitureItem {
     type: string;
     quantity: number;
     description?: string;
+    /** הסרת דלתות בלבד (ללא פירוק מלא) - חלופה זולה יותר לפירוק, בעיקר לארונות. */
+    needsDoorRemoval?: boolean;
 }
 
 interface FurniturePricing {
@@ -52,6 +55,7 @@ export class PricingService {
         distancePrice: 2, // מחיר לכל ק"מ
         elevatorDiscount: 0.8, // הנחה במעלית (20%)
         cranePrice: 500, // מחיר להובלה בכרן
+        doorRemovalPrice: 150, // הסרת דלתות בלבד (חלופה זולה יותר לפירוק מלא)
     };
 
     private static readonly FURNITURE_PRICING: FurniturePricing = {
@@ -257,33 +261,33 @@ export class PricingService {
             category: FURNITURE_CATEGORIES.storage
         },
         wardrobe: {
-            basePrice: 250,
+            basePrice: 300, // הובלת הארון עצמו
             fragile: false,
-            needsDisassemble: true,
+            needsDisassemble: true, // פירוק+הרכבה: 450 ₪ (ר' getDisassembleFees)
             maxQuantity: 2,
             description: 'ארון בגדים',
             category: FURNITURE_CATEGORIES.storage
         },
         wardrobe_3_door: {
-            basePrice: 300,
+            basePrice: 350,
             fragile: false,
-            needsDisassemble: true,
+            needsDisassemble: true, // פירוק+הרכבה: 500 ₪
             maxQuantity: 2,
             description: 'ארון 3 דלתות',
             category: FURNITURE_CATEGORIES.storage
         },
         wardrobe_4_door: {
-            basePrice: 400,
+            basePrice: 450,
             fragile: false,
-            needsDisassemble: true,
+            needsDisassemble: true, // פירוק+הרכבה: 600 ₪
             maxQuantity: 2,
             description: 'ארון 4 דלתות',
             category: FURNITURE_CATEGORIES.storage
         },
         wardrobe_sliding: {
-            basePrice: 350,
+            basePrice: 400,
             fragile: false,
-            needsDisassemble: true,
+            needsDisassemble: true, // פירוק+הרכבה: 550 ₪
             maxQuantity: 2,
             description: 'ארון הזזה',
             category: FURNITURE_CATEGORIES.storage
@@ -323,9 +327,9 @@ export class PricingService {
             category: FURNITURE_CATEGORIES.small_appliances
         },
 
-        // אריזה (קרטונים ושקיות)
+        // אריזה (קרטונים ושקיות) - מחירים מותאמים למחירי השוק הנוכחיים
         box: {
-            basePrice: 20,
+            basePrice: 30,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 30,
@@ -333,7 +337,7 @@ export class PricingService {
             category: FURNITURE_CATEGORIES.packing
         },
         box_small: {
-            basePrice: 15,
+            basePrice: 20,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 30,
@@ -341,7 +345,7 @@ export class PricingService {
             category: FURNITURE_CATEGORIES.packing
         },
         box_large: {
-            basePrice: 25,
+            basePrice: 40,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 30,
@@ -515,6 +519,35 @@ export class PricingService {
     }
 
     /**
+     * מחירי פירוק/הרכבה ייעודיים לפריט - חלק מהפריטים (בעיקר ארונות) מתומחרים
+     * בנפרד מהמחיר הגלובלי (disassemblePrice/reassemblePrice) כי העבודה שונה בהיקפה.
+     * משמש גם ב-calculateFurniturePrice וגם ב-getItemPrice, כדי שלא יהיה כפל קוד/סתירה.
+     */
+    private static getDisassembleFees(itemType: string): { disassemblePrice: number; reassemblePrice: number } {
+        switch (itemType) {
+            case 'cabinet_small':
+                return { disassemblePrice: 250, reassemblePrice: 350 };
+            case 'cabinet_large':
+                return { disassemblePrice: 300, reassemblePrice: 500 };
+            case 'cabinet':
+                return { disassemblePrice: 275, reassemblePrice: 425 };
+            case 'wardrobe':
+                return { disassemblePrice: 200, reassemblePrice: 250 }; // סה"כ פירוק+הרכבה: 450 ₪
+            case 'wardrobe_3_door':
+                return { disassemblePrice: 220, reassemblePrice: 280 }; // סה"כ: 500 ₪
+            case 'wardrobe_4_door':
+                return { disassemblePrice: 260, reassemblePrice: 340 }; // סה"כ: 600 ₪
+            case 'wardrobe_sliding':
+                return { disassemblePrice: 240, reassemblePrice: 310 }; // סה"כ: 550 ₪
+            default:
+                return {
+                    disassemblePrice: this.PRICING_CONFIG.disassemblePrice,
+                    reassemblePrice: this.PRICING_CONFIG.reassemblePrice
+                };
+        }
+    }
+
+    /**
      * חישוב מחיר רהיטים
      */
     private static calculateFurniturePrice(furnitureItems: FurnitureItem[]): number {
@@ -529,24 +562,16 @@ export class PricingService {
                 itemPrice *= this.PRICING_CONFIG.fragileMultiplier;
             }
 
-            // מחיר פירוק והרכבה - מחירים שונים לארונות
+            // מחיר פירוק והרכבה מלאים - מחירים שונים לארונות
             if (pricing.needsDisassemble) {
-                let disassemblePrice = this.PRICING_CONFIG.disassemblePrice;
-                let reassemblePrice = this.PRICING_CONFIG.reassemblePrice;
+                const { disassemblePrice, reassemblePrice } = this.getDisassembleFees(item.type);
+                itemPrice += (disassemblePrice + reassemblePrice) * item.quantity;
+            }
 
-                // מחירים מיוחדים לארונות
-                if (item.type === 'cabinet_small') {
-                    disassemblePrice = 250; // פירוק ארון קטן
-                    reassemblePrice = 350;  // הרכבה ארון קטן
-                } else if (item.type === 'cabinet_large') {
-                    disassemblePrice = 300; // פירוק ארון גדול
-                    reassemblePrice = 500;  // הרכבה ארון גדול
-                } else if (item.type === 'cabinet') {
-                    disassemblePrice = 275; // פירוק ארון רגיל
-                    reassemblePrice = 425;  // הרכבה ארון רגיל
-                }
-
-                itemPrice += disassemblePrice + reassemblePrice;
+            // הסרת דלתות בלבד (למשל כדי לעבור בפתח צר) - שירות נפרד, רלוונטי רק
+            // לפריטים עם דלתות (ארונות/מזנונים - אלו שהוגדרו כניתנים לפירוק).
+            if (item.needsDoorRemoval && pricing.needsDisassemble) {
+                itemPrice += this.PRICING_CONFIG.doorRemovalPrice * item.quantity;
             }
 
             totalPrice += itemPrice;
@@ -589,6 +614,7 @@ export class PricingService {
         description: string;
         disassemblePrice?: number;
         reassemblePrice?: number;
+        doorRemovalPrice?: number;
     } {
         const pricing = this.FURNITURE_PRICING[itemType] || this.FURNITURE_PRICING.other;
         let totalPrice = pricing.basePrice * quantity;
@@ -601,22 +627,10 @@ export class PricingService {
         let reassemblePrice = 0;
 
         if (pricing.needsDisassemble) {
-            // מחירים מיוחדים לארונות
-            if (itemType === 'cabinet_small') {
-                disassemblePrice = 250;
-                reassemblePrice = 350;
-            } else if (itemType === 'cabinet_large') {
-                disassemblePrice = 300;
-                reassemblePrice = 500;
-            } else if (itemType === 'cabinet') {
-                disassemblePrice = 275;
-                reassemblePrice = 425;
-            } else {
-                disassemblePrice = this.PRICING_CONFIG.disassemblePrice;
-                reassemblePrice = this.PRICING_CONFIG.reassemblePrice;
-            }
-
-            totalPrice += disassemblePrice + reassemblePrice;
+            const fees = this.getDisassembleFees(itemType);
+            disassemblePrice = fees.disassemblePrice;
+            reassemblePrice = fees.reassemblePrice;
+            totalPrice += (disassemblePrice + reassemblePrice) * quantity;
         }
 
         return {
@@ -626,12 +640,15 @@ export class PricingService {
             isFragile: pricing.fragile,
             description: pricing.description,
             disassemblePrice,
-            reassemblePrice
+            reassemblePrice,
+            doorRemovalPrice: pricing.needsDisassemble ? this.PRICING_CONFIG.doorRemovalPrice : 0
         };
     }
 
     /**
-     * קבלת רשימת כל הפריטים עם מחירים
+     * קבלת רשימת כל הפריטים עם מחירים - כולל פירוט עלויות פירוק/הרכבה/הסרת
+     * דלתות לכל פריט, כדי שה-frontend יוכל להציג מחיר ליד כל מוצר בטופס
+     * בלי לשכפל את לוגיקת התמחור בצד הלקוח.
      */
     static getAllFurniturePricing(): Array<{
         type: string;
@@ -641,16 +658,28 @@ export class PricingService {
         needsDisassemble: boolean;
         maxQuantity: number;
         category: string;
+        disassemblePrice: number;
+        reassemblePrice: number;
+        doorRemovalPrice: number;
     }> {
-        return Object.entries(this.FURNITURE_PRICING).map(([type, pricing]) => ({
-            type,
-            basePrice: pricing.basePrice,
-            description: pricing.description,
-            isFragile: pricing.fragile,
-            needsDisassemble: pricing.needsDisassemble,
-            maxQuantity: pricing.maxQuantity,
-            category: pricing.category
-        }));
+        return Object.entries(this.FURNITURE_PRICING).map(([type, pricing]) => {
+            const fees = pricing.needsDisassemble
+                ? this.getDisassembleFees(type)
+                : { disassemblePrice: 0, reassemblePrice: 0 };
+
+            return {
+                type,
+                basePrice: pricing.basePrice,
+                description: pricing.description,
+                isFragile: pricing.fragile,
+                needsDisassemble: pricing.needsDisassemble,
+                maxQuantity: pricing.maxQuantity,
+                category: pricing.category,
+                disassemblePrice: fees.disassemblePrice,
+                reassemblePrice: fees.reassemblePrice,
+                doorRemovalPrice: pricing.needsDisassemble ? this.PRICING_CONFIG.doorRemovalPrice : 0
+            };
+        });
     }
 
     /**

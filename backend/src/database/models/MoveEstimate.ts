@@ -140,6 +140,10 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
             type: Boolean,
             default: false
         },
+        needsDoorRemoval: {
+            type: Boolean,
+            default: false
+        },
         comments: String
     }],
     totalPrice: {

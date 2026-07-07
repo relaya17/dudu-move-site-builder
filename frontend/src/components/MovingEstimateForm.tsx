@@ -43,6 +43,9 @@ interface FurnitureOption {
   needsDisassemble: boolean;
   maxQuantity: number;
   category?: string;
+  disassemblePrice: number;
+  reassemblePrice: number;
+  doorRemovalPrice: number;
 }
 
 interface ItemForm {
@@ -52,17 +55,24 @@ interface ItemForm {
   fragile: boolean;
   disassemble: boolean;
   assemble: boolean;
+  doorRemoval: boolean;
   note: string;
   img: File | null;
+}
+
+interface PriceRangeEstimate {
+  minEstimate: number;
+  maxEstimate: number;
 }
 
 export const MovingEstimateForm: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [items, setItems] = useState<ItemForm[]>([
-    { id: 1, type: '', quantity: 1, fragile: false, disassemble: false, assemble: false, note: '', img: null }
+    { id: 1, type: '', quantity: 1, fragile: false, disassemble: false, assemble: false, doorRemoval: false, note: '', img: null }
   ]);
   const navigate = useNavigate();
   const [furnitureOptions, setFurnitureOptions] = useState<FurnitureOption[]>([]);
+  const [priceRange, setPriceRange] = useState<PriceRangeEstimate | null>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     phone: '',
@@ -84,6 +94,11 @@ export const MovingEstimateForm: React.FC = () => {
   });
   const formRef = useRef<HTMLFormElement>(null);
 
+  const API_URL = import.meta.env.VITE_API_URL ||
+    (window.location.hostname === 'localhost'
+      ? 'http://localhost:3001'
+      : 'https://dudu-move-backend.onrender.com');
+
   useEffect(() => {
     // Scroll to the top of the form when the step changes
     if (formRef.current) {
@@ -94,11 +109,6 @@ export const MovingEstimateForm: React.FC = () => {
   useEffect(() => {
     const fetchFurnitureOptions = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL ||
-          (window.location.hostname === 'localhost'
-            ? 'http://localhost:3001'
-            : 'https://dudu-move-backend.onrender.com');
-
         const response = await axios.get(`${API_URL}/api/pricing/furniture-items`);
         // Ensure response.data is an array
         const data = Array.isArray(response.data) ? response.data : [];
@@ -109,7 +119,7 @@ export const MovingEstimateForm: React.FC = () => {
       }
     };
     fetchFurnitureOptions();
-  }, []); // Empty dependency array means this runs once on mount
+  }, [API_URL]);
 
   // מקבץ את רשימת סוגי הפריטים לפי קטגוריה (תת-קטגוריות), לתצוגה כ-optgroup בתפריט הבחירה.
   const groupedFurnitureOptions = useMemo(() => {
@@ -123,6 +133,45 @@ export const MovingEstimateForm: React.FC = () => {
     }
     return Array.from(groups.entries());
   }, [furnitureOptions]);
+
+  const getFurnitureOption = (type: string): FurnitureOption | undefined =>
+    furnitureOptions.find(option => option.type === type);
+
+  // הערכת מחיר "חיה" - מחושבת בשרת (אותה נוסחה שתקבע את המחיר בפועל), ומוצגת
+  // כטווח (לא נקודה בודדת) כדי לשקף שזו הערכה בלבד לפני אישור טלפוני סופי.
+  useEffect(() => {
+    const itemsWithType = items.filter(item => item.type);
+    if (itemsWithType.length === 0) {
+      setPriceRange(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const floorDifference = Math.abs((formData.toFloor || 0) - (formData.fromFloor || 0));
+        const hasElevator = formData.fromElevator > 0 && formData.toElevator > 0;
+
+        const response = await axios.post(`${API_URL}/api/pricing/estimate-preview`, {
+          furnitureItems: itemsWithType.map(item => ({
+            type: item.type,
+            quantity: item.quantity,
+            needsDoorRemoval: item.doorRemoval
+          })),
+          floorDifference,
+          hasElevator,
+          originHasCrane: formData.fromLift,
+          destinationHasCrane: formData.toLift
+        });
+        if (response.data?.success) {
+          setPriceRange(response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to preview estimate:', error);
+      }
+    }, 400); // דיבאונס קל כדי לא להפציץ את השרת בכל הקשת מקלדת
+
+    return () => clearTimeout(timeoutId);
+  }, [items, formData.fromFloor, formData.toFloor, formData.fromElevator, formData.toElevator, formData.fromLift, formData.toLift, API_URL]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -175,7 +224,7 @@ export const MovingEstimateForm: React.FC = () => {
   };
 
   const addItem = () => {
-    setItems(prev => [...prev, { id: prev.length + 1, type: '', quantity: 1, fragile: false, disassemble: false, assemble: false, note: '', img: null }]);
+    setItems(prev => [...prev, { id: prev.length + 1, type: '', quantity: 1, fragile: false, disassemble: false, assemble: false, doorRemoval: false, note: '', img: null }]);
   };
 
   const handleItemChange = (id: number, field: keyof ItemForm, value: ItemForm[keyof ItemForm]) => {
@@ -214,6 +263,7 @@ export const MovingEstimateForm: React.FC = () => {
         isFragile: item.fragile,
         needsDisassemble: item.disassemble,
         needsReassemble: item.assemble,
+        needsDoorRemoval: item.doorRemoval,
         comments: item.note,
         // The 'description' field is optional on the backend and not available directly from the frontend ItemForm.
         // The 'id' and 'img' fields are not part of the backend schema and are omitted.
@@ -221,12 +271,6 @@ export const MovingEstimateForm: React.FC = () => {
     };
 
     try {
-      // Send the data to the backend
-      const API_URL = import.meta.env.VITE_API_URL ||
-        (window.location.hostname === 'localhost'
-          ? 'http://localhost:3001'
-          : 'https://dudu-move-backend.onrender.com');
-
       const response = await axios.post(`${API_URL}/api/move-requests`, formattedData);
       const trackingToken = response.data?.data?.trackingToken;
       navigate('/thank-you', { state: { trackingToken } });
@@ -484,11 +528,21 @@ export const MovingEstimateForm: React.FC = () => {
                           {groupedFurnitureOptions.map(([category, options]) => (
                             <optgroup key={category} label={category}>
                               {options.map((option) => (
-                                <option key={option.type} value={option.type}>{option.description}</option>
+                                <option key={option.type} value={option.type}>
+                                  {option.description} — ₪{option.basePrice}{option.isFragile ? ' (שביר)' : ''}
+                                </option>
                               ))}
                             </optgroup>
                           ))}
                         </select>
+                        {item.type && getFurnitureOption(item.type) && (
+                          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
+                            מחיר בסיס: ₪{getFurnitureOption(item.type)!.basePrice} לפריט
+                            {getFurnitureOption(item.type)!.isFragile && ' · פריט שביר - מטופל בזהירות מיוחדת'}
+                            {getFurnitureOption(item.type)!.needsDisassemble &&
+                              ` · פירוק + הרכבה: ₪${getFurnitureOption(item.type)!.disassemblePrice + getFurnitureOption(item.type)!.reassemblePrice}`}
+                          </Typography>
+                        )}
                       </Box>
                       <Box sx={{ mb: 1 }}>
                         <Typography component="label" htmlFor={`itemQty-${item.id}`} variant="body2" sx={{ mb: 0.5, display: 'block' }}>כמות</Typography>
@@ -535,6 +589,21 @@ export const MovingEstimateForm: React.FC = () => {
                         />
                         <Typography variant="body2">נדרש הרכבה</Typography>
                       </Box>
+                      {getFurnitureOption(item.type)?.needsDisassemble && (
+                        <Box component="label" htmlFor={`itemDoorRemoval-${item.id}`} sx={{ display: 'flex', alignItems: 'center', mb: 1, cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            id={`itemDoorRemoval-${item.id}`}
+                            name={`itemDoorRemoval-${item.id}`}
+                            checked={item.doorRemoval}
+                            onChange={(e) => handleItemChange(item.id, 'doorRemoval', e.target.checked)}
+                            style={{ marginLeft: '8px' }}
+                          />
+                          <Typography variant="body2">
+                            הסרת דלתות בלבד (₪{getFurnitureOption(item.type)!.doorRemovalPrice}) - חלופה זולה יותר לפירוק מלא, למשל למעבר בפתח צר
+                          </Typography>
+                        </Box>
+                      )}
                       <Box sx={{ mb: 1 }}>
                         <Typography component="label" htmlFor={`itemNote-${item.id}`} variant="body2" sx={{ mb: 0.5, display: 'block' }}>הערות</Typography>
                         <input
@@ -563,6 +632,17 @@ export const MovingEstimateForm: React.FC = () => {
                 </Box>
                 <Button variant="contained" onClick={addItem} sx={{ mb: 3 }}>הוסף פריט</Button>
 
+                {priceRange && (
+                  <Box sx={{ mb: 3, p: 2, borderRadius: '8px', bgcolor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ color: '#1e40af', fontWeight: 'bold' }}>
+                      הערכת מחיר משוערת: ₪{priceRange.minEstimate} - ₪{priceRange.maxEstimate}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#1e40af' }}>
+                      המחיר הסופי המדויק ייקבע לאחר אישור טלפוני
+                    </Typography>
+                  </Box>
+                )}
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                   <Button variant="outlined" onClick={prevStep}>חזור</Button>
                   <Button variant="contained" onClick={nextStep}>המשך</Button>
@@ -573,6 +653,18 @@ export const MovingEstimateForm: React.FC = () => {
             {currentStep === 4 && (
               <Box>
                 <Typography variant="h6" component="h3" sx={{ mb: 2 }}>סיכום</Typography>
+
+                {priceRange && (
+                  <Box sx={{ mb: 3, p: 2, borderRadius: '8px', bgcolor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+                    <Typography variant="subtitle1" sx={{ color: '#1e40af', fontWeight: 'bold' }}>
+                      הערכת מחיר משוערת: ₪{priceRange.minEstimate} - ₪{priceRange.maxEstimate}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#1e40af' }}>
+                      ההערכה מבוססת על הפריטים, הקומות והמעליות שציינת. המחיר הסופי המדויק ייקבע לאחר אישור טלפוני.
+                    </Typography>
+                  </Box>
+                )}
+
                 <Box sx={{ mb: 3 }}>
                   <Typography component="label" htmlFor="notes" variant="body1" sx={{ mb: 0.5, display: 'block' }}>הערות נוספות</Typography>
                   <textarea

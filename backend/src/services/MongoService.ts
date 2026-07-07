@@ -1,6 +1,7 @@
 import { EstimateStatus } from 'shared';
 import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
 import { Customer, ICustomer } from '../database/models/Customer';
+import { CalendarNote, ICalendarNote } from '../database/models/CalendarNote';
 
 export class MongoService {
     // Move Estimate Methods
@@ -190,6 +191,42 @@ export class MongoService {
         } catch (error) {
             console.error('Error searching customers:', error);
             throw new Error('Failed to search customers');
+        }
+    }
+
+    // Calendar Note Methods - הערות חופשיות של ההנהלה על ימים בלוח השנה
+    static async getCalendarNotes(fromDate?: string, toDate?: string): Promise<ICalendarNote[]> {
+        try {
+            const filter: Record<string, unknown> = {};
+            if (fromDate || toDate) {
+                filter.date = {
+                    ...(fromDate ? { $gte: fromDate } : {}),
+                    ...(toDate ? { $lte: toDate } : {})
+                };
+            }
+            return await CalendarNote.find(filter).sort({ date: 1 });
+        } catch (error) {
+            console.error('Error getting calendar notes:', error);
+            throw new Error('Failed to get calendar notes');
+        }
+    }
+
+    static async createCalendarNote(date: string, text: string): Promise<ICalendarNote> {
+        try {
+            return await CalendarNote.create({ date, text });
+        } catch (error) {
+            console.error('Error creating calendar note:', error);
+            throw new Error('Failed to create calendar note');
+        }
+    }
+
+    static async deleteCalendarNote(id: string): Promise<boolean> {
+        try {
+            const result = await CalendarNote.findByIdAndDelete(id);
+            return Boolean(result);
+        } catch (error) {
+            console.error('Error deleting calendar note:', error);
+            throw new Error('Failed to delete calendar note');
         }
     }
 } 

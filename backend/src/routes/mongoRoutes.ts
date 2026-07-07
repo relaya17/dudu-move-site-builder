@@ -29,4 +29,9 @@ router.get('/analytics', MongoController.getAnalytics);
 router.get('/search/estimates', MongoController.searchMoveEstimates);
 router.get('/search/customers', MongoController.searchCustomers);
 
+// Calendar Note Routes - הערות חופשיות בלוח השנה של הדשבורד
+router.get('/calendar-notes', MongoController.getCalendarNotes);
+router.post('/calendar-notes', MongoController.createCalendarNote);
+router.delete('/calendar-notes/:id', MongoController.deleteCalendarNote);
+
 export default router; 

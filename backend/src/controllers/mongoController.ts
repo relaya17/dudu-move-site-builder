@@ -358,4 +358,75 @@ export class MongoController {
             });
         }
     }
+
+    // Calendar Note Controllers - הערות חופשיות בלוח השנה של הדשבורד
+    static async getCalendarNotes(req: Request, res: Response): Promise<void> {
+        try {
+            const { from, to } = req.query;
+            const notes = await MongoService.getCalendarNotes(
+                typeof from === 'string' ? from : undefined,
+                typeof to === 'string' ? to : undefined
+            );
+
+            res.status(200).json({
+                success: true,
+                data: notes,
+                count: notes.length
+            });
+        } catch (error) {
+            console.error('Error getting calendar notes:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to get calendar notes',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    static async createCalendarNote(req: Request, res: Response): Promise<void> {
+        try {
+            const { date, text } = req.body as { date?: string; text?: string };
+
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                res.status(400).json({ success: false, message: 'תאריך לא תקין (נדרש YYYY-MM-DD)' });
+                return;
+            }
+            if (!text || !text.trim()) {
+                res.status(400).json({ success: false, message: 'טקסט ההערה לא יכול להיות ריק' });
+                return;
+            }
+
+            const note = await MongoService.createCalendarNote(date, text.trim());
+
+            res.status(201).json({ success: true, data: note });
+        } catch (error) {
+            console.error('Error creating calendar note:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to create calendar note',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    static async deleteCalendarNote(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const deleted = await MongoService.deleteCalendarNote(id);
+
+            if (!deleted) {
+                res.status(404).json({ success: false, message: 'הערה לא נמצאה' });
+                return;
+            }
+
+            res.status(200).json({ success: true, message: 'ההערה נמחקה בהצלחה' });
+        } catch (error) {
+            console.error('Error deleting calendar note:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to delete calendar note',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
 } 

@@ -10,7 +10,7 @@ import { ReportService } from "@/services/ReportService";
 import { AiAssistant } from "@/components/admin/AiAssistant";
 import { useToast } from "@/components/ui/use-toast";
 import { adminHeaders } from "@/lib/adminApi";
-import { Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText, Receipt } from 'lucide-react';
+import { Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText, Receipt, Plus, Trash2, Wallet } from 'lucide-react';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -25,6 +25,15 @@ interface MoveRecord {
   totalPrice: number;
   status: string;
   customer: { name: string; phone: string };
+  quote?: { quoteNumber: string; issuedAt: string };
+  invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string };
+}
+
+interface CalendarNote {
+  _id: string;
+  date: string; // YYYY-MM-DD
+  text: string;
+  createdAt: string;
 }
 
 interface Customer {
@@ -53,8 +62,18 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 // ─── לוח שנה מיני ────────────────────────────────────────────────────────────
-const MiniCalendar = ({ moves }: { moves: MoveRecord[] }) => {
+interface MiniCalendarProps {
+  moves: MoveRecord[];
+  notes: CalendarNote[];
+  onAddNote: (date: string, text: string) => Promise<void>;
+  onDeleteNote: (id: string) => Promise<void>;
+}
+
+const MiniCalendar = ({ moves, notes, onAddNote, onDeleteNote }: MiniCalendarProps) => {
   const [viewDate, setViewDate] = useState(() => new Date());
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [newNoteText, setNewNoteText] = useState('');
+  const [saving, setSaving] = useState(false);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
@@ -69,6 +88,15 @@ const MiniCalendar = ({ moves }: { moves: MoveRecord[] }) => {
     return map;
   }, [moves]);
 
+  const notesByDate = useMemo(() => {
+    const map: Record<string, CalendarNote[]> = {};
+    notes.forEach(n => {
+      if (!map[n.date]) map[n.date] = [];
+      map[n.date].push(n);
+    });
+    return map;
+  }, [notes]);
+
   const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const todayKey = new Date().toLocaleDateString('sv');
@@ -77,15 +105,28 @@ const MiniCalendar = ({ moves }: { moves: MoveRecord[] }) => {
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const prevMonth = () => setViewDate(new Date(year, month - 1));
-  const nextMonth = () => setViewDate(new Date(year, month + 1));
+  const prevMonth = () => { setViewDate(new Date(year, month - 1)); setSelectedDay(null); };
+  const nextMonth = () => { setViewDate(new Date(year, month + 1)); setSelectedDay(null); };
+
+  const selectedNotes = selectedDay ? (notesByDate[selectedDay] || []) : [];
+
+  const handleAddNote = async () => {
+    if (!selectedDay || !newNoteText.trim()) return;
+    setSaving(true);
+    try {
+      await onAddNote(selectedDay, newNoteText.trim());
+      setNewNoteText('');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Calendar size={16} /> לוח שנה — הובלות מתוכננות
+            <Calendar size={16} /> לוח שנה — הובלות והערות
           </CardTitle>
           <div className="flex items-center gap-1">
             <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded" aria-label="חודש קודם"><ChevronRight size={16} /></button>
@@ -105,13 +146,17 @@ const MiniCalendar = ({ moves }: { moves: MoveRecord[] }) => {
             if (!day) return <div key={i} />;
             const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const count = moveDates[key] || 0;
+            const noteCount = notesByDate[key]?.length || 0;
             const isToday = key === todayKey;
+            const isSelected = key === selectedDay;
             return (
-              <div
+              <button
                 key={key}
-                className={`relative flex flex-col items-center justify-center h-9 rounded text-xs cursor-default
-                  ${isToday ? 'bg-blue-600 text-white font-bold' : count > 0 ? 'bg-blue-50 text-blue-800 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
-                title={count > 0 ? `${count} הובלות ב-${day}/${month + 1}` : ''}
+                onClick={() => { setSelectedDay(key); setNewNoteText(''); }}
+                className={`relative flex flex-col items-center justify-center h-9 rounded text-xs transition-colors
+                  ${isSelected ? 'ring-2 ring-blue-500' : ''}
+                  ${isToday ? 'bg-blue-600 text-white font-bold' : count > 0 ? 'bg-blue-50 text-blue-800 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                title={count > 0 ? `${count} הובלות ב-${day}/${month + 1}` : 'לחץ להוספת הערה'}
               >
                 {day}
                 {count > 0 && (
@@ -119,11 +164,51 @@ const MiniCalendar = ({ moves }: { moves: MoveRecord[] }) => {
                     {count}
                   </span>
                 )}
-              </div>
+                {noteCount > 0 && (
+                  <span className={`absolute top-0.5 left-0.5 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-yellow-300' : 'bg-amber-500'}`} />
+                )}
+              </button>
             );
           })}
         </div>
-        <p className="text-xs text-gray-400 mt-3">מספרים קטנים = מספר הובלות מתוכננות באותו יום</p>
+        <p className="text-xs text-gray-400 mt-3">נקודה כתומה = יש הערה ביום זה. לחץ על יום כדי לצפות/להוסיף הערה.</p>
+
+        {selectedDay && (
+          <div className="mt-4 border-t pt-4">
+            <p className="text-sm font-semibold text-gray-700 mb-2">
+              הערות ל-{new Date(selectedDay).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <div className="space-y-2 mb-3">
+              {selectedNotes.length === 0 && (
+                <p className="text-xs text-gray-400">אין הערות ליום זה עדיין.</p>
+              )}
+              {selectedNotes.map(n => (
+                <div key={n._id} className="flex items-start justify-between gap-2 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm">
+                  <span className="text-gray-800 whitespace-pre-wrap">{n.text}</span>
+                  <button
+                    onClick={() => onDeleteNote(n._id)}
+                    className="text-gray-400 hover:text-red-600 shrink-0"
+                    aria-label="מחק הערה"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-start gap-2">
+              <textarea
+                value={newNoteText}
+                onChange={e => setNewNoteText(e.target.value)}
+                placeholder="הוסף הערה או תזכורת ליום זה..."
+                rows={2}
+                className="flex-1 text-sm border rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Button size="sm" onClick={handleAddNote} disabled={saving || !newNoteText.trim()} className="flex items-center gap-1 h-9">
+                <Plus size={14} /> הוסף
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -244,11 +329,115 @@ const StatsTable = ({ moves }: { moves: MoveRecord[] }) => {
   );
 };
 
+// ─── הנהלת חשבונות ───────────────────────────────────────────────────────────
+interface BillingPanelProps {
+  moves: MoveRecord[];
+  issuingInvoiceId: string | null;
+  onIssueInvoice: (move: MoveRecord) => void;
+}
+
+const BillingPanel = ({ moves, issuingInvoiceId, onIssueInvoice }: BillingPanelProps) => {
+  const invoicedMoves = moves.filter(m => m.invoice?.documentNumber);
+  const quotedOnlyMoves = moves.filter(m => m.quote?.quoteNumber && !m.invoice?.documentNumber);
+  const noDocumentMoves = moves.filter(m => !m.quote?.quoteNumber && !m.invoice?.documentNumber);
+  const totalInvoiced = invoicedMoves.reduce((s, m) => s + m.totalPrice, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="border-r-4 border-r-green-500 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">סה"כ הופקו חשבוניות</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-900">₪{totalInvoiced.toLocaleString('he-IL')}</p>
+            <p className="text-xs text-gray-400 mt-1">{invoicedMoves.length} חשבוניות</p>
+          </CardContent>
+        </Card>
+        <Card className="border-r-4 border-r-blue-500 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">הצעות מחיר בלבד</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-900">{quotedOnlyMoves.length}</p>
+            <p className="text-xs text-gray-400 mt-1">נשלחה הצעה, טרם הופקה חשבונית</p>
+          </CardContent>
+        </Card>
+        <Card className="border-r-4 border-r-yellow-500 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">ללא מסמך</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-900">{noDocumentMoves.length}</p>
+            <p className="text-xs text-gray-400 mt-1">מתוך {moves.length} הובלות</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Wallet size={16} /> מסמכים חשבונאיים</CardTitle>
+          <p className="text-xs text-gray-500 mt-1">כל החשבוניות והצעות המחיר שהופקו במערכת עבור לקוחות, במקום אחד</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-right px-3 py-3 font-medium text-gray-600">לקוח</th>
+                  <th className="text-right px-3 py-3 font-medium text-gray-600">מחיר</th>
+                  <th className="text-right px-3 py-3 font-medium text-gray-600">הצעת מחיר</th>
+                  <th className="text-right px-3 py-3 font-medium text-gray-600">חשבונית</th>
+                  <th className="text-right px-3 py-3 font-medium text-gray-600">פעולה</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {moves.map(move => (
+                  <tr key={move.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-3 font-medium text-gray-900">{move.customer?.name}</td>
+                    <td className="px-3 py-3 font-semibold text-gray-900">₪{move.totalPrice.toLocaleString('he-IL')}</td>
+                    <td className="px-3 py-3 text-gray-600">
+                      {move.quote?.quoteNumber
+                        ? <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">#{move.quote.quoteNumber}</span>
+                        : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-3 py-3 text-gray-600">
+                      {move.invoice?.documentNumber
+                        ? (
+                          move.invoice.documentUrl
+                            ? <a href={move.invoice.documentUrl} target="_blank" rel="noreferrer" className="inline-flex px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 hover:underline">#{move.invoice.documentNumber}</a>
+                            : <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">#{move.invoice.documentNumber}</span>
+                        )
+                        : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-3 py-3">
+                      {!move.invoice?.documentNumber && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={issuingInvoiceId === move.id}
+                          onClick={() => onIssueInvoice(move)}
+                          className="flex items-center gap-1 text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
+                        >
+                          <Receipt size={12} aria-hidden="true" />
+                          {issuingInvoiceId === move.id ? 'מפיק...' : 'הפק חשבונית'}
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {moves.length === 0 && (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">אין הובלות להצגה</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // ─── Dashboard ראשי ───────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [moves, setMoves] = useState<MoveRecord[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [notes, setNotes] = useState<CalendarNote[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [monthlyData, setMonthlyData] = useState<{ month: string; amount: number }[]>([]);
   const [selectedTab, setSelectedTab] = useState('overview');
@@ -258,6 +447,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchMoves();
     fetchCustomers();
+    fetchCalendarNotes();
     setupNotifications();
     return () => { NotificationService.unsubscribeAll(); };
   }, []);
@@ -285,6 +475,8 @@ const AdminDashboard = () => {
       const raw: Array<{
         _id: string; name: string; phone: string; email?: string;
         createdAt: string; preferredMoveDate?: string; totalPrice: number; status: string;
+        quote?: { quoteNumber: string; issuedAt: string };
+        invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string };
       }> = result.data || [];
 
       let total = 0;
@@ -298,6 +490,8 @@ const AdminDashboard = () => {
           totalPrice: e.totalPrice ?? 0,
           status: e.status ?? 'pending',
           customer: { name: e.name, phone: e.phone },
+          quote: e.quote,
+          invoice: e.invoice,
         };
         total += move.totalPrice;
         const key = new Date(move.created_at).toLocaleDateString('he-IL', { year: 'numeric', month: 'long' });
@@ -321,6 +515,51 @@ const AdminDashboard = () => {
       setCustomers(result.data || []);
     } catch (err) {
       console.error('שגיאה בטעינת לקוחות:', err);
+    }
+  };
+
+  const fetchCalendarNotes = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/calendar-notes`, { headers: adminHeaders() });
+      const result = await res.json();
+      setNotes(result.data || []);
+    } catch (err) {
+      console.error('שגיאה בטעינת הערות לוח השנה:', err);
+    }
+  };
+
+  const handleAddNote = async (date: string, text: string) => {
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/calendar-notes`, {
+        method: 'POST',
+        headers: adminHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ date, text }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setNotes(prev => [...prev, result.data]);
+      } else {
+        toast({ title: 'שגיאה', description: result.message || 'הוספת ההערה נכשלה', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'שגיאה', description: 'הוספת ההערה נכשלה', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    try {
+      const res = await fetch(`${API_ROOT}/api/mongo/calendar-notes/${id}`, {
+        method: 'DELETE',
+        headers: adminHeaders(),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setNotes(prev => prev.filter(n => n._id !== id));
+      } else {
+        toast({ title: 'שגיאה', description: result.message || 'מחיקת ההערה נכשלה', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'שגיאה', description: 'מחיקת ההערה נכשלה', variant: 'destructive' });
     }
   };
 
@@ -422,6 +661,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="moves" className="flex-1 sm:flex-none">הובלות</TabsTrigger>
             <TabsTrigger value="clients" className="flex-1 sm:flex-none flex items-center gap-1"><Users size={13} />לקוחות</TabsTrigger>
             <TabsTrigger value="calendar" className="flex-1 sm:flex-none flex items-center gap-1"><Calendar size={13} />לוח שנה</TabsTrigger>
+            <TabsTrigger value="billing" className="flex-1 sm:flex-none flex items-center gap-1"><Wallet size={13} />הנהלת חשבונות</TabsTrigger>
             <TabsTrigger value="stats" className="flex-1 sm:flex-none flex items-center gap-1"><BarChart2 size={13} />סטטיסטיקות</TabsTrigger>
             <TabsTrigger value="ai" className="flex-1 sm:flex-none">🤖 לאה AI</TabsTrigger>
             <TabsTrigger value="reports" className="flex-1 sm:flex-none flex items-center gap-1"><FileText size={13} />דוחות</TabsTrigger>
@@ -601,7 +841,12 @@ const AdminDashboard = () => {
 
           {/* ─── לוח שנה ─── */}
           <TabsContent value="calendar">
-            <MiniCalendar moves={moves} />
+            <MiniCalendar moves={moves} notes={notes} onAddNote={handleAddNote} onDeleteNote={handleDeleteNote} />
+          </TabsContent>
+
+          {/* ─── הנהלת חשבונות ─── */}
+          <TabsContent value="billing">
+            <BillingPanel moves={moves} issuingInvoiceId={issuingInvoiceId} onIssueInvoice={handleIssueInvoice} />
           </TabsContent>
 
           {/* ─── סטטיסטיקות ─── */}

@@ -260,6 +260,23 @@ export class PricingService {
             description: 'תנור אפייה',
             category: FURNITURE_CATEGORIES.large_appliances
         },
+        gas_stove: {
+            basePrice: 150,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'כיריים גז / חשמל',
+            category: FURNITURE_CATEGORIES.large_appliances
+        },
+        gas_balloon: {
+            // בלון גז - יש לוודא עם הצוות שהבלון מנותק וסגור לפני ההובלה (מטעמי בטיחות).
+            basePrice: 40,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 4,
+            description: 'בלון גז (מנותק וסגור)',
+            category: FURNITURE_CATEGORIES.large_appliances
+        },
 
         // ארונות ואחסון
         cabinet: {
@@ -292,6 +309,22 @@ export class PricingService {
             needsDisassemble: true,
             maxQuantity: 3,
             description: 'מדף ספרים',
+            category: FURNITURE_CATEGORIES.storage
+        },
+        shelf: {
+            basePrice: 30,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 10,
+            description: 'מדף קיר בודד',
+            category: FURNITURE_CATEGORIES.storage
+        },
+        shelving_unit: {
+            basePrice: 120,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 3,
+            description: 'מדפייה / כונניות אחסון',
             category: FURNITURE_CATEGORIES.storage
         },
         drawer: {
@@ -332,6 +365,16 @@ export class PricingService {
             needsDisassemble: true, // פירוק+הרכבה: 550 ₪
             maxQuantity: 2,
             description: 'ארון הזזה',
+            category: FURNITURE_CATEGORIES.storage
+        },
+        built_in_closet: {
+            // ארון קיר / בילט-אין מודולרי - עבודת פירוק/הרכבה מורכבת ומשמעותית יותר
+            // מארון חדר שינה רגיל (התאמה מדויקת לקיר, לעתים כוללת חיתוך/כיוונון בהרכבה).
+            basePrice: 450,
+            fragile: false,
+            needsDisassemble: true, // פירוק+הרכבה: 700 ₪ (ר' getDisassembleFees)
+            maxQuantity: 2,
+            description: 'ארון קיר / בילט-אין',
             category: FURNITURE_CATEGORIES.storage
         },
         buffet: {
@@ -746,6 +789,8 @@ export class PricingService {
                 return { disassemblePrice: 260, reassemblePrice: 340 }; // סה"כ: 600 ₪
             case 'wardrobe_sliding':
                 return { disassemblePrice: 240, reassemblePrice: 310 }; // סה"כ: 550 ₪
+            case 'built_in_closet':
+                return { disassemblePrice: 300, reassemblePrice: 400 }; // סה"כ: 700 ₪
             default:
                 return {
                     disassemblePrice: this.PRICING_CONFIG.disassemblePrice,

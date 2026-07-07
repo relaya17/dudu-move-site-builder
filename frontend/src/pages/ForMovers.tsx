@@ -657,8 +657,25 @@ const ForMovers = () => {
       </div>
 
       {/* Hero */}
-      <section className="relative text-white bg-gray-900 py-16">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative text-white overflow-hidden min-h-[480px] flex flex-col justify-center">
+        {/* רקע וידאו */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source
+            src="https://res.cloudinary.com/dora8sxcb/video/upload/v1783457470/hailuo-2_3_English_Create_a_futuristic_high-tech_promotional_video_for_a_SaaS_platform_that-0_1_hf9pb8.mp4"
+            type="video/mp4"
+          />
+        </video>
+        {/* שכבת אפלה */}
+        <div className="absolute inset-0 bg-black/55" />
+
+        <div className="relative z-10 container mx-auto px-4 py-16 text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Truck className="h-7 w-7 text-blue-300" aria-hidden="true" />
             {/* שם המוצר/הפלטפורמה - נשאר קבוע בכל שפה (שם מותג), בניגוד לשם

@@ -15,6 +15,7 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
     const [muted, setMuted] = useState(true);
 
     const dismiss = () => {
+        if (fading) return;
         setFading(true);
         setTimeout(() => {
             sessionStorage.setItem(SEEN_KEY, '1');
@@ -26,41 +27,45 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
         const v = videoRef.current;
         if (!v) return;
         v.play().catch(() => {});
-        const onEnded = () => dismiss();
-        v.addEventListener('ended', onEnded);
-        return () => v.removeEventListener('ended', onEnded);
+        v.addEventListener('ended', dismiss);
+        return () => v.removeEventListener('ended', dismiss);
     }, []);
+
+    const toggleMute = () => {
+        const next = !muted;
+        setMuted(next);
+        if (videoRef.current) videoRef.current.muted = next;
+    };
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[9999] bg-black transition-opacity duration-500 ${fading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         >
+            {/* וידאו — מכסה את כל המסך בכל גודל */}
             <video
                 ref={videoRef}
                 src={PROMO_URL}
                 muted={muted}
                 playsInline
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* פקדים */}
-            <div className="absolute bottom-8 left-0 right-0 flex items-center justify-between px-6">
-                {/* השתק / הפעל */}
+            {/* שכבת עמעום קלה בתחתית לנראות כפתורים */}
+            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 to-transparent" />
+
+            {/* כפתורים — safe-area aware */}
+            <div className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-0 right-0 flex items-center justify-between px-4 sm:px-8">
                 <button
-                    onClick={() => {
-                        setMuted(m => !m);
-                        if (videoRef.current) videoRef.current.muted = !muted;
-                    }}
-                    className="bg-white/20 hover:bg-white/30 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm transition"
+                    onClick={toggleMute}
+                    className="bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full backdrop-blur-sm transition select-none"
                     aria-label={muted ? 'הפעל שמע' : 'השתק'}
                 >
                     {muted ? '🔇 הפעל שמע' : '🔊 השתק'}
                 </button>
 
-                {/* דלג */}
                 <button
                     onClick={dismiss}
-                    className="bg-white/20 hover:bg-white/30 text-white text-sm px-5 py-2 rounded-full backdrop-blur-sm transition font-medium"
+                    className="bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-full backdrop-blur-sm transition font-semibold select-none"
                 >
                     דלג ←
                 </button>

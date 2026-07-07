@@ -1,11 +1,9 @@
 
-import { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Truck, Phone, Mail, MapPin } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 import { PrivacyPolicy } from '@/components/legal/PrivacyPolicy';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { AccessibilityStatement } from '@/components/legal/AccessibilityStatement';
-import { fetchBusinessName, FALLBACK_BUSINESS_NAME } from '@/services/businessInfoService';
 
 const PHONE_NUMBER = '0547777623';
 const EMAIL_ADDRESS = 'davidgueta3232@gmail.com';
@@ -24,17 +22,6 @@ const quickLinks = [
 ];
 
 export const Footer = () => {
-  // שם העסק מגיע מהגדרות העסק בפאנל הניהול, לא קבוע בקוד - ר' Navbar.tsx להסבר מלא.
-  const [businessName, setBusinessName] = useState(FALLBACK_BUSINESS_NAME);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchBusinessName().then(name => {
-      if (!cancelled) setBusinessName(name);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
   return (
     <footer className="bg-gray-900 text-white" dir="rtl">
       {/* max-w-4xl (ולא כל רוחב ה-container) - כדי שבמסכים גדולים העמודות יישארו

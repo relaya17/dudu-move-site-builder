@@ -663,7 +663,7 @@ const ForMovers = () => {
             <Truck className="h-7 w-7 text-blue-300" aria-hidden="true" />
             {/* שם המוצר/הפלטפורמה - נשאר קבוע בכל שפה (שם מותג), בניגוד לשם
                 העסק של כל מוביל (זה שמופיע ב-Navbar/Footer של האתר שלו עצמו). */}
-            <span dir="ltr" className="text-2xl font-bold tracking-tight text-white">Vanto</span>
+            <span dir="ltr" className="text-2xl font-bold tracking-tight text-white">Movalo</span>
           </div>
           <p className="text-blue-300/80 text-sm mb-6">{t.brand}</p>
           <p className="text-blue-300 font-semibold mb-2">{t.hero.eyebrow}</p>

@@ -19,12 +19,23 @@
 import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
 import { BusinessSettings, IBusinessSettings } from '../database/models/BusinessSettings';
 import { tenantFilter } from '../lib/tenantFilter';
+import { PaymentMethod, PAYMENT_METHOD_LABELS } from 'shared';
 
 const SANDBOX_BASE_URL = 'https://sandbox.d.greeninvoice.co.il/api/v1';
 const PRODUCTION_BASE_URL = 'https://api.greeninvoice.co.il/api/v1';
 
 // קוד סוג מסמך של Green Invoice: 320 = "חשבונית מס קבלה" (Invoice-Receipt)
 const DOCUMENT_TYPE_INVOICE_RECEIPT = 320;
+
+// מעל סכום זה (₪, כולל מע"מ) חובה לרשום על הקבלה את ת.ז./ח.פ של הלקוח, לפי
+// הוראות ניהול ספרים (חלק מ"חוק צמצום השימוש במזומן"). ר' shared/src/billing.ts.
+export const CUSTOMER_ID_REQUIRED_THRESHOLD = 5000;
+
+export interface PaymentDetails {
+    paymentMethod: PaymentMethod;
+    // נדרש בפועל (ר' ולידציה ב-issueInvoiceReceipt) כשהסכום עולה על הסף שלמעלה.
+    customerIdNumber?: string;
+}
 
 interface GreenInvoiceCredentials {
     apiKey: string;
@@ -118,8 +129,17 @@ export class InvoiceService {
     /**
      * מפיק חשבונית מס/קבלה עבור הזמנת הובלה. בוחר אוטומטית בין הפקה עצמאית (built_in)
      * לבין הספק החיצוני, לפי ההגדרה השמורה ב-BusinessSettings.
+     *
+     * paymentDetails הוא שדה חובה מבחינה מהותית - לא ניתן להפיק קבלה כדין בלי
+     * לציין אמצעי תשלום (הוראות ניהול ספרים), ומעל 5,000 ₪ חובה גם ת.ז/ח.פ הלקוח.
+     * הבדיקה כאן היא שכבת האכיפה המרכזית - ר' גם mongoController.issueInvoice
+     * שמעביר את הפרטים האלה מה-body של הבקשה.
      */
-    static async issueInvoiceReceipt(estimateId: string, tenantId?: string): Promise<IMoveEstimate | null> {
+    static async issueInvoiceReceipt(
+        estimateId: string,
+        paymentDetails: PaymentDetails,
+        tenantId?: string
+    ): Promise<IMoveEstimate | null> {
         // ר' QuoteService.issueQuote להסבר על ה-tenantFilter כאן - הגנה כפולה
         // מעבר לבדיקת הבעלות שכבר קיימת ב-mongoController.
         const estimate = await MoveEstimate.findOne({ _id: estimateId, ...tenantFilter(tenantId) });
@@ -132,18 +152,31 @@ export class InvoiceService {
             return estimate;
         }
 
+        if (!paymentDetails.paymentMethod) {
+            throw new Error('חובה לציין אמצעי תשלום לפני הפקת קבלה (דרישת הוראות ניהול ספרים)');
+        }
+        if (estimate.totalPrice > CUSTOMER_ID_REQUIRED_THRESHOLD && !paymentDetails.customerIdNumber?.trim()) {
+            throw new Error(
+                `חובה לרשום ת.ז./ח.פ של הלקוח על הקבלה כשהסכום עולה על ${CUSTOMER_ID_REQUIRED_THRESHOLD.toLocaleString('he-IL')} ₪`
+            );
+        }
+
         const settings = await getSettings(false, tenantId);
         const creds = settings.invoiceProvider === 'green_invoice' ? await resolveGreenInvoiceCredentials(tenantId) : null;
 
         if (settings.invoiceProvider === 'green_invoice' && creds) {
-            return this.issueViaGreenInvoice(estimate, creds);
+            return this.issueViaGreenInvoice(estimate, creds, paymentDetails);
         }
 
         // ברירת מחדל / נפילה חזרה: הפקה עצמאית (built_in) - חינמית וללא ספק חיצוני.
-        return this.issueBuiltIn(estimate, settings);
+        return this.issueBuiltIn(estimate, settings, paymentDetails);
     }
 
-    private static async issueBuiltIn(estimate: IMoveEstimate, settings: IBusinessSettings): Promise<IMoveEstimate> {
+    private static async issueBuiltIn(
+        estimate: IMoveEstimate,
+        settings: IBusinessSettings,
+        paymentDetails: PaymentDetails
+    ): Promise<IMoveEstimate> {
         // הקצאת מספר סידורי רץ באופן אטומי, כדי שלא יהיו כפילויות/דילוגים בין הפקות מקבילות.
         const updated = await BusinessSettings.findOneAndUpdate(
             { _id: settings._id },
@@ -158,22 +191,32 @@ export class InvoiceService {
             providerId: 'built_in',
             documentNumber,
             documentUrl: '',
-            issuedAt: new Date()
+            issuedAt: new Date(),
+            paymentMethod: paymentDetails.paymentMethod,
+            customerIdNumber: paymentDetails.customerIdNumber?.trim() || undefined
         };
 
         await estimate.save();
         return estimate;
     }
 
-    private static async issueViaGreenInvoice(estimate: IMoveEstimate, creds: GreenInvoiceCredentials): Promise<IMoveEstimate> {
+    private static async issueViaGreenInvoice(
+        estimate: IMoveEstimate,
+        creds: GreenInvoiceCredentials,
+        paymentDetails: PaymentDetails
+    ): Promise<IMoveEstimate> {
         const token = await getToken(creds);
 
+        // Green Invoice מטפל בעצמו בכל דרישות התוכן החוקיות של המסמך (כולל מספר
+        // הקצאה כשרלוונטי) - כאן רק מעבירים לו את אמצעי התשלום ות.ז/ח.פ הלקוח
+        // (אם סופק), כדי שיופיעו על גבי המסמך הרשמי שהוא מפיק.
         const payload = {
             type: DOCUMENT_TYPE_INVOICE_RECEIPT,
             client: {
                 name: estimate.name,
                 emails: [estimate.email],
-                phone: estimate.phone
+                phone: estimate.phone,
+                ...(paymentDetails.customerIdNumber?.trim() ? { id: paymentDetails.customerIdNumber.trim() } : {})
             },
             income: [
                 {
@@ -184,7 +227,7 @@ export class InvoiceService {
                     vatType: 1
                 }
             ],
-            remarks: `הזמנת הובלה מס' ${estimate.id}`,
+            remarks: `הזמנת הובלה מס' ${estimate.id} · אמצעי תשלום: ${PAYMENT_METHOD_LABELS[paymentDetails.paymentMethod]}`,
             lang: 'he',
             currency: 'ILS'
         };
@@ -216,7 +259,9 @@ export class InvoiceService {
             documentNumber: doc.number,
             allocationNumber: doc.allocationNumber,
             documentUrl: doc.url?.he || doc.url?.origin || '',
-            issuedAt: new Date()
+            issuedAt: new Date(),
+            paymentMethod: paymentDetails.paymentMethod,
+            customerIdNumber: paymentDetails.customerIdNumber?.trim() || undefined
         };
 
         await estimate.save();

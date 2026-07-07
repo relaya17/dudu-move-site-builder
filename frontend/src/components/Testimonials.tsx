@@ -40,7 +40,7 @@ export const Testimonials = () => {
     <section id="testimonials" className="py-20 bg-white" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             מה הלקוחות שלנו אומרים
             <span className="inline-block animate-pulse text-blue-600 mr-2 text-4xl">؟</span>
           </h2>
@@ -49,9 +49,9 @@ export const Testimonials = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto snap-x scroll-smooth px-2 md:px-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="snap-start min-w-[280px] md:min-w-0">
+            <div key={index}>
               <Card className="h-full hover:shadow-lg transition-shadow duration-300 animate-fadeInUp">
                 <CardContent className="p-6">
                   <div
@@ -74,16 +74,16 @@ export const Testimonials = () => {
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <div className="inline-flex items-center space-x-4 space-x-reverse bg-blue-50 px-8 py-4 rounded-lg">
-            <div className="flex items-center" role="img" aria-label="דירוג 4.9 מתוך 5 כוכבים">
+        <div className="text-center mt-12 px-4">
+          <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-6 py-4 rounded-xl w-full sm:w-auto max-w-xs sm:max-w-none mx-auto">
+            <div className="flex items-center gap-0.5" role="img" aria-label="דירוג 4.9 מתוך 5 כוכבים">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" aria-hidden="true" />
               ))}
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900">4.9/5 כוכבים</p>
-              <p className="text-gray-600">מבוסס על 500+ ביקורות</p>
+            <div className="text-center sm:text-right">
+              <p className="text-xl font-bold text-gray-900">4.9/5 כוכבים</p>
+              <p className="text-sm text-gray-600">מבוסס על 500+ ביקורות</p>
             </div>
           </div>
         </div>

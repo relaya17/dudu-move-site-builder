@@ -26,6 +26,22 @@ export interface QuoteDocumentInfo<TDate extends DateLike = string> {
     generatedAt: TDate;
 }
 
+/**
+ * אמצעי תשלום - חובה לציין על גבי קבלה/חשבונית לפי הוראות ניהול ספרים ("חוק המזומן"),
+ * ר' InvoiceService.ts להסבר המלא ולאכיפה בפועל.
+ */
+export type PaymentMethod = 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'other';
+
+export const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'check', 'credit_card', 'bank_transfer', 'other'];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+    cash: 'מזומן',
+    check: "צ'ק",
+    credit_card: 'כרטיס אשראי',
+    bank_transfer: 'העברה בנקאית',
+    other: 'אחר'
+};
+
 export interface InvoiceDocumentInfo<TDate extends DateLike = string> {
     /** סוג המסמך שהופק אצל ספק החשבוניות */
     docType: 'invoice_receipt' | 'invoice' | 'receipt';
@@ -38,4 +54,11 @@ export interface InvoiceDocumentInfo<TDate extends DateLike = string> {
     /** קישור להורדה/צפייה במסמך המקורי (PDF חתום) */
     documentUrl: string;
     issuedAt: TDate;
+    /** אמצעי התשלום - שדה חובה על קבלה לפי הוראות ניהול ספרים */
+    paymentMethod?: PaymentMethod;
+    /**
+     * ת.ז./ח.פ של הלקוח - חובה לרשום על הקבלה כשסכום התשלום עולה על 5,000 ₪
+     * (ר' InvoiceService.CUSTOMER_ID_REQUIRED_THRESHOLD).
+     */
+    customerIdNumber?: string;
 }

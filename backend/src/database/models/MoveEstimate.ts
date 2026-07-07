@@ -213,7 +213,14 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
         documentNumber: String,
         allocationNumber: String,
         documentUrl: String,
-        issuedAt: Date
+        issuedAt: Date,
+        // אמצעי תשלום - חובה לפי הוראות ניהול ספרים (ר' InvoiceService.ts).
+        paymentMethod: {
+            type: String,
+            enum: ['cash', 'check', 'credit_card', 'bank_transfer', 'other']
+        },
+        // ת.ז./ח.פ של הלקוח - חובה כשסכום התשלום עולה על 5,000 ₪.
+        customerIdNumber: String
     }
 }, {
     timestamps: true

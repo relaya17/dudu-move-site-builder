@@ -16,11 +16,11 @@ export const Hero = () => {
         className="w-full max-h-[500px] object-cover object-top"
       />
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">
           שירותי <span className="text-blue-300">הובלות</span> ו
           <span className="text-blue-300">אריזה</span> מקצועיים
         </h1>
-        <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-8">
+        <p className="text-base md:text-xl text-blue-100 max-w-2xl mx-auto mb-8">
           השותף המהימן שלכם למעבר דירה ללא לחץ. אנו מטפלים בחפציכם בזהירות ובמקצועיות.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">

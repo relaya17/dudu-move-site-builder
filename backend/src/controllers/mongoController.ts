@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ESTIMATE_STATUSES, EstimateStatus } from 'shared';
+import { ESTIMATE_STATUSES, EstimateStatus, PAYMENT_METHODS, PaymentMethod } from 'shared';
 import { MongoService } from '../services/MongoService';
 import { QuoteService } from '../services/QuoteService';
 import { InvoiceService } from '../services/InvoiceService';
@@ -154,16 +154,35 @@ export class MongoController {
     }
 
     // הפקת חשבונית מס/קבלה - עצמאית (built_in) או דרך ספק חשבוניות חיצוני, לפי BusinessSettings.
+    // אמצעי תשלום (paymentMethod) הוא שדה חובה בגוף הבקשה, ות.ז/ח.פ הלקוח
+    // (customerIdNumber) נדרש בפועל מעל 5,000 ₪ - ר' InvoiceService לאכיפה המלאה.
     static async issueInvoice(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
+            const { paymentMethod, customerIdNumber } = req.body as {
+                paymentMethod?: string;
+                customerIdNumber?: string;
+            };
+
             const owned = await MongoService.getMoveEstimateById(id, req.tenantId);
             if (!owned) {
                 res.status(404).json({ success: false, message: 'Move estimate not found' });
                 return;
             }
 
-            const estimate = await InvoiceService.issueInvoiceReceipt(id, req.tenantId);
+            if (!paymentMethod || !PAYMENT_METHODS.includes(paymentMethod as PaymentMethod)) {
+                res.status(400).json({
+                    success: false,
+                    message: `יש לבחור אמצעי תשלום תקין: ${PAYMENT_METHODS.join(', ')}`
+                });
+                return;
+            }
+
+            const estimate = await InvoiceService.issueInvoiceReceipt(
+                id,
+                { paymentMethod: paymentMethod as PaymentMethod, customerIdNumber },
+                req.tenantId
+            );
 
             if (!estimate) {
                 res.status(404).json({
@@ -179,10 +198,13 @@ export class MongoController {
             });
         } catch (error) {
             console.error('Error issuing invoice:', error);
-            res.status(500).json({
+            // שגיאות ולידציה עסקית (למשל חסר ת.ז מעל 5,000 ₪) הן 400, לא 500 -
+            // הן תקלת קלט, לא תקלת שרת.
+            const message = error instanceof Error ? error.message : 'Failed to issue invoice';
+            res.status(400).json({
                 success: false,
-                message: 'Failed to issue invoice',
-                error: error instanceof Error ? error.message : 'Unknown error'
+                message,
+                error: message
             });
         }
     }

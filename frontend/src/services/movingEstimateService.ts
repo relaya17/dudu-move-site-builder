@@ -1,6 +1,7 @@
 // src/services/movingEstimateService.ts
 import { MovingEstimateRequest, EstimateStatus, TrackingStage } from '../types/movingEstimate';
 import { adminHeaders } from '../lib/adminApi';
+import type { BusinessSettingsDTO } from 'shared';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -95,18 +96,38 @@ class MovingEstimateService {
   }
 
   /**
-   * מפיק חשבונית מס קבלה (מסמך מס) דרך ספק חשבוניות מורשה חיצוני (Green Invoice).
-   * ייכשל עם הודעה ברורה אם השירות טרם הוגדר (ר' backend/src/services/InvoiceService.ts).
+   * מפיק חשבונית מס/קבלה - עצמאית (built_in) או דרך ספק חשבוניות חיצוני, לפי
+   * הגדרות העסק. paymentMethod הוא שדה חובה (הוראות ניהול ספרים), customerIdNumber
+   * נדרש בפועל מעל 5,000 ₪ - ר' backend/src/services/InvoiceService.ts לאכיפה המלאה.
    */
-  static async issueInvoice(id: string): Promise<MovingEstimateRequest> {
+  static async issueInvoice(
+    id: string,
+    paymentDetails: { paymentMethod: string; customerIdNumber?: string }
+  ): Promise<MovingEstimateRequest> {
     const response = await fetch(`${this.API_URL}/${id}/invoice`, {
       method: 'POST',
-      headers: adminHeaders()
+      headers: adminHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(paymentDetails)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`שגיאה בהפקת חשבונית: ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result.data || result;
+  }
+
+  /**
+   * שולף את פרטי העסק (שם, ת.ז/ח.פ, כתובת, טלפון, מע"מ וכו') - נדרש כדי שהצעת
+   * המחיר/החשבונית המודפסת תציג את פרטי העסק האמיתי של כל מוביל (ולא שם קבוע).
+   */
+  static async getBusinessSettings(): Promise<BusinessSettingsDTO> {
+    const response = await fetch(`${API_ROOT}/api/mongo/settings`, { headers: adminHeaders() });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`שגיאה בשליפת הגדרות העסק: ${errorText}`);
     }
 
     const result = await response.json();

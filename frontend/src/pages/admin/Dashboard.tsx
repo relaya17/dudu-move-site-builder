@@ -14,8 +14,9 @@ import {
   Mail, ChevronRight, ChevronLeft, Users, Calendar, BarChart2, FileText, Receipt, Plus, Trash2, Wallet,
   Settings as SettingsIcon, Link2, CheckCircle2, Loader2,
 } from 'lucide-react';
-import type { BusinessSettingsDTO } from 'shared';
+import type { BusinessSettingsDTO, PaymentMethod } from 'shared';
 import { printBuiltInInvoice } from '@/lib/printInvoice';
+import { IssueInvoiceDialog } from '@/components/admin/IssueInvoiceDialog';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -31,7 +32,14 @@ interface MoveRecord {
   status: string;
   customer: { name: string; phone: string };
   quote?: { quoteNumber: string; issuedAt: string };
-  invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string; providerId?: string };
+  invoice?: {
+    documentNumber: string;
+    documentUrl?: string;
+    issuedAt: string;
+    providerId?: string;
+    paymentMethod?: PaymentMethod;
+    customerIdNumber?: string;
+  };
   currentAddress?: string;
   destinationAddress?: string;
 }
@@ -699,6 +707,7 @@ const AdminDashboard = () => {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [sendingQuoteId, setSendingQuoteId] = useState<string | null>(null);
   const [issuingInvoiceId, setIssuingInvoiceId] = useState<string | null>(null);
+  const [invoiceDialogMove, setInvoiceDialogMove] = useState<MoveRecord | null>(null);
 
   useEffect(() => {
     fetchMoves();
@@ -744,7 +753,14 @@ const AdminDashboard = () => {
         createdAt: string; preferredMoveDate?: string; totalPrice: number; status: string;
         currentAddress?: string; destinationAddress?: string;
         quote?: { quoteNumber: string; issuedAt: string };
-        invoice?: { documentNumber: string; documentUrl?: string; issuedAt: string; providerId?: string };
+        invoice?: {
+    documentNumber: string;
+    documentUrl?: string;
+    issuedAt: string;
+    providerId?: string;
+    paymentMethod?: PaymentMethod;
+    customerIdNumber?: string;
+  };
       }> = result.data || [];
 
       let total = 0;
@@ -857,7 +873,10 @@ const AdminDashboard = () => {
     }
   };
 
-  const printInvoiceForMove = (move: MoveRecord, inv: { documentNumber: string; issuedAt: string }) => {
+  const printInvoiceForMove = (
+    move: MoveRecord,
+    inv: { documentNumber: string; issuedAt: string; paymentMethod?: PaymentMethod; customerIdNumber?: string }
+  ) => {
     if (!businessSettings) return;
     printBuiltInInvoice(businessSettings, {
       documentNumber: inv.documentNumber,
@@ -869,15 +888,26 @@ const AdminDashboard = () => {
       toAddress: move.destinationAddress || '—',
       moveDate: move.preferred_move_date,
       totalPrice: move.totalPrice,
+      paymentMethod: inv.paymentMethod,
+      customerIdNumber: inv.customerIdNumber,
     });
   };
 
-  const handleIssueInvoice = async (move: MoveRecord) => {
+  // פתיחת הפקת חשבונית - מציגים דיאלוג "פרטי תשלום" קודם (ר' IssueInvoiceDialog),
+  // כי אמצעי תשלום הוא שדה חובה לפי הוראות ניהול ספרים ולא ניתן לדלג עליו.
+  const handleIssueInvoice = (move: MoveRecord) => {
+    setInvoiceDialogMove(move);
+  };
+
+  const handleConfirmIssueInvoice = async (details: { paymentMethod: PaymentMethod; customerIdNumber?: string }) => {
+    const move = invoiceDialogMove;
+    if (!move) return;
     setIssuingInvoiceId(move.id);
     try {
       const res = await fetch(`${API_ROOT}/api/mongo/estimates/${move.id}/invoice`, {
         method: 'POST',
         headers: adminHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(details),
       });
       const data = await res.json();
       if (data.success) {
@@ -887,6 +917,7 @@ const AdminDashboard = () => {
           description: `מספר מסמך: ${inv?.documentNumber ?? '—'}`,
         });
         setMoves(prev => prev.map(m => m.id === move.id ? { ...m, invoice: inv } : m));
+        setInvoiceDialogMove(null);
         if (inv?.documentUrl) {
           window.open(inv.documentUrl, '_blank');
         } else if (inv?.providerId === 'built_in') {
@@ -1066,7 +1097,7 @@ const AdminDashboard = () => {
                               disabled={issuingInvoiceId === move.id}
                               onClick={() => {
                                 if (move.invoice?.documentUrl) window.open(move.invoice.documentUrl, '_blank');
-                                else if (move.invoice?.documentNumber) printInvoiceForMove(move, move.invoice as { documentNumber: string; issuedAt: string });
+                                else if (move.invoice?.documentNumber) printInvoiceForMove(move, move.invoice as { documentNumber: string; issuedAt: string; paymentMethod?: PaymentMethod; customerIdNumber?: string });
                                 else handleIssueInvoice(move);
                               }}
                               className="flex items-center gap-1 text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
@@ -1149,7 +1180,7 @@ const AdminDashboard = () => {
               moves={moves}
               issuingInvoiceId={issuingInvoiceId}
               onIssueInvoice={handleIssueInvoice}
-              onReprintInvoice={(move) => move.invoice?.documentNumber && printInvoiceForMove(move, move.invoice as { documentNumber: string; issuedAt: string })}
+              onReprintInvoice={(move) => move.invoice?.documentNumber && printInvoiceForMove(move, move.invoice as { documentNumber: string; issuedAt: string; paymentMethod?: PaymentMethod; customerIdNumber?: string })}
             />
           </TabsContent>
 
@@ -1189,6 +1220,17 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {invoiceDialogMove && (
+        <IssueInvoiceDialog
+          open={Boolean(invoiceDialogMove)}
+          onOpenChange={(open) => !open && setInvoiceDialogMove(null)}
+          totalPrice={invoiceDialogMove.totalPrice}
+          customerName={invoiceDialogMove.customer?.name || ''}
+          loading={issuingInvoiceId === invoiceDialogMove.id}
+          onConfirm={handleConfirmIssueInvoice}
+        />
+      )}
     </div>
   );
 };

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import MovingEstimateService from '@/services/movingEstimateService';
 import { MovingEstimateRequest, TRACKING_STAGES, TRACKING_STAGE_LABELS, TrackingStage } from '@/types/movingEstimate';
 import { printQuote } from '@/lib/quotePrint';
+import { IssueInvoiceDialog } from '@/components/admin/IssueInvoiceDialog';
+import type { PaymentMethod } from 'shared';
 
 // מעקב חי (רציף) - מרווח מינימלי בין שליחות מיקום לשרת, כדי לא להעמיס רשת/סוללה.
 const LIVE_TRACKING_MIN_INTERVAL_MS = 20000;
@@ -12,6 +14,7 @@ const MovingEstimatesAdminPage = () => {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [liveTrackingEstimateId, setLiveTrackingEstimateId] = useState<string | null>(null);
+  const [invoiceDialogEstimate, setInvoiceDialogEstimate] = useState<MovingEstimateRequest | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastSentAtRef = useRef<number>(0);
 
@@ -175,14 +178,20 @@ const MovingEstimatesAdminPage = () => {
     }
   };
 
-  const handleIssueInvoice = async (estimate: MovingEstimateRequest) => {
-    if (!window.confirm('הפקת חשבונית היא פעולה חד-פעמית ובלתי הפיכה מול רשות המסים. להמשיך?')) {
-      return;
-    }
+  // פתיחת הזמנת חשבונית - במקום confirm() פשוט, מציגים דיאלוג "פרטי תשלום"
+  // (ר' IssueInvoiceDialog) כי אמצעי תשלום הוא שדה חובה לפי הוראות ניהול ספרים.
+  const handleIssueInvoice = (estimate: MovingEstimateRequest) => {
+    setInvoiceDialogEstimate(estimate);
+  };
+
+  const handleConfirmIssueInvoice = async (details: { paymentMethod: PaymentMethod; customerIdNumber?: string }) => {
+    const estimate = invoiceDialogEstimate;
+    if (!estimate) return;
     try {
       setBusyId(estimate._id);
-      const updated = await MovingEstimateService.issueInvoice(estimate._id);
+      const updated = await MovingEstimateService.issueInvoice(estimate._id, details);
       setEstimates(prev => prev.map(e => (e._id === estimate._id ? updated : e)));
+      setInvoiceDialogEstimate(null);
     } catch (err) {
       console.error('Error issuing invoice:', err);
       alert(err instanceof Error ? err.message : 'שגיאה בהפקת החשבונית');
@@ -363,6 +372,17 @@ const MovingEstimatesAdminPage = () => {
           ))}
         </ul>
       </main>
+
+      {invoiceDialogEstimate && (
+        <IssueInvoiceDialog
+          open={Boolean(invoiceDialogEstimate)}
+          onOpenChange={(open) => !open && setInvoiceDialogEstimate(null)}
+          totalPrice={invoiceDialogEstimate.totalPrice}
+          customerName={invoiceDialogEstimate.name}
+          loading={busyId === invoiceDialogEstimate._id}
+          onConfirm={handleConfirmIssueInvoice}
+        />
+      )}
     </div>
   );
 };

@@ -1,10 +1,18 @@
 import { MovingEstimateRequest } from '@/types/movingEstimate';
+import type { BusinessSettingsDTO } from 'shared';
 
-// פרטי הקשר של העסק - תואמים לאלו שמופיעים בפוטר/בדף הבית (מקור האמת התוכני).
-const COMPANY_NAME = 'דוד הובלות';
-const COMPANY_PHONE = '0547777623';
-const COMPANY_EMAIL = 'davidgueta3232@gmail.com';
-const COMPANY_ADDRESS = 'אילת, ישראל';
+// שם/פרטי קשר גיבוי בלבד - למקרה שהגדרות העסק עדיין לא נטענו/לא הוגדרו.
+// אין להסתמך על זה כמקור אמת: כל מוביל בפלטפורמה מציג את פרטי העסק שלו עצמו,
+// שמגיעים דרך BusinessSettingsDTO (ר' MovingEstimateService.getBusinessSettings).
+const FALLBACK_BUSINESS: Pick<BusinessSettingsDTO, 'businessName'> & { phone?: string; email?: string; address?: string } = {
+  businessName: 'המוביל שלך',
+};
+
+function escapeHtml(value: string): string {
+  const div = document.createElement('div');
+  div.textContent = value;
+  return div.innerHTML;
+}
 
 /**
  * פותח חלון הדפסה עם הצעת מחיר מעוצבת ללקוח, ומפעיל את דיאלוג ההדפסה של הדפדפן
@@ -12,10 +20,21 @@ const COMPANY_ADDRESS = 'אילת, ישראל';
  *
  * הערה חשובה: זהו מסמך שיווקי/מסחרי בלבד ("הצעת מחיר") ואינו מסמך מס -
  * אין לבלבל אותו עם חשבונית/קבלה, שמופקת דרך שירות חשבוניות מורשה (ר' InvoiceService).
+ *
+ * business מתקבל דינמית (ולא קבוע קשיח) כי בפלטפורמה מרובת-דיירים (multi-tenant)
+ * לכל מוביל יש שם/פרטי קשר משלו - ר' printInvoice.ts לאותה גישה בחשבונית.
  */
-export function printQuote(estimate: MovingEstimateRequest): void {
+export function printQuote(estimate: MovingEstimateRequest, business?: BusinessSettingsDTO | null): void {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
+
+  const biz = business || FALLBACK_BUSINESS;
+  const businessName = escapeHtml(biz.businessName);
+  const contactLine = [
+    biz.address ? escapeHtml(biz.address) : '',
+    biz.phone ? escapeHtml(biz.phone) : '',
+    biz.email ? escapeHtml(biz.email) : '',
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ');
 
   const quoteNumber = estimate.quote?.quoteNumber || 'טיוטה';
   const issuedDate = estimate.quote?.generatedAt
@@ -43,53 +62,107 @@ export function printQuote(estimate: MovingEstimateRequest): void {
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8" />
-      <title>הצעת מחיר ${quoteNumber} - ${COMPANY_NAME}</title>
+      <title>הצעת מחיר ${quoteNumber} - ${businessName}</title>
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 24px; }
-        h1 { text-align: center; color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
-        h2 { color: #1e40af; margin-top: 24px; font-size: 18px; }
-        .meta { display: flex; justify-content: space-between; font-size: 14px; color: #444; margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: right; font-size: 14px; }
-        th { background: #f1f5f9; }
-        .total { font-size: 20px; font-weight: bold; text-align: left; margin-top: 16px; }
-        .disclaimer { margin-top: 32px; padding: 12px; background: #fef9c3; border: 1px solid #eab308; border-radius: 6px; font-size: 13px; }
-        .footer { margin-top: 32px; text-align: center; font-size: 12px; color: #666; }
-        @media print { body { padding: 10px; } }
+        * { box-sizing: border-box; }
+        body {
+          font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+          color: #1f2937;
+          padding: 42px 46px;
+          max-width: 820px;
+          margin: 0 auto;
+          font-size: 14px;
+          line-height: 1.55;
+        }
+        .header {
+          display: flex; justify-content: space-between; align-items: flex-start;
+          border-bottom: 3px solid #1e40af; padding-bottom: 18px; margin-bottom: 24px;
+        }
+        .business-name { font-size: 22px; font-weight: 800; color: #1e3a8a; letter-spacing: -0.3px; }
+        .business-contact { font-size: 12px; color: #6b7280; margin-top: 6px; }
+        .doc-title { text-align: left; min-width: 200px; }
+        .doc-title h1 { font-size: 18px; margin: 0 0 8px; color: #111827; }
+        .doc-meta-row { display: flex; justify-content: space-between; gap: 14px; font-size: 12.5px; color: #4b5563; padding: 2px 0; }
+        .doc-meta-row strong { color: #111827; }
+        .section { margin: 22px 0; }
+        .section h2 {
+          font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+          color: #1e40af; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb;
+        }
+        .info-grid { display: flex; flex-wrap: wrap; gap: 4px 28px; font-size: 13.5px; }
+        .info-grid .item { min-width: 200px; }
+        .info-grid .item .label { color: #6b7280; font-size: 11.5px; display: block; margin-bottom: 1px; }
+        .info-grid .item .value { color: #111827; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        th, td { text-align: right; padding: 9px 12px; font-size: 13.5px; }
+        th { background: #eff6ff; color: #1e3a8a; font-weight: 700; border-bottom: 2px solid #dbeafe; }
+        td { border-bottom: 1px solid #f0f1f3; }
+        .total-row {
+          display: flex; justify-content: flex-end; margin-top: 16px;
+        }
+        .total-row .box {
+          font-size: 18px; font-weight: 800; color: #1e3a8a;
+          border-top: 2px solid #1e40af; padding-top: 10px; min-width: 220px; text-align: left;
+        }
+        .disclaimer {
+          margin-top: 30px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a;
+          border-radius: 8px; font-size: 12.5px; color: #92400e;
+        }
+        .footer {
+          margin-top: 40px; text-align: center; font-size: 11px; color: #9ca3af;
+          border-top: 1px solid #e5e7eb; padding-top: 14px;
+        }
+        @media print { body { padding: 14px 20px; } }
       </style>
     </head>
     <body>
-      <h1>הצעת מחיר להובלה</h1>
-      <div class="meta">
-        <span>מס' הצעה: ${quoteNumber}</span>
-        <span>תאריך הפקה: ${issuedDate}</span>
-        <span>בתוקף עד: ${validUntil.toLocaleDateString('he-IL')}</span>
+      <div class="header">
+        <div>
+          <div class="business-name">${businessName}</div>
+          ${contactLine ? `<div class="business-contact">${contactLine}</div>` : ''}
+        </div>
+        <div class="doc-title">
+          <h1>הצעת מחיר להובלה</h1>
+          <div class="doc-meta-row"><span>מס' הצעה</span><strong>${escapeHtml(quoteNumber)}</strong></div>
+          <div class="doc-meta-row"><span>תאריך הפקה</span><strong>${issuedDate}</strong></div>
+          <div class="doc-meta-row"><span>בתוקף עד</span><strong>${validUntil.toLocaleDateString('he-IL')}</strong></div>
+        </div>
       </div>
 
-      <h2>פרטי לקוח</h2>
-      <p>שם: ${escapeHtml(estimate.name)}<br>
-      טלפון: ${escapeHtml(estimate.phone)}<br>
-      אימייל: ${escapeHtml(estimate.email)}</p>
+      <div class="section">
+        <h2>פרטי לקוח</h2>
+        <div class="info-grid">
+          <div class="item"><span class="label">שם</span><span class="value">${escapeHtml(estimate.name)}</span></div>
+          <div class="item"><span class="label">טלפון</span><span class="value">${escapeHtml(estimate.phone)}</span></div>
+          <div class="item"><span class="label">אימייל</span><span class="value">${escapeHtml(estimate.email)}</span></div>
+        </div>
+      </div>
 
-      <h2>פרטי ההובלה</h2>
-      <p>
-        סוג דירה: ${escapeHtml(estimate.apartmentType)}<br>
-        תאריך מועדף: ${escapeHtml(estimate.preferredMoveDate)}<br>
-        מ: ${escapeHtml(estimate.currentAddress)}<br>
-        אל: ${escapeHtml(estimate.destinationAddress)}
-      </p>
+      <div class="section">
+        <h2>פרטי ההובלה</h2>
+        <div class="info-grid">
+          <div class="item"><span class="label">סוג דירה</span><span class="value">${escapeHtml(estimate.apartmentType)}</span></div>
+          <div class="item"><span class="label">תאריך מועדף</span><span class="value">${escapeHtml(estimate.preferredMoveDate)}</span></div>
+          <div class="item"><span class="label">מכתובת</span><span class="value">${escapeHtml(estimate.currentAddress)}</span></div>
+          <div class="item"><span class="label">לכתובת</span><span class="value">${escapeHtml(estimate.destinationAddress)}</span></div>
+        </div>
+      </div>
 
-      <h2>פירוט פריטים</h2>
-      <table>
-        <thead>
-          <tr><th>פריט</th><th>כמות</th><th>הערות מיוחדות</th><th>הערות נוספות</th></tr>
-        </thead>
-        <tbody>
-          ${itemsRows}
-        </tbody>
-      </table>
+      <div class="section">
+        <h2>פירוט פריטים</h2>
+        <table>
+          <thead>
+            <tr><th>פריט</th><th>כמות</th><th>הערות מיוחדות</th><th>הערות נוספות</th></tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+          </tbody>
+        </table>
+      </div>
 
-      <p class="total">סה"כ הערכת מחיר: ₪${estimate.totalPrice.toLocaleString()}</p>
+      <div class="total-row">
+        <div class="box">סה"כ הערכת מחיר: ₪${estimate.totalPrice.toLocaleString('he-IL')}</div>
+      </div>
 
       <div class="disclaimer">
         מסמך זה הינו <strong>הצעת מחיר בלבד</strong> ואינו מהווה חשבונית מס או קבלה.
@@ -98,8 +171,8 @@ export function printQuote(estimate: MovingEstimateRequest): void {
       </div>
 
       <div class="footer">
-        ${COMPANY_NAME} · ${COMPANY_ADDRESS} · ${COMPANY_PHONE} · ${COMPANY_EMAIL}<br>
-        © ${new Date().getFullYear()} ${COMPANY_NAME} - כל הזכויות שמורות
+        ${businessName}${contactLine ? ` · ${contactLine}` : ''}<br>
+        © ${new Date().getFullYear()} ${businessName} - כל הזכויות שמורות
       </div>
     </body>
     </html>
@@ -107,10 +180,4 @@ export function printQuote(estimate: MovingEstimateRequest): void {
 
   printWindow.document.close();
   printWindow.print();
-}
-
-function escapeHtml(value: string): string {
-  const div = document.createElement('div');
-  div.textContent = value;
-  return div.innerHTML;
 }

@@ -3,7 +3,7 @@ import MovingEstimateService from '@/services/movingEstimateService';
 import { MovingEstimateRequest, TRACKING_STAGES, TRACKING_STAGE_LABELS, TrackingStage } from '@/types/movingEstimate';
 import { printQuote } from '@/lib/quotePrint';
 import { IssueInvoiceDialog } from '@/components/admin/IssueInvoiceDialog';
-import type { PaymentMethod } from 'shared';
+import type { PaymentMethod, BusinessSettingsDTO } from 'shared';
 
 // מעקב חי (רציף) - מרווח מינימלי בין שליחות מיקום לשרת, כדי לא להעמיס רשת/סוללה.
 const LIVE_TRACKING_MIN_INTERVAL_MS = 20000;
@@ -15,6 +15,7 @@ const MovingEstimatesAdminPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [liveTrackingEstimateId, setLiveTrackingEstimateId] = useState<string | null>(null);
   const [invoiceDialogEstimate, setInvoiceDialogEstimate] = useState<MovingEstimateRequest | null>(null);
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettingsDTO | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastSentAtRef = useRef<number>(0);
 
@@ -43,6 +44,11 @@ const MovingEstimatesAdminPage = () => {
 
   useEffect(() => {
     fetchEstimates();
+    // דרוש להצגת שם/פרטי העסק האמיתיים על גבי הצעת המחיר המודפסת (ולא שם קבוע) -
+    // ר' quotePrint.ts. כישלון בטעינה לא חוסם את הדף - ההדפסה תיפול חזרה לברירת מחדל.
+    MovingEstimateService.getBusinessSettings()
+      .then(setBusinessSettings)
+      .catch((err) => console.error('שגיאה בטעינת הגדרות העסק:', err));
   }, []);
 
   const handleStatusChange = async (id: string, status: 'approved' | 'rejected') => {
@@ -169,7 +175,7 @@ const MovingEstimatesAdminPage = () => {
       setBusyId(estimate._id);
       const updated = await MovingEstimateService.issueQuote(estimate._id);
       setEstimates(prev => prev.map(e => (e._id === estimate._id ? updated : e)));
-      printQuote(updated);
+      printQuote(updated, businessSettings);
     } catch (err) {
       console.error('Error issuing quote:', err);
       alert('שגיאה בהפקת הצעת המחיר');

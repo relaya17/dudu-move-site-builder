@@ -15,10 +15,12 @@ import trackingRoutes from './routes/trackingRoutes';
 import publicRoutes from './routes/publicRoutes';
 import authRoutes from './routes/authRoutes';
 import tenantRoutes from './routes/tenantRoutes';
+import reviewRoutes from './routes/reviewRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
 import { connectMongoDB } from './database/mongoConnection';
 import { startReminderCron } from './services/ReminderCronService';
+import { isSocialPreviewBot, getSocialPreviewMeta, renderSocialPreviewHtml } from './lib/socialPreviewMeta';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -116,6 +118,7 @@ app.use('/api/tracking', trackingRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tenant', tenantRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // הגשת קבצי ה-frontend הבנויים (שרת Render אחד מגיש גם את ה-API וגם את האתר).
 // maxAge ארוך זול/מהיר לגמרי: Vite מוסיף hash לשם כל קובץ JS/CSS, כך שקובץ עם
@@ -125,8 +128,30 @@ const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath, { maxAge: '1y', index: false }));
 
 // SPA fallback - כל בקשת GET שאינה API ולא תואמת קובץ סטטי קיים מקבלת את index.html
-// (כדי ש-React Router יוכל לטפל בניתוב בצד הלקוח, כולל /tracking/:token)
-app.get(/^(?!\/api\/).*/, (req, res, next) => {
+// (כדי ש-React Router יוכל לטפל בניתוב בצד הלקוח, כולל /tracking/:token).
+//
+// יוצא מן הכלל: בוטים של תצוגה מקדימה לשיתוף קישורים (וואטסאפ/פייסבוק/טוויטר
+// וכו') לא מריצים JavaScript, ולכן לעולם לא היו רואים את הכותרת/תיאור/תמונה
+// הנכונים לכל דף (שמתעדכנים בצד הלקוח דרך usePageMeta) - הם תמיד היו מקבלים
+// את ברירת המחדל הגנרית מתוך index.html, לא משנה לאיזה דף בפועל שותף הקישור.
+// כדי לפתור את זה בלי לעבור לפריימוורק עם רינדור בצד שרת (שינוי תשתית גדול
+// הרבה יותר), מזהים כאן בוטים כאלה לפי User-Agent ומחזירים להם ישירות HTML
+// קטן עם ה-meta/OG הנכונים לנתיב הספציפי (ר' lib/socialPreviewMeta.ts).
+// גולשים רגילים (וגם גוגלבוט, שכן מריץ JS) ממשיכים לקבל את ה-SPA הרגיל.
+app.get(/^(?!\/api\/).*/, async (req, res, next) => {
+  try {
+    if (isSocialPreviewBot(req.get('user-agent'))) {
+      const meta = await getSocialPreviewMeta(req.path);
+      if (meta) {
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.send(renderSocialPreviewHtml(meta));
+        return;
+      }
+    }
+  } catch (error) {
+    console.error('שגיאה בבניית תצוגה מקדימה לשיתוף - חוזרים ל-index.html רגיל:', error);
+  }
+
   res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
     if (err) next(err);
   });

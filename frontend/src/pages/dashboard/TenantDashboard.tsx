@@ -10,8 +10,9 @@ import {
     Truck, LayoutDashboard, Users, Settings, LogOut,
     Menu, X, ClipboardList, TrendingUp, DollarSign,
     Search, ChevronRight, Loader2, Bell, UserCheck,
-    Phone, Mail, MapPin, Calendar, RefreshCw
+    Phone, Mail, MapPin, Calendar, RefreshCw, Star, MessageSquare, Trash2
 } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // ─── טיפוסים ──────────────────────────────────────────────────────────────────
 
@@ -97,6 +98,7 @@ const NAV = [
     { to: '/dashboard/estimates', label: 'הזמנות', icon: <ClipboardList className="h-4 w-4" /> },
     { to: '/dashboard/customers', label: 'לקוחות', icon: <UserCheck className="h-4 w-4" /> },
     { to: '/dashboard/team', label: 'צוות', icon: <Users className="h-4 w-4" /> },
+    { to: '/dashboard/reviews', label: 'ביקורות', icon: <Star className="h-4 w-4" /> },
     { to: '/dashboard/settings', label: 'הגדרות', icon: <Settings className="h-4 w-4" /> },
 ];
 
@@ -744,10 +746,145 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
     );
 }
 
+// ─── ReviewsPage ──────────────────────────────────────────────────────────────
+
+interface DashReview {
+    _id: string;
+    customerName: string;
+    text: string;
+    rating: number;
+    photoUrl?: string;
+    reply?: string;
+    repliedAt?: string;
+    createdAt: string;
+}
+
+function ReviewsPage() {
+    const adminKey = import.meta.env.VITE_ADMIN_KEY as string | undefined;
+    const [reviews, setReviews] = useState<DashReview[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [replyText, setReplyText] = useState<Record<string, string>>({});
+    const [saving, setSaving] = useState<string | null>(null);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const r = await fetch('/api/reviews');
+            const d = await r.json();
+            if (d.success) setReviews(d.data);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const sendReply = async (id: string) => {
+        const reply = replyText[id]?.trim();
+        if (!reply) return;
+        setSaving(id);
+        try {
+            const r = await fetch(`/api/reviews/${id}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' },
+                body: JSON.stringify({ reply }),
+            });
+            const d = await r.json();
+            if (d.success) {
+                setReviews(prev => prev.map(rv => rv._id === id ? { ...rv, reply: d.data.reply } : rv));
+                setReplyText(prev => ({ ...prev, [id]: '' }));
+            }
+        } finally {
+            setSaving(null);
+        }
+    };
+
+    const deleteReview = async (id: string) => {
+        if (!confirm('למחוק את הביקורת?')) return;
+        await fetch(`/api/reviews/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-key': adminKey || '' },
+        });
+        setReviews(prev => prev.filter(r => r._id !== id));
+    };
+
+    if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>;
+
+    return (
+        <div className="p-6 max-w-3xl mx-auto" dir="rtl">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">ביקורות לקוחות</h2>
+                <button onClick={load} className="text-gray-500 hover:text-blue-600 transition"><RefreshCw className="h-4 w-4" /></button>
+            </div>
+
+            {reviews.length === 0 ? (
+                <EmptyState icon={<Star />} text="אין ביקורות עדיין" />
+            ) : (
+                <div className="flex flex-col gap-5">
+                    {reviews.map(r => (
+                        <div key={r._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <p className="font-semibold text-gray-900">{r.customerName}</p>
+                                    <div className="flex gap-0.5 mt-0.5">
+                                        {[1,2,3,4,5].map(i => (
+                                            <Star key={i} className={`h-4 w-4 ${i <= r.rating ? 'text-yellow-400 fill-current' : 'text-gray-200'}`} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString('he-IL')}</span>
+                                    <button onClick={() => deleteReview(r._id)} className="text-gray-300 hover:text-red-500 transition">
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {r.photoUrl && (
+                                <img src={r.photoUrl} alt="" className="mt-3 w-full h-40 object-cover rounded-lg" />
+                            )}
+                            <p className="text-gray-700 mt-2 leading-relaxed">"{r.text}"</p>
+
+                            {/* תגובה קיימת */}
+                            {r.reply && (
+                                <div className="mt-3 bg-blue-50 border-r-4 border-blue-400 pr-3 py-2 rounded text-sm text-blue-900">
+                                    <p className="font-semibold text-blue-700 mb-1">💬 תגובתך:</p>
+                                    <p>{r.reply}</p>
+                                </div>
+                            )}
+
+                            {/* שדה תגובה */}
+                            <div className="mt-3 flex gap-2">
+                                <input
+                                    value={replyText[r._id] || ''}
+                                    onChange={e => setReplyText(prev => ({ ...prev, [r._id]: e.target.value }))}
+                                    placeholder={r.reply ? 'עדכן תגובה...' : 'כתוב תגובה ללקוח...'}
+                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <button
+                                    onClick={() => sendReply(r._id)}
+                                    disabled={saving === r._id || !replyText[r._id]?.trim()}
+                                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm px-3 py-2 rounded-lg transition"
+                                >
+                                    {saving === r._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                                    שלח
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
 export default function TenantDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // דשבורד פרטי של כל מוביל - לא רוצים שנתוני עסק (הכנסות, לקוחות) יזלגו לגוגל.
+    usePageMeta({ title: 'הדשבורד שלי | Movalo', noindex: true });
 
     return (
         <div dir="rtl" className="flex h-screen bg-gray-50">
@@ -782,6 +919,7 @@ export default function TenantDashboard() {
                         <Route path="estimates" element={<EstimatesPage />} />
                         <Route path="customers" element={<CustomersPage />} />
                         <Route path="team" element={<TeamPage />} />
+                        <Route path="reviews" element={<ReviewsPage />} />
                         <Route path="settings" element={<SettingsPage />} />
                     </Routes>
                 </div>

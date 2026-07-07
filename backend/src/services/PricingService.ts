@@ -40,6 +40,7 @@ export const FURNITURE_CATEGORIES = {
     small_appliances: 'מכשירי חשמל קטנים',
     packing: 'אריזה (קרטונים ושקיות)',
     decor: 'אביזרים ופריטי נוי',
+    garden: 'ריהוט גינה וחוץ',
     special: 'פריטים מיוחדים',
     other: 'אחר'
 } as const;
@@ -308,6 +309,14 @@ export class PricingService {
             description: 'ארון הזזה',
             category: FURNITURE_CATEGORIES.storage
         },
+        buffet: {
+            basePrice: 250,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 2,
+            description: 'מזנון / ויטרינת מטבח',
+            category: FURNITURE_CATEGORIES.storage
+        },
 
         // מכשירי חשמל קטנים
         microwave: {
@@ -340,6 +349,30 @@ export class PricingService {
             needsDisassemble: false,
             maxQuantity: 2,
             description: 'מחשב',
+            category: FURNITURE_CATEGORIES.small_appliances
+        },
+        blender: {
+            basePrice: 30,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 3,
+            description: 'בלנדר / מיקסר',
+            category: FURNITURE_CATEGORIES.small_appliances
+        },
+        vacuum_cleaner: {
+            basePrice: 50,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'שואב אבק',
+            category: FURNITURE_CATEGORIES.small_appliances
+        },
+        iron_board: {
+            basePrice: 40,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'מגהץ ושולחן גיהוץ',
             category: FURNITURE_CATEGORIES.small_appliances
         },
 
@@ -483,6 +516,64 @@ export class PricingService {
             maxQuantity: 10,
             description: 'ארגז כלי עבודה',
             category: FURNITURE_CATEGORIES.special
+        },
+
+        // ריהוט גינה וחוץ
+        garden_table: {
+            basePrice: 120,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 3,
+            description: 'שולחן גינה',
+            category: FURNITURE_CATEGORIES.garden
+        },
+        garden_chair: {
+            basePrice: 30,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 12,
+            description: 'כיסא גינה',
+            category: FURNITURE_CATEGORIES.garden
+        },
+        garden_umbrella: {
+            basePrice: 100,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'שמשיה / גגון',
+            category: FURNITURE_CATEGORIES.garden
+        },
+        bbq_grill: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'מנגל / ברביקיו',
+            category: FURNITURE_CATEGORIES.garden
+        },
+        lawn_mower: {
+            basePrice: 180,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'מכסחת דשא',
+            category: FURNITURE_CATEGORIES.garden
+        },
+        garden_storage: {
+            basePrice: 250,
+            fragile: false,
+            needsDisassemble: true,
+            maxQuantity: 1,
+            description: 'ארגז / מחסן גינה',
+            category: FURNITURE_CATEGORIES.garden
+        },
+        garden_bench: {
+            basePrice: 150,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 2,
+            description: 'ספסל / ספת גינה',
+            category: FURNITURE_CATEGORIES.garden
         },
 
         // אחר - פריט שלא ברשימה: יש לתאר אותו בשדה "הערות" (למשל פסנתר ישן,

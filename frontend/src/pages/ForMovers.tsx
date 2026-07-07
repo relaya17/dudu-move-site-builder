@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { VideoIntro, hasSeenIntro } from '../components/VideoIntro';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -628,17 +629,16 @@ const LANG_ORDER: Lang[] = ['he', 'en', 'fr', 'ar', 'ru'];
 
 const ForMovers = () => {
   const [lang, setLang] = useState<Lang>('he');
+  const [showIntro, setShowIntro] = useState(!hasSeenIntro());
   const content = buildContent();
   const t = content[lang];
 
   return (
     <div className="min-h-screen bg-background" dir={t.dir} lang={lang}>
+      {showIntro && <VideoIntro onDone={() => setShowIntro(false)} />}
       {/* Top bar: language switcher + link back to the customer-facing site */}
       <div className="bg-gray-900 text-white">
-        <div className="container mx-auto px-4 h-12 flex items-center justify-between text-sm">
-          <Link to="/" className="text-gray-300 hover:text-white transition-colors">
-            {t.nav.backHome}
-          </Link>
+        <div className="container mx-auto px-4 h-12 flex items-center justify-end text-sm">
           <div className="flex items-center gap-1" role="group" aria-label="Language / שפה">
             {LANG_ORDER.map((l) => (
               <button
@@ -671,15 +671,19 @@ const ForMovers = () => {
           <h2 className="text-2xl md:text-4xl font-bold text-blue-300 mb-6">{t.hero.highlight}</h2>
           <p className="text-lg text-blue-100 max-w-2xl mx-auto mb-8">{t.hero.subtitle}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button className="bg-white text-blue-700 hover:bg-blue-100 px-8 py-4 text-lg font-semibold">
-              {t.hero.ctaPrimary}
-            </Button>
-            <Button
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
-            >
-              {t.hero.ctaSecondary}
-            </Button>
+            <Link to="/register">
+              <Button className="bg-white text-blue-700 hover:bg-blue-100 px-8 py-4 text-lg font-semibold w-full sm:w-auto">
+                {t.hero.ctaPrimary}
+              </Button>
+            </Link>
+            <Link to="/">
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold w-full sm:w-auto"
+              >
+                {t.hero.ctaSecondary}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -771,9 +775,11 @@ const ForMovers = () => {
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <h2 className="text-3xl font-bold mb-4">{t.cta.title}</h2>
           <p className="text-blue-100 mb-8">{t.cta.text}</p>
-          <Button className="bg-white text-blue-700 hover:bg-blue-100 px-8 py-4 text-lg font-semibold">
-            {t.cta.button}
-          </Button>
+          <Link to="/register">
+            <Button className="bg-white text-blue-700 hover:bg-blue-100 px-8 py-4 text-lg font-semibold">
+              {t.cta.button}
+            </Button>
+          </Link>
         </div>
       </section>
 

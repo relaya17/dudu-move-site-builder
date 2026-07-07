@@ -4,11 +4,15 @@ import { MovingEstimateRequest, TRACKING_STAGES, TRACKING_STAGE_LABELS, Tracking
 import { printQuote } from '@/lib/quotePrint';
 import { IssueInvoiceDialog } from '@/components/admin/IssueInvoiceDialog';
 import type { PaymentMethod, BusinessSettingsDTO } from 'shared';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // מעקב חי (רציף) - מרווח מינימלי בין שליחות מיקום לשרת, כדי לא להעמיס רשת/סוללה.
 const LIVE_TRACKING_MIN_INTERVAL_MS = 20000;
 
 const MovingEstimatesAdminPage = () => {
+  // דף ניהול פרטי - לא רלוונטי לחיפוש.
+  usePageMeta({ title: 'ניהול הערכות מחיר | Movalo', noindex: true });
+
   const [estimates, setEstimates] = useState<MovingEstimateRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);

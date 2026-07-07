@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Hero } from '../components/Hero';
 import { Navbar } from '../components/Navbar';
 import { Services } from '../components/Services';
@@ -8,23 +8,26 @@ import MovingEstimateForm from '../components/MovingEstimateForm';
 import { Testimonials } from '../components/Testimonials';
 import { Footer } from '../components/Footer';
 import { fetchBusinessName, FALLBACK_BUSINESS_NAME } from '../services/businessInfoService';
-const Index = () => {
+import { usePageMeta, SITE_ORIGIN } from '@/hooks/usePageMeta';
 
-  // כותרת הטאב של הדפדפן משתקפת לפי שם העסק האמיתי (ולא "Movalo" - זה שם הפלטפורמה,
+const Index = () => {
+  // כותרת/תיאור הדף משתקפים לפי שם העסק האמיתי (ולא "Movalo" - זה שם הפלטפורמה,
   // לא שם העסק של הלקוח) - עמוד זה הוא אתר הלקוחות לדוגמה (/demo), לא דף הבית הראשי.
+  const [businessName, setBusinessName] = useState(FALLBACK_BUSINESS_NAME);
+
   useEffect(() => {
-    const previousTitle = document.title;
     let cancelled = false;
     fetchBusinessName().then((name) => {
-      if (!cancelled) document.title = `${name} - הערכת מחיר`;
-    }).catch(() => {
-      document.title = `${FALLBACK_BUSINESS_NAME} - הערכת מחיר`;
+      if (!cancelled) setBusinessName(name);
     });
-    return () => {
-      cancelled = true;
-      document.title = previousTitle;
-    };
+    return () => { cancelled = true; };
   }, []);
+
+  usePageMeta({
+    title: `${businessName} - הערכת מחיר להובלה`,
+    description: `${businessName} - שירותי הובלות ואריזה מקצועיים. קבלו הצעת מחיר מיידית ומעקב GPS בזמן אמת אחרי ההובלה שלכם.`,
+    canonical: `${SITE_ORIGIN}/demo`,
+  });
 
   return (
     <div className="min-h-screen bg-background">

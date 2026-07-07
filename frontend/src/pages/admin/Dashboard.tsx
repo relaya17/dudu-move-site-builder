@@ -17,6 +17,7 @@ import {
 import type { BusinessSettingsDTO, PaymentMethod } from 'shared';
 import { printBuiltInInvoice } from '@/lib/printInvoice';
 import { IssueInvoiceDialog } from '@/components/admin/IssueInvoiceDialog';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const API_ROOT = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -708,6 +709,9 @@ const AdminDashboard = () => {
   const [sendingQuoteId, setSendingQuoteId] = useState<string | null>(null);
   const [issuingInvoiceId, setIssuingInvoiceId] = useState<string | null>(null);
   const [invoiceDialogMove, setInvoiceDialogMove] = useState<MoveRecord | null>(null);
+
+  // דשבורד ניהול פרטי - לא רלוונטי לחיפוש, ולא רוצים שנתוני עסק יזלגו לתוצאות גוגל.
+  usePageMeta({ title: 'ניהול | Movalo', noindex: true });
 
   useEffect(() => {
     fetchMoves();

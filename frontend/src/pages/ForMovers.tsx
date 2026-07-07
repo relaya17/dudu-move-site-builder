@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { VideoIntro, hasSeenIntro } from '../components/VideoIntro';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { usePageMeta, SITE_ORIGIN } from '@/hooks/usePageMeta';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -627,11 +628,34 @@ function buildContent(): Record<Lang, PageContent> {
 
 const LANG_ORDER: Lang[] = ['he', 'en', 'fr', 'ar', 'ru'];
 
+function isLang(value: string | undefined): value is Lang {
+  return !!value && (LANG_ORDER as string[]).includes(value);
+}
+
+// כתובת ציבורית לפי שפה: עברית (ברירת המחדל) יושבת על "/" עצמו, שאר השפות
+// על "/for-movers/:lang" - כדי שלכל שפה תהיה כתובת אמיתית ונפרדת שגוגל יכול
+// לגלות, לסרוק ולאנדקס בנפרד (וגם לקשר ביניהן עם hreflang, ר' למטה).
+function pathForLang(l: Lang): string {
+  return l === 'he' ? '/' : `/for-movers/${l}`;
+}
+
 const ForMovers = () => {
-  const [lang, setLang] = useState<Lang>('he');
+  const navigate = useNavigate();
+  const { lang: langParam } = useParams<{ lang?: string }>();
+  const lang: Lang = isLang(langParam) ? langParam : 'he';
   const [showIntro, setShowIntro] = useState(!hasSeenIntro());
   const content = buildContent();
   const t = content[lang];
+
+  usePageMeta({
+    title: `${t.hero.title} ${t.hero.highlight} | Movalo`,
+    description: t.hero.subtitle,
+    canonical: `${SITE_ORIGIN}${pathForLang(lang)}`,
+    hreflang: [
+      ...LANG_ORDER.map((l) => ({ lang: l, href: `${SITE_ORIGIN}${pathForLang(l)}` })),
+      { lang: 'x-default', href: `${SITE_ORIGIN}${pathForLang('he')}` },
+    ],
+  });
 
   return (
     <div className="min-h-screen bg-background" dir={t.dir} lang={lang}>
@@ -643,7 +667,7 @@ const ForMovers = () => {
             {LANG_ORDER.map((l) => (
               <button
                 key={l}
-                onClick={() => setLang(l)}
+                onClick={() => navigate(pathForLang(l))}
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                   l === lang ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-white/10'
                 }`}
@@ -780,20 +804,29 @@ const ForMovers = () => {
         </div>
       </section>
 
-      {/* Hidden value / things they might not have identified */}
+      {/* Hidden value / things they might not have identified - אייקון עגול + טקסט
+          ממורכז בכל כרטיס, כדי שהחלק הזה ירגיש מעוצב כמו שאר האתר (ולא רק טקסט
+          יבש שדבוק לפינה). סדר האייקונים תואם לסדר הפריטים בכל שפה (זהה בכולן):
+          סיכון משפטי, תיעוד לרואה חשבון, ייעוץ AI, תזכורות/ביטולים. */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4 max-w-4xl">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">{t.hidden.title}</h2>
           <p className="text-center text-gray-600 mb-10">{t.hidden.intro}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {t.hidden.items.map((item, i) => (
-              <Card key={i} className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">{item.title}</CardTitle>
-                  <CardDescription>{item.desc}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
+            {t.hidden.items.map((item, i) => {
+              const HiddenIcon = [ShieldCheck, FileText, Bot, BellRing][i] ?? ShieldCheck;
+              return (
+                <Card key={i} className="border-0 shadow-sm text-center">
+                  <CardHeader className="items-center">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                      <HiddenIcon className="h-6 w-6" aria-hidden="true" />
+                    </div>
+                    <CardTitle className="text-lg">{item.title}</CardTitle>
+                    <CardDescription>{item.desc}</CardDescription>
+                  </CardHeader>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>

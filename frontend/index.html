@@ -5,12 +5,57 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e3a8a" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet">
-  <title>Movalo - פלטפורמת ניהול למובילים</title>
+  <title>Movalo - פלטפורמת ניהול למובילים | אתר, חשבוניות, GPS ו-AI במנוי אחד</title>
+  <meta name="description"
+    content="Movalo נותנת לחברת ההובלות שלך אתר, הצעות מחיר וחשבוניות אוטומטיות, מעקב GPS ומזכירה חכמה מבוססת AI - הכול במנוי חודשי אחד, במקום לשלם בנפרד על כל כלי." />
+
+  <!--
+    שים לב: קובץ זה משמש כברירת מחדל לכל ה-routes באתר (זהו SPA - React Router,
+    בלי server-side rendering), כך שכותרת/תיאור/תגיות שיתוף (OG) יהיו זהים בכל
+    דף שישותף (למשל /demo). אם רוצים כותרת ותמונת שיתוף שונות לכל דף בפועל
+    (חשוב לשיתוף בוואטסאפ/פייסבוק), צריך react-helmet-async או מעבר ל-SSR/prerender.
+    כתובת ה-canonical/og:url למטה היא placeholder - יש להחליף בדומיין האמיתי
+    לאחר הפריסה (deploy) לכתובת הסופית.
+  -->
+  <link rel="canonical" href="https://movalo.co.il/" />
+
+  <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Movalo" />
+  <meta property="og:locale" content="he_IL" />
+  <meta property="og:title" content="Movalo - פלטפורמת ניהול למובילים" />
+  <meta property="og:description"
+    content="אתר, חשבוניות, מעקב GPS ומזכירה חכמה מבוססת AI לחברת ההובלות שלך - הכול במנוי חודשי אחד." />
+  <meta property="og:url" content="https://movalo.co.il/" />
+  <meta property="og:image" content="https://movalo.co.il/og-image.jpg" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Movalo - פלטפורמת ניהול למובילים" />
+  <meta name="twitter:description"
+    content="אתר, חשבוניות, מעקב GPS ומזכירה חכמה מבוססת AI לחברת ההובלות שלך - הכול במנוי חודשי אחד." />
+  <meta name="twitter:image" content="https://movalo.co.il/og-image.jpg" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Movalo",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "פלטפורמת SaaS רב-דיירים לחברות הובלה - אתר, הצעות מחיר וחשבוניות אוטומטיות, מעקב GPS ומזכירה חכמה מבוססת AI.",
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "ILS"
+    }
+  }
+  </script>
 </head>
 
 <body>

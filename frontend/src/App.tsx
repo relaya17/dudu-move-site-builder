@@ -58,10 +58,13 @@ const App = () => (
         <AuthProvider>
           <LandingShortcut />
           <Routes>
-            {/* עמוד הבית הראשי - דף השיווק של הפלטפורמה (Movalo) למובילים פוטנציאליים */}
+            {/* עמוד הבית הראשי - דף השיווק של הפלטפורמה (Movalo) למובילים פוטנציאליים,
+                בעברית (ברירת המחדל). "/for-movers" נשאר עובד (לא שובר קישורים ישנים)
+                ומצביע לאותו תוכן. "/for-movers/:lang" - כתובת אמיתית ונפרדת לכל שפה
+                (en/fr/ar/ru), כדי שגוגל יוכל לסרוק ולאנדקס כל שפה בנפרד - ר' ForMovers.tsx. */}
             <Route path="/" element={<ForMovers />} />
-            {/* "/for-movers" נשאר עובד (לא שובר קישורים ישנים ששותפו) ומצביע לאותו דף */}
             <Route path="/for-movers" element={<ForMovers />} />
+            <Route path="/for-movers/:lang" element={<ForMovers />} />
 
             {/* אתר הלקוחות של דוד הובלות - דוגמה חיה לעסק שמריץ על הפלטפורמה */}
             <Route

@@ -6,12 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { usePageMeta, SITE_ORIGIN } from '@/hooks/usePageMeta';
 
 export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const from = (location.state as { from?: string })?.from || '/dashboard';
+
+    // דף כניסה פרטי - אין לו ערך בחיפוש, ולא רוצים שיופיע בתוצאות גוגל.
+    usePageMeta({
+        title: 'כניסה | Movalo',
+        canonical: `${SITE_ORIGIN}/login`,
+        noindex: true,
+    });
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

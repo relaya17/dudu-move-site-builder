@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
+import { usePageMeta, SITE_ORIGIN } from '@/hooks/usePageMeta';
 
 const BENEFITS = [
     'אתר ניהול מלא לחברת ההובלות שלך',
@@ -17,6 +18,13 @@ const BENEFITS = [
 export default function Register() {
     const { register } = useAuth();
     const navigate = useNavigate();
+
+    // דף הרשמה כן שווה לאנדקס (זו דף המרה - "הרשמה למובילים" יכול להגיע מחיפוש).
+    usePageMeta({
+        title: 'הרשמה למובילים | Movalo',
+        description: 'הרשמה לפלטפורמת Movalo - אתר, ניהול לקוחות, הצעות מחיר וחשבוניות לחברת ההובלות שלך. 14 יום ניסיון ללא כרטיס אשראי.',
+        canonical: `${SITE_ORIGIN}/register`,
+    });
 
     const [form, setForm] = useState({
         businessName: '',

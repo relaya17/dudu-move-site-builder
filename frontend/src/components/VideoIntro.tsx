@@ -4,6 +4,7 @@ const PROMO_URL =
     'https://res.cloudinary.com/dora8sxcb/video/upload/v1783457267/seedance-2.0_English_Create_a_futuristic_high-tech_promotional_video_for_a_SaaS_platform_that-0_1_krszht.mp4';
 
 const SEEN_KEY = 'movalo_intro_seen';
+const MIN_DISPLAY_MS = 6000; // לפחות 6 שניות לפני סגירה אוטומטית
 
 interface VideoIntroProps {
     onDone: () => void;
@@ -12,6 +13,7 @@ interface VideoIntroProps {
 export function VideoIntro({ onDone }: VideoIntroProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [fading, setFading] = useState(false);
+    const readyRef = useRef(false); // האם עברו MIN_DISPLAY_MS
 
     const dismiss = () => {
         if (fading) return;
@@ -23,18 +25,40 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
     };
 
     useEffect(() => {
+        // נועל גלילה בזמן הפרומו
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
         const v = videoRef.current;
-        if (!v) return;
-        v.play().catch(() => {});
-        v.addEventListener('ended', dismiss);
-        return () => v.removeEventListener('ended', dismiss);
+        if (v) v.play().catch(() => {});
+
+        // טיימר מינימום — רק אחרי 6 שניות הוידאו יכול לסגור אוטומטית
+        const minTimer = setTimeout(() => { readyRef.current = true; }, MIN_DISPLAY_MS);
+
+        const onEnded = () => {
+            if (readyRef.current) {
+                dismiss();
+            } else {
+                // אם הוידאו קצר מ-6 שניות — ממתינים לשאר הזמן
+                const remaining = MIN_DISPLAY_MS - (v ? v.currentTime * 1000 : 0);
+                setTimeout(dismiss, Math.max(0, remaining));
+            }
+        };
+
+        if (v) v.addEventListener('ended', onEnded);
+
+        return () => {
+            document.body.style.overflow = prev;
+            clearTimeout(minTimer);
+            if (v) v.removeEventListener('ended', onEnded);
+        };
     }, []);
 
     return (
         <div
             className={`fixed inset-0 z-[9999] bg-black transition-opacity duration-500 ${fading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         >
-            {/* וידאו — מכסה את כל המסך בכל גודל, תמיד מושתק */}
+            {/* וידאו — מכסה כל המסך, תמיד מושתק */}
             <video
                 ref={videoRef}
                 src={PROMO_URL}
@@ -43,10 +67,10 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
                 className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* שכבת עמעום קלה בתחתית לנראות כפתור */}
+            {/* גרדיאנט בתחתית לנראות כפתור */}
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
 
-            {/* כפתור דלג בלבד — safe-area aware */}
+            {/* כפתור דלג */}
             <div className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 sm:right-8">
                 <button
                     onClick={dismiss}

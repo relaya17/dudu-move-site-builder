@@ -1,4 +1,5 @@
 import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
+import { tenantFilter } from '../lib/tenantFilter';
 
 /**
  * הצעת מחיר (quote) - מסמך שיווקי/מסחרי, לא מסמך מס.
@@ -7,10 +8,14 @@ import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
  * כאן אנחנו רק מנפיקים ושומרים מספר הצעה סידורי לצורך מעקב אצל בעל העסק.
  *
  * חשוב: אין לבלבל בין הצעת מחיר לבין חשבונית/קבלה (מסמך מס) - ר' InvoiceService.ts.
+ *
+ * tenantId אופציונלי מסנן איזו הזמנה מותר לגעת בה - הגנה כפולה (defense in
+ * depth) מעבר לבדיקת הבעלות שכבר קיימת ב-mongoController, כדי שקריאה עתידית
+ * ישירה לשירות הזה (בלי לעבור דרך אותו controller) לא תוכל "לגלוש" לדייר אחר.
  */
 export class QuoteService {
-    static async issueQuote(estimateId: string): Promise<IMoveEstimate | null> {
-        const estimate = await MoveEstimate.findById(estimateId);
+    static async issueQuote(estimateId: string, tenantId?: string): Promise<IMoveEstimate | null> {
+        const estimate = await MoveEstimate.findOne({ _id: estimateId, ...tenantFilter(tenantId) });
         if (!estimate) {
             return null;
         }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, Truck } from 'lucide-react';
+import { fetchBusinessName, FALLBACK_BUSINESS_NAME } from '@/services/businessInfoService';
 
 const NAV_LINKS = [
   { label: 'ראשי', id: 'hero' },
@@ -13,11 +14,22 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // שם העסק מגיע מהגדרות העסק בפאנל הניהול (BusinessSettings) ולא קבוע בקוד -
+  // כך כל מוביל שמפעיל את המערכת רואה בנאב שלו את השם העסקי שלו, לא שם קבוע.
+  const [businessName, setBusinessName] = useState(FALLBACK_BUSINESS_NAME);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchBusinessName().then(name => {
+      if (!cancelled) setBusinessName(name);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const scrollTo = (id: string) => {
@@ -50,7 +62,8 @@ export const Navbar = () => {
           }`}
         >
           <Truck size={26} aria-hidden="true" />
-          <span>דוד הובלות</span>
+          {/* dir="auto" - שם העסק דינמי (עברית או אנגלית, תלוי מה כל מוביל הזין) */}
+          <span dir="auto">{businessName}</span>
         </button>
 
         {/* קישורי ניווט — desktop */}

@@ -18,6 +18,7 @@
 
 import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
 import { BusinessSettings, IBusinessSettings } from '../database/models/BusinessSettings';
+import { tenantFilter } from '../lib/tenantFilter';
 
 const SANDBOX_BASE_URL = 'https://sandbox.d.greeninvoice.co.il/api/v1';
 const PRODUCTION_BASE_URL = 'https://api.greeninvoice.co.il/api/v1';
@@ -69,20 +70,24 @@ async function getToken(creds: GreenInvoiceCredentials): Promise<string> {
     return tokenCache.token;
 }
 
-async function getSettings(withSecrets = false): Promise<IBusinessSettings> {
+// tenantId אופציונלי - ריק עבור הזרימה הישנה של דוד הובלות (הגדרות גלובליות),
+// מוגדר עבור כל דייר/מוביל חדש שנרשם, כך שכל עסק מקבל חשבוניות עם השם/מע"מ/ספק
+// חשבוניות שלו, לא של דייר אחר. ר' lib/tenantFilter.ts.
+async function getSettings(withSecrets = false, tenantId?: string): Promise<IBusinessSettings> {
+    const filter = tenantFilter(tenantId);
     const settings = withSecrets
-        ? await BusinessSettings.findOne().select('+greenInvoiceApiKey +greenInvoiceApiSecret')
-        : await BusinessSettings.findOne();
+        ? await BusinessSettings.findOne(filter).select('+greenInvoiceApiKey +greenInvoiceApiSecret')
+        : await BusinessSettings.findOne(filter);
 
     if (!settings) {
-        return await BusinessSettings.create({});
+        return await BusinessSettings.create({ tenantId: tenantId || undefined });
     }
     return settings;
 }
 
 /** שולף את מפתחות Green Invoice - מעדיף את ההגדרות שנשמרו דרך מסך ההגדרות, ונופל למשתני סביבה כגיבוי. */
-async function resolveGreenInvoiceCredentials(): Promise<GreenInvoiceCredentials | null> {
-    const settings = await getSettings(true);
+async function resolveGreenInvoiceCredentials(tenantId?: string): Promise<GreenInvoiceCredentials | null> {
+    const settings = await getSettings(true, tenantId);
     const apiKey = settings.greenInvoiceApiKey || process.env.GREEN_INVOICE_API_KEY;
     const apiSecret = settings.greenInvoiceApiSecret || process.env.GREEN_INVOICE_API_SECRET;
     const env = (settings.greenInvoiceEnv || process.env.GREEN_INVOICE_ENV || 'sandbox') as 'sandbox' | 'production';
@@ -95,8 +100,8 @@ async function resolveGreenInvoiceCredentials(): Promise<GreenInvoiceCredentials
 
 export class InvoiceService {
     /** האם קיימת התחברות תקינה (מפתחות) לספק החיצוני, בהגדרות או במשתני סביבה. */
-    static async isGreenInvoiceConfigured(): Promise<boolean> {
-        const creds = await resolveGreenInvoiceCredentials();
+    static async isGreenInvoiceConfigured(tenantId?: string): Promise<boolean> {
+        const creds = await resolveGreenInvoiceCredentials(tenantId);
         return creds !== null;
     }
 
@@ -114,8 +119,10 @@ export class InvoiceService {
      * מפיק חשבונית מס/קבלה עבור הזמנת הובלה. בוחר אוטומטית בין הפקה עצמאית (built_in)
      * לבין הספק החיצוני, לפי ההגדרה השמורה ב-BusinessSettings.
      */
-    static async issueInvoiceReceipt(estimateId: string): Promise<IMoveEstimate | null> {
-        const estimate = await MoveEstimate.findById(estimateId);
+    static async issueInvoiceReceipt(estimateId: string, tenantId?: string): Promise<IMoveEstimate | null> {
+        // ר' QuoteService.issueQuote להסבר על ה-tenantFilter כאן - הגנה כפולה
+        // מעבר לבדיקת הבעלות שכבר קיימת ב-mongoController.
+        const estimate = await MoveEstimate.findOne({ _id: estimateId, ...tenantFilter(tenantId) });
         if (!estimate) {
             return null;
         }
@@ -125,8 +132,8 @@ export class InvoiceService {
             return estimate;
         }
 
-        const settings = await getSettings();
-        const creds = settings.invoiceProvider === 'green_invoice' ? await resolveGreenInvoiceCredentials() : null;
+        const settings = await getSettings(false, tenantId);
+        const creds = settings.invoiceProvider === 'green_invoice' ? await resolveGreenInvoiceCredentials(tenantId) : null;
 
         if (settings.invoiceProvider === 'green_invoice' && creds) {
             return this.issueViaGreenInvoice(estimate, creds);

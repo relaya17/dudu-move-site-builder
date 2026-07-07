@@ -2,24 +2,28 @@ import { EstimateStatus } from 'shared';
 import { MoveEstimate, IMoveEstimate } from '../database/models/MoveEstimate';
 import { Customer, ICustomer } from '../database/models/Customer';
 import { CalendarNote, ICalendarNote } from '../database/models/CalendarNote';
+import { tenantFilter } from '../lib/tenantFilter';
 
 export class MongoService {
     // Move Estimate Methods
     // הערה: יצירת הערכה חדשה מתבצעת אך ורק דרך MovingEstimateService.submitEstimateRequest
     // (הכולל ולידציה, חישוב מחיר, trackingToken ומייל אישור) - כדי למנוע נתיב כפול לא-מתועד.
+    //
+    // כל מתודה כאן מקבלת tenantId אופציונלי ומסננת דרכו (ר' lib/tenantFilter.ts) -
+    // זה מה שמבטיח שדייר אחד (מוביל) לא יראה/ישנה/ימחק נתונים של דייר אחר.
 
-    static async getMoveEstimateById(id: string): Promise<IMoveEstimate | null> {
+    static async getMoveEstimateById(id: string, tenantId?: string): Promise<IMoveEstimate | null> {
         try {
-            return await MoveEstimate.findById(id);
+            return await MoveEstimate.findOne({ _id: id, ...tenantFilter(tenantId) });
         } catch (error) {
             console.error('Error getting move estimate:', error);
             throw new Error('Failed to get move estimate');
         }
     }
 
-    static async getAllMoveEstimates(limit: number = 50, skip: number = 0): Promise<IMoveEstimate[]> {
+    static async getAllMoveEstimates(limit: number = 50, skip: number = 0, tenantId?: string): Promise<IMoveEstimate[]> {
         try {
-            return await MoveEstimate.find()
+            return await MoveEstimate.find(tenantFilter(tenantId))
                 .sort({ createdAt: -1 })
                 .limit(limit)
                 .skip(skip);
@@ -29,9 +33,9 @@ export class MongoService {
         }
     }
 
-    static async getMoveEstimatesByStatus(status: string, limit: number = 50, skip: number = 0): Promise<IMoveEstimate[]> {
+    static async getMoveEstimatesByStatus(status: string, limit: number = 50, skip: number = 0, tenantId?: string): Promise<IMoveEstimate[]> {
         try {
-            return await MoveEstimate.find({ status })
+            return await MoveEstimate.find({ status, ...tenantFilter(tenantId) })
                 .sort({ createdAt: -1 })
                 .limit(limit)
                 .skip(skip);
@@ -41,10 +45,10 @@ export class MongoService {
         }
     }
 
-    static async updateMoveEstimateStatus(id: string, status: EstimateStatus): Promise<IMoveEstimate | null> {
+    static async updateMoveEstimateStatus(id: string, status: EstimateStatus, tenantId?: string): Promise<IMoveEstimate | null> {
         try {
-            return await MoveEstimate.findByIdAndUpdate(
-                id,
+            return await MoveEstimate.findOneAndUpdate(
+                { _id: id, ...tenantFilter(tenantId) },
                 { status },
                 { new: true, runValidators: true }
             );
@@ -54,9 +58,9 @@ export class MongoService {
         }
     }
 
-    static async deleteMoveEstimate(id: string): Promise<boolean> {
+    static async deleteMoveEstimate(id: string, tenantId?: string): Promise<boolean> {
         try {
-            const result = await MoveEstimate.findByIdAndDelete(id);
+            const result = await MoveEstimate.findOneAndDelete({ _id: id, ...tenantFilter(tenantId) });
             return !!result;
         } catch (error) {
             console.error('Error deleting move estimate:', error);
@@ -65,27 +69,27 @@ export class MongoService {
     }
 
     // Customer Methods
-    static async getCustomerByEmail(email: string): Promise<ICustomer | null> {
+    static async getCustomerByEmail(email: string, tenantId?: string): Promise<ICustomer | null> {
         try {
-            return await Customer.findOne({ email });
+            return await Customer.findOne({ email, ...tenantFilter(tenantId) });
         } catch (error) {
             console.error('Error getting customer by email:', error);
             throw new Error('Failed to get customer');
         }
     }
 
-    static async getCustomerByPhone(phone: string): Promise<ICustomer | null> {
+    static async getCustomerByPhone(phone: string, tenantId?: string): Promise<ICustomer | null> {
         try {
-            return await Customer.findOne({ phone });
+            return await Customer.findOne({ phone, ...tenantFilter(tenantId) });
         } catch (error) {
             console.error('Error getting customer by phone:', error);
             throw new Error('Failed to get customer');
         }
     }
 
-    static async getAllCustomers(limit: number = 50, skip: number = 0): Promise<ICustomer[]> {
+    static async getAllCustomers(limit: number = 50, skip: number = 0, tenantId?: string): Promise<ICustomer[]> {
         try {
-            return await Customer.find()
+            return await Customer.find(tenantFilter(tenantId))
                 .sort({ createdAt: -1 })
                 .limit(limit)
                 .skip(skip);
@@ -95,9 +99,9 @@ export class MongoService {
         }
     }
 
-    static async updateCustomerStats(email: string, name: string, phone: string, movePrice: number): Promise<void> {
+    static async updateCustomerStats(email: string, name: string, phone: string, movePrice: number, tenantId?: string): Promise<void> {
         try {
-            const customer = await Customer.findOne({ email });
+            const customer = await Customer.findOne({ email, ...tenantFilter(tenantId) });
 
             if (customer) {
                 // Update existing customer
@@ -113,6 +117,7 @@ export class MongoService {
                     email,
                     name,
                     phone,
+                    tenantId: tenantId || undefined,
                     totalMoves: 1,
                     totalSpent: movePrice,
                     lastMoveDate: new Date()
@@ -126,7 +131,7 @@ export class MongoService {
     }
 
     // Analytics Methods
-    static async getAnalytics(): Promise<{
+    static async getAnalytics(tenantId?: string): Promise<{
         totalEstimates: number;
         totalCustomers: number;
         totalRevenue: number;
@@ -134,17 +139,20 @@ export class MongoService {
         topCustomers: ICustomer[];
     }> {
         try {
-            const totalEstimates = await MoveEstimate.countDocuments();
-            const totalCustomers = await Customer.countDocuments();
+            const filter = tenantFilter(tenantId);
+            const totalEstimates = await MoveEstimate.countDocuments(filter);
+            const totalCustomers = await Customer.countDocuments(filter);
             const totalRevenue = await MoveEstimate.aggregate([
+                { $match: filter },
                 { $group: { _id: null, total: { $sum: '$totalPrice' } } }
             ]);
 
             const estimatesByStatus = await MoveEstimate.aggregate([
+                { $match: filter },
                 { $group: { _id: '$status', count: { $sum: 1 } } }
             ]);
 
-            const topCustomers = await Customer.find()
+            const topCustomers = await Customer.find(filter)
                 .sort({ totalSpent: -1 })
                 .limit(10);
 
@@ -162,9 +170,10 @@ export class MongoService {
     }
 
     // Search Methods
-    static async searchMoveEstimates(query: string): Promise<IMoveEstimate[]> {
+    static async searchMoveEstimates(query: string, tenantId?: string): Promise<IMoveEstimate[]> {
         try {
             return await MoveEstimate.find({
+                ...tenantFilter(tenantId),
                 $or: [
                     { name: { $regex: query, $options: 'i' } },
                     { email: { $regex: query, $options: 'i' } },
@@ -179,9 +188,10 @@ export class MongoService {
         }
     }
 
-    static async searchCustomers(query: string): Promise<ICustomer[]> {
+    static async searchCustomers(query: string, tenantId?: string): Promise<ICustomer[]> {
         try {
             return await Customer.find({
+                ...tenantFilter(tenantId),
                 $or: [
                     { name: { $regex: query, $options: 'i' } },
                     { email: { $regex: query, $options: 'i' } },
@@ -195,9 +205,9 @@ export class MongoService {
     }
 
     // Calendar Note Methods - הערות חופשיות של ההנהלה על ימים בלוח השנה
-    static async getCalendarNotes(fromDate?: string, toDate?: string): Promise<ICalendarNote[]> {
+    static async getCalendarNotes(fromDate?: string, toDate?: string, tenantId?: string): Promise<ICalendarNote[]> {
         try {
-            const filter: Record<string, unknown> = {};
+            const filter: Record<string, unknown> = { ...tenantFilter(tenantId) };
             if (fromDate || toDate) {
                 filter.date = {
                     ...(fromDate ? { $gte: fromDate } : {}),
@@ -211,22 +221,22 @@ export class MongoService {
         }
     }
 
-    static async createCalendarNote(date: string, text: string): Promise<ICalendarNote> {
+    static async createCalendarNote(date: string, text: string, tenantId?: string): Promise<ICalendarNote> {
         try {
-            return await CalendarNote.create({ date, text });
+            return await CalendarNote.create({ date, text, tenantId: tenantId || undefined });
         } catch (error) {
             console.error('Error creating calendar note:', error);
             throw new Error('Failed to create calendar note');
         }
     }
 
-    static async deleteCalendarNote(id: string): Promise<boolean> {
+    static async deleteCalendarNote(id: string, tenantId?: string): Promise<boolean> {
         try {
-            const result = await CalendarNote.findByIdAndDelete(id);
+            const result = await CalendarNote.findOneAndDelete({ _id: id, ...tenantFilter(tenantId) });
             return Boolean(result);
         } catch (error) {
             console.error('Error deleting calendar note:', error);
             throw new Error('Failed to delete calendar note');
         }
     }
-} 
+}

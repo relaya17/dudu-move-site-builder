@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Truck, Package, Home, Building, Clock } from 'lucide-react';
+import { Truck, Package, Home, Building } from 'lucide-react';
 
 export const Services = () => {
   const services = [
@@ -27,13 +27,6 @@ export const Services = () => {
       title: "הובלות למרחקים ארוכים",
       description: "הובלות בין־עירוניות וארציות המטופלות בזהירות ובדייקנות. מורשים להובלות בין־עירוניות.",
       features: ["מעקב GPS", "אפשרויות אחסון", "זמנים גמישים"]
-    },
-  
-    {
-      icon: <Clock className="h-12 w-12 text-blue-600" aria-hidden="true" />,
-      title: "הובלות חירום",
-      description: "שירותי הובלה דחופים זמינים 24/7. אנחנו כאן כשאתם הכי צריכים אותנו.",
-      features: ["זמינות 24/7", "תגובה מהירה", "אריזה דחופה"]
     }
   ];
 

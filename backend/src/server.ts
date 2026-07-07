@@ -12,6 +12,9 @@ import aiRouter from './routes/aiRoutes';
 import mongoRoutes from './routes/mongoRoutes';
 import pricingRoutes from './routes/pricingRoutes';
 import trackingRoutes from './routes/trackingRoutes';
+import publicRoutes from './routes/publicRoutes';
+import authRoutes from './routes/authRoutes';
+import tenantRoutes from './routes/tenantRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
 import { connectMongoDB } from './database/mongoConnection';
@@ -110,6 +113,9 @@ app.use('/api/ai', aiRouter);
 app.use('/api/mongo', mongoRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/tracking', trackingRoutes);
+app.use('/api/public', publicRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/tenant', tenantRoutes);
 
 // הגשת קבצי ה-frontend הבנויים (שרת Render אחד מגיש גם את ה-API וגם את האתר).
 // maxAge ארוך זול/מהיר לגמרי: Vite מוסיף hash לשם כל קובץ JS/CSS, כך שקובץ עם

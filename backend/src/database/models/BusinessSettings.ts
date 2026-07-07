@@ -7,6 +7,9 @@ import { BusinessType, InvoiceProvider } from 'shared';
  * להסבר המלא על שני המצבים, ו-InvoiceService.ts למימוש.
  */
 export interface IBusinessSettings extends Document {
+    // חשבון העסק (tenant) - ר' MoveEstimate.ts להסבר מלא. שים לב: זה שדה שונה
+    // לגמרי מ-businessId למטה (מספר עוסק מורשה/ח.פ) - אין קשר בין השניים.
+    tenantId?: mongoose.Types.ObjectId;
     businessName: string;
     businessId: string;
     businessType: BusinessType;
@@ -27,6 +30,11 @@ export interface IBusinessSettings extends Document {
 }
 
 const BusinessSettingsSchema = new Schema<IBusinessSettings>({
+    // index: true הוסר בכוונה מכאן - האינדקס האמיתי מוגדר למטה כ-unique+sparse,
+    // כדי שלא יהיו בטעות שני מסמכי הגדרות לאותו tenant (מרוץ בין שתי בקשות
+    // "get-or-create" ראשונות במקביל). sparse מדלג על מסמכים בלי tenantId
+    // בכלל (הסינגלטון הישן של דוד הובלות), כך שזה לא משפיע על הזרימה הישנה.
+    tenantId: { type: Schema.Types.ObjectId, ref: 'Business' },
     businessName: { type: String, default: 'דוד הובלות', trim: true },
     businessId: { type: String, default: '', trim: true },
     businessType: { type: String, enum: ['exempt', 'licensed', 'company'], default: 'licensed' },
@@ -42,5 +50,7 @@ const BusinessSettingsSchema = new Schema<IBusinessSettings>({
 }, {
     timestamps: true
 });
+
+BusinessSettingsSchema.index({ tenantId: 1 }, { unique: true, sparse: true });
 
 export const BusinessSettings = mongoose.model<IBusinessSettings>('BusinessSettings', BusinessSettingsSchema);

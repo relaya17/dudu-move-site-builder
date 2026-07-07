@@ -5,6 +5,13 @@ import { QuoteService } from '../services/QuoteService';
 import { InvoiceService } from '../services/InvoiceService';
 import { EmailService } from '../services/EmailService';
 
+// הערה על req.tenantId בכל מתודה כאן: זה הבקר המשותף לשתי מערכות הרשאה -
+// הישן (requireAdminKey, בלי tenantId - הזרימה החד-דיירית של דוד הובלות) והחדש
+// (requireBusinessAuth, עם tenantId - כל דייר/מוביל שנרשם). ר' routes/mongoRoutes.ts
+// (ישן) ו-routes/tenantRoutes.ts (חדש) - שניהם מצביעים על אותם controllers,
+// וההבדל היחיד הוא אם req.tenantId מוגדר או לא. לעולם אין להסיר את ה-tenantId
+// מהקריאות ל-MongoService - זה מה שמבטיח בידוד בין דיירים.
+
 export class MongoController {
     // Move Estimate Controllers
     // הערה: יצירת הערכה חדשה מתבצעת אך ורק דרך POST /api/move-requests
@@ -13,7 +20,7 @@ export class MongoController {
     static async getMoveEstimateById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const estimate = await MongoService.getMoveEstimateById(id);
+            const estimate = await MongoService.getMoveEstimateById(id, req.tenantId);
 
             if (!estimate) {
                 res.status(404).json({
@@ -46,12 +53,14 @@ export class MongoController {
                 estimates = await MongoService.getMoveEstimatesByStatus(
                     status as string,
                     parseInt(limit as string),
-                    parseInt(skip as string)
+                    parseInt(skip as string),
+                    req.tenantId
                 );
             } else {
                 estimates = await MongoService.getAllMoveEstimates(
                     parseInt(limit as string),
-                    parseInt(skip as string)
+                    parseInt(skip as string),
+                    req.tenantId
                 );
             }
 
@@ -83,7 +92,7 @@ export class MongoController {
                 return;
             }
 
-            const estimate = await MongoService.updateMoveEstimateStatus(id, status as EstimateStatus);
+            const estimate = await MongoService.updateMoveEstimateStatus(id, status as EstimateStatus, req.tenantId);
 
             if (!estimate) {
                 res.status(404).json({
@@ -109,10 +118,18 @@ export class MongoController {
     }
 
     // הפקת מספר הצעת מחיר (מסמך לא-פיסקלי) - ה-PDF עצמו נוצר ומודפס בצד הלקוח (frontend).
+    // הגנה כפולה (defense in depth): גם getMoveEstimateById וגם QuoteService עצמו
+    // מסננים לפי tenantId, כך שאין תלות בסדר הקריאות בלבד.
     static async issueQuote(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const estimate = await QuoteService.issueQuote(id);
+            const owned = await MongoService.getMoveEstimateById(id, req.tenantId);
+            if (!owned) {
+                res.status(404).json({ success: false, message: 'Move estimate not found' });
+                return;
+            }
+
+            const estimate = await QuoteService.issueQuote(id, req.tenantId);
 
             if (!estimate) {
                 res.status(404).json({
@@ -140,7 +157,13 @@ export class MongoController {
     static async issueInvoice(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const estimate = await InvoiceService.issueInvoiceReceipt(id);
+            const owned = await MongoService.getMoveEstimateById(id, req.tenantId);
+            if (!owned) {
+                res.status(404).json({ success: false, message: 'Move estimate not found' });
+                return;
+            }
+
+            const estimate = await InvoiceService.issueInvoiceReceipt(id, req.tenantId);
 
             if (!estimate) {
                 res.status(404).json({
@@ -168,7 +191,13 @@ export class MongoController {
     static async sendQuoteEmail(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const estimate = await QuoteService.issueQuote(id);
+            const owned = await MongoService.getMoveEstimateById(id, req.tenantId);
+            if (!owned) {
+                res.status(404).json({ success: false, message: 'הזמנה לא נמצאה' });
+                return;
+            }
+
+            const estimate = await QuoteService.issueQuote(id, req.tenantId);
 
             if (!estimate) {
                 res.status(404).json({ success: false, message: 'הזמנה לא נמצאה' });
@@ -206,7 +235,7 @@ export class MongoController {
     static async deleteMoveEstimate(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await MongoService.deleteMoveEstimate(id);
+            const deleted = await MongoService.deleteMoveEstimate(id, req.tenantId);
 
             if (!deleted) {
                 res.status(404).json({
@@ -234,7 +263,7 @@ export class MongoController {
     static async getCustomerByEmail(req: Request, res: Response): Promise<void> {
         try {
             const { email } = req.params;
-            const customer = await MongoService.getCustomerByEmail(email);
+            const customer = await MongoService.getCustomerByEmail(email, req.tenantId);
 
             if (!customer) {
                 res.status(404).json({
@@ -263,7 +292,8 @@ export class MongoController {
             const { limit = 50, skip = 0 } = req.query;
             const customers = await MongoService.getAllCustomers(
                 parseInt(limit as string),
-                parseInt(skip as string)
+                parseInt(skip as string),
+                req.tenantId
             );
 
             res.status(200).json({
@@ -284,7 +314,7 @@ export class MongoController {
     // Analytics Controllers
     static async getAnalytics(req: Request, res: Response): Promise<void> {
         try {
-            const analytics = await MongoService.getAnalytics();
+            const analytics = await MongoService.getAnalytics(req.tenantId);
 
             res.status(200).json({
                 success: true,
@@ -313,7 +343,7 @@ export class MongoController {
                 return;
             }
 
-            const estimates = await MongoService.searchMoveEstimates(q);
+            const estimates = await MongoService.searchMoveEstimates(q, req.tenantId);
 
             res.status(200).json({
                 success: true,
@@ -342,7 +372,7 @@ export class MongoController {
                 return;
             }
 
-            const customers = await MongoService.searchCustomers(q);
+            const customers = await MongoService.searchCustomers(q, req.tenantId);
 
             res.status(200).json({
                 success: true,
@@ -365,7 +395,8 @@ export class MongoController {
             const { from, to } = req.query;
             const notes = await MongoService.getCalendarNotes(
                 typeof from === 'string' ? from : undefined,
-                typeof to === 'string' ? to : undefined
+                typeof to === 'string' ? to : undefined,
+                req.tenantId
             );
 
             res.status(200).json({
@@ -396,7 +427,7 @@ export class MongoController {
                 return;
             }
 
-            const note = await MongoService.createCalendarNote(date, text.trim());
+            const note = await MongoService.createCalendarNote(date, text.trim(), req.tenantId);
 
             res.status(201).json({ success: true, data: note });
         } catch (error) {
@@ -412,7 +443,7 @@ export class MongoController {
     static async deleteCalendarNote(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await MongoService.deleteCalendarNote(id);
+            const deleted = await MongoService.deleteCalendarNote(id, req.tenantId);
 
             if (!deleted) {
                 res.status(404).json({ success: false, message: 'הערה לא נמצאה' });
@@ -429,4 +460,4 @@ export class MongoController {
             });
         }
     }
-} 
+}

@@ -659,9 +659,13 @@ const ForMovers = () => {
       {/* Hero */}
       <section className="relative text-white bg-gray-900 py-16">
         <div className="container mx-auto px-4 text-center">
-          <div className="flex justify-center mb-4">
-            <Truck className="h-10 w-10 text-blue-300" aria-hidden="true" />
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <Truck className="h-7 w-7 text-blue-300" aria-hidden="true" />
+            {/* שם המוצר/הפלטפורמה - נשאר קבוע בכל שפה (שם מותג), בניגוד לשם
+                העסק של כל מוביל (זה שמופיע ב-Navbar/Footer של האתר שלו עצמו). */}
+            <span dir="ltr" className="text-2xl font-bold tracking-tight text-white">Vanto</span>
           </div>
+          <p className="text-blue-300/80 text-sm mb-6">{t.brand}</p>
           <p className="text-blue-300 font-semibold mb-2">{t.hero.eyebrow}</p>
           <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-2">{t.hero.title}</h1>
           <h2 className="text-2xl md:text-4xl font-bold text-blue-300 mb-6">{t.hero.highlight}</h2>

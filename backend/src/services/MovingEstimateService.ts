@@ -6,6 +6,7 @@ import { customerSchema, moveDetailsSchema, furnitureItemSchema } from '../middl
 import { PricingService } from './PricingService';
 import { MongoService } from './MongoService';
 import { EmailService } from './EmailService';
+import { tenantFilter } from '../lib/tenantFilter';
 
 export class MovingEstimateService {
     /**
@@ -38,7 +39,10 @@ export class MovingEstimateService {
             needsReassemble?: boolean;
             needsDoorRemoval?: boolean;
             comments?: string;
-        }>
+        }>,
+        // tenantId אופציונלי - ריק עבור האתר הישן/הזרימה החד-דיירית של דוד הובלות,
+        // מוגדר כשההזמנה מגיעה מטופס ההערכה של דייר/מוביל ספציפי שנרשם למערכת.
+        tenantId?: string
     ) {
         try {
             // ולידציה של הנתונים
@@ -71,6 +75,7 @@ export class MovingEstimateService {
             const trackingToken = crypto.randomBytes(12).toString('hex');
 
             const estimate = new MoveEstimate({
+                tenantId: tenantId || undefined,
                 name: customerData.name,
                 email: customerData.email,
                 phone: customerData.phone,
@@ -109,7 +114,8 @@ export class MovingEstimateService {
                 customerData.email || '',
                 customerData.name,
                 customerData.phone,
-                priceEstimate
+                priceEstimate,
+                tenantId
             );
 
             // שליחת מייל אישור עם קישור למעקב (לא קריטי - לא נכשיל את הבקשה אם זה נכשל)
@@ -134,10 +140,14 @@ export class MovingEstimateService {
 
     /**
      * קבלת כל בקשות הערכת המחיר
+     * tenantId אופציונלי - ר' lib/tenantFilter.ts. חשוב: זה נתיב מקביל
+     * ל-MongoService.getAllMoveEstimates (חשוף דרך /api/move-requests ולא
+     * /api/mongo/estimates) - חייב לסנן באותו אופן בדיוק, אחרת דייר אחד
+     * (או מי שמחזיק ב-admin key) יכול לראות הזמנות של דיירים אחרים.
      */
-    static async getAllMoveRequests() {
+    static async getAllMoveRequests(tenantId?: string) {
         try {
-            return await MoveEstimate.find().sort({ createdAt: -1 });
+            return await MoveEstimate.find(tenantFilter(tenantId)).sort({ createdAt: -1 });
         } catch (error) {
             console.error('שגיאה בשליפת בקשות הערכת מחיר:', error);
             throw error;
@@ -147,9 +157,9 @@ export class MovingEstimateService {
     /**
      * קבלת בקשת הערכת מחיר לפי ID
      */
-    static async getMoveRequestById(id: string) {
+    static async getMoveRequestById(id: string, tenantId?: string) {
         try {
-            const estimate = await MoveEstimate.findById(id);
+            const estimate = await MoveEstimate.findOne({ _id: id, ...tenantFilter(tenantId) });
             if (!estimate) {
                 throw new Error('בקשת הערכת המחיר לא נמצאה');
             }
@@ -163,9 +173,13 @@ export class MovingEstimateService {
     /**
      * עדכון סטטוס בקשת הערכת מחיר
      */
-    static async updateMoveRequestStatus(id: string, status: EstimateStatus) {
+    static async updateMoveRequestStatus(id: string, status: EstimateStatus, tenantId?: string) {
         try {
-            const estimate = await MoveEstimate.findByIdAndUpdate(id, { status }, { new: true, runValidators: true });
+            const estimate = await MoveEstimate.findOneAndUpdate(
+                { _id: id, ...tenantFilter(tenantId) },
+                { status },
+                { new: true, runValidators: true }
+            );
             if (!estimate) {
                 throw new Error('בקשת הערכת המחיר לא נמצאה');
             }

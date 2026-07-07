@@ -20,6 +20,9 @@ export type IQuoteDocumentInfo = QuoteDocumentInfo<Date>;
 export type IInvoiceDocumentInfo = InvoiceDocumentInfo<Date>;
 
 export interface IMoveEstimate extends Document {
+    // חשבון העסק (tenant) שההזמנה שייכת אליו - ריק/לא מוגדר עבור הנתונים
+    // ה"ישנים" (מלפני המעבר ל-SaaS רב-דיירי, ר' backend/src/lib/tenantFilter.ts).
+    tenantId?: mongoose.Types.ObjectId;
     name: string;
     email: string;
     phone: string;
@@ -52,6 +55,11 @@ export interface IMoveEstimate extends Document {
 }
 
 const MoveEstimateSchema = new Schema<IMoveEstimate>({
+    tenantId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Business',
+        index: true
+    },
     name: {
         type: String,
         required: true,

@@ -934,9 +934,17 @@ const AdminDashboard = () => {
               {new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <Button onClick={handleExportReport} variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-            ייצא דוח חודשי
-          </Button>
+          <div className="flex items-center gap-2">
+            <a
+              href="/"
+              className="inline-flex items-center justify-center rounded-md border border-white/30 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20 transition-colors"
+            >
+              לדף הנחיתה
+            </a>
+            <Button onClick={handleExportReport} variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
+              ייצא דוח חודשי
+            </Button>
+          </div>
         </div>
       </header>
 

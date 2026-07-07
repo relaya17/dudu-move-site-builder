@@ -1,18 +1,22 @@
 import { Request, Response } from 'express';
 import { BusinessSettings } from '../database/models/BusinessSettings';
+import { Business } from '../database/models/Business';
 import { InvoiceService } from '../services/InvoiceService';
 import { BusinessType, InvoiceProvider } from 'shared';
+import { tenantFilter } from '../lib/tenantFilter';
 
 const BUSINESS_TYPES: BusinessType[] = ['exempt', 'licensed', 'company'];
 const INVOICE_PROVIDERS: InvoiceProvider[] = ['built_in', 'green_invoice'];
 
 export class SettingsController {
     // מחזיר את הגדרות העסק - ללא הסודות עצמם (מפתחות ה-API), רק דגל שמציין אם הם מוגדרים.
+    // req.tenantId מגיע מ-requireBusinessAuth (דיירים חדשים) או ריק (הזרימה הישנה
+    // של דוד הובלות, מוגנת ב-requireAdminKey) - ר' lib/tenantFilter.ts.
     static async getSettings(req: Request, res: Response): Promise<void> {
         try {
-            let settings = await BusinessSettings.findOne();
+            let settings = await BusinessSettings.findOne(tenantFilter(req.tenantId));
             if (!settings) {
-                settings = await BusinessSettings.create({});
+                settings = await BusinessSettings.create({ tenantId: req.tenantId || undefined });
             }
 
             res.status(200).json({
@@ -26,7 +30,7 @@ export class SettingsController {
                     email: settings.email,
                     vatRate: settings.vatRate,
                     invoiceProvider: settings.invoiceProvider,
-                    greenInvoiceConfigured: await InvoiceService.isGreenInvoiceConfigured(),
+                    greenInvoiceConfigured: await InvoiceService.isGreenInvoiceConfigured(req.tenantId),
                     greenInvoiceEnv: settings.greenInvoiceEnv,
                     nextDocumentNumber: settings.nextDocumentNumber
                 }
@@ -38,6 +42,42 @@ export class SettingsController {
                 message: 'טעינת הגדרות העסק נכשלה',
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
+        }
+    }
+
+    // מידע ציבורי ובטוח בלבד - בכוונה בלי דרישת admin key, כדי שעמודי הלקוחות
+    // עצמם (Navbar/Footer) יוכלו להציג את שם העסק. חושף אך ורק את השם - לא
+    // טלפון/אימייל/כתובת/פרטי חיוב, כדי לא לחשוף מידע רגיש בנתיב לא מוגן.
+    //
+    // מקבל tenantSlug אופציונלי ב-query string (לדוגמה ?tenantSlug=david-move) -
+    // זה השלב הראשון לקראת זיהוי דייר לפי subdomain באתר הציבורי. בלי הפרמטר
+    // (המצב היום, כל עוד ה-frontend לא שולח אותו) מוצג שם העסק ה"ישן" (הזרימה
+    // החד-דיירית המקורית), בדיוק כמו היום - אפס שינוי התנהגות לדוד הובלות.
+    static async getPublicInfo(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantSlug = typeof req.query.tenantSlug === 'string' ? req.query.tenantSlug : undefined;
+            let tenantId: string | undefined;
+
+            if (tenantSlug) {
+                const business = await Business.findOne({ slug: tenantSlug });
+                tenantId = business?.id;
+                if (!tenantId) {
+                    // slug לא קיים - עדיף להחזיר ברירת מחדל מאשר לחשוף שגיאה/לזלוג לדייר לא נכון.
+                    res.status(200).json({ success: true, data: { businessName: 'David Move' } });
+                    return;
+                }
+            }
+
+            const settings = await BusinessSettings.findOne(tenantFilter(tenantId));
+            res.status(200).json({
+                success: true,
+                data: { businessName: settings?.businessName || 'David Move' }
+            });
+        } catch (error) {
+            console.error('Error getting public business info:', error);
+            // גם בשגיאה מחזירים ברירת מחדל סבירה - זה שדה תצוגה בלבד, לא שווה
+            // להפיל את טעינת האתר הציבורי (Navbar/Footer) בגללו.
+            res.status(200).json({ success: true, data: { businessName: 'David Move' } });
         }
     }
 
@@ -63,9 +103,9 @@ export class SettingsController {
                 return;
             }
 
-            let settings = await BusinessSettings.findOne();
+            let settings = await BusinessSettings.findOne(tenantFilter(req.tenantId));
             if (!settings) {
-                settings = new BusinessSettings();
+                settings = new BusinessSettings({ tenantId: req.tenantId || undefined });
             }
 
             if (body.businessName !== undefined) settings.businessName = body.businessName;

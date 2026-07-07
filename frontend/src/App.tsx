@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import { AccessibilityButton } from "@/components/ui/accessibility-button";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { muiTheme } from "@/lib/muiTheme";
@@ -24,6 +24,21 @@ const ForMovers = lazy(() => import("./pages/ForMovers"));
 
 const queryClient = new QueryClient();
 
+const LandingShortcut = () => {
+  const location = useLocation();
+  if (location.pathname === "/") return null;
+
+  return (
+    <Link
+      to="/"
+      className="fixed bottom-4 right-4 z-50 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:bg-blue-700 transition-colors"
+      aria-label="חזרה לדף הנחיתה"
+    >
+      לדף הנחיתה
+    </Link>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider theme={muiTheme}>
@@ -31,6 +46,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <LandingShortcut />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/thank-you" element={<ThankYou />} />

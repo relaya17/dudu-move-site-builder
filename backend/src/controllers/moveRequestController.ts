@@ -3,6 +3,21 @@ import { ZodError } from 'zod';
 import { ESTIMATE_STATUSES } from 'shared';
 import { MovingEstimateService } from '../services/MovingEstimateService';
 import { estimateRequestSchema } from '../middleware/validation';
+import { Business } from '../database/models/Business';
+
+/**
+ * מזהה לאיזה דייר (מוביל) שייכת בקשת ההערכה, לפי tenantSlug אופציונלי שנשלח
+ * מה-frontend (זהות "האתר" ממנו הוגשה הבקשה - לקראת פתרון subdomain מלא בעתיד).
+ * בלי הפרמטר (המצב היום עבור האתר של דוד הובלות) מוחזר undefined - כלומר
+ * ההזמנה משויכת לזרימה הישנה/חד-דיירית, אפס שינוי התנהגות.
+ */
+async function resolveTenantId(tenantSlug: unknown): Promise<string | undefined> {
+    if (typeof tenantSlug !== 'string' || !tenantSlug.trim()) {
+        return undefined;
+    }
+    const business = await Business.findOne({ slug: tenantSlug.trim().toLowerCase() });
+    return business?.id;
+}
 
 export const submitMoveRequest = async (req: Request, res: Response) => {
     try {
@@ -18,11 +33,12 @@ export const submitMoveRequest = async (req: Request, res: Response) => {
         }
 
         const { customerData, moveData, furnitureItems } = validatedData;
+        const tenantId = await resolveTenantId((req.body as { tenantSlug?: unknown })?.tenantSlug);
         const result = await MovingEstimateService.submitEstimateRequest(customerData, {
             ...moveData,
             preferred_move_date: moveData.preferred_move_date || '',
             additional_notes: moveData.additional_notes || ''
-        }, furnitureItems);
+        }, furnitureItems, tenantId);
         res.status(201).json({ success: true, message: 'בקשת הערכת מחיר נשלחה בהצלחה', data: result });
     } catch (error) {
         console.error('שגיאה בשליחת בקשת הערכת מחיר:', error);
@@ -43,7 +59,7 @@ export const submitMoveRequest = async (req: Request, res: Response) => {
 
 export const getAllMoveRequests = async (req: Request, res: Response) => {
     try {
-        const requests = await MovingEstimateService.getAllMoveRequests();
+        const requests = await MovingEstimateService.getAllMoveRequests(req.tenantId);
 
         res.status(200).json({
             success: true,
@@ -61,7 +77,7 @@ export const getAllMoveRequests = async (req: Request, res: Response) => {
 export const getMoveRequestById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const request = await MovingEstimateService.getMoveRequestById(id);
+        const request = await MovingEstimateService.getMoveRequestById(id, req.tenantId);
 
         res.status(200).json({
             success: true,
@@ -89,7 +105,7 @@ export const updateMoveRequestStatus = async (req: Request, res: Response) => {
             return;
         }
 
-        await MovingEstimateService.updateMoveRequestStatus(id, status);
+        await MovingEstimateService.updateMoveRequestStatus(id, status, req.tenantId);
 
         res.status(200).json({
             success: true,

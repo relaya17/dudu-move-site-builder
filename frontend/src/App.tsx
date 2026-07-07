@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { ThemeProvider } from "@mui/material/styles";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AccessibilityButton } from "@/components/ui/accessibility-button";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { muiTheme } from "@/lib/muiTheme";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ThankYou } from "./pages/ThankYou";
@@ -21,6 +23,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider theme={muiTheme}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -54,6 +57,7 @@ const App = () => (
       </BrowserRouter>
       <AccessibilityButton />
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

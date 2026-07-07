@@ -243,7 +243,7 @@ export const MovingEstimateForm: React.FC = () => {
     <Container maxWidth="sm" sx={{ mt: 4, direction: 'rtl' }}>
       <Card elevation={8} sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Typography variant="h5" component="h2" align="center" sx={{ mb: 1, color: '#2196f3', fontWeight: 'bold' }}>
+          <Typography variant="h5" component="h2" align="center" sx={{ mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
             בקשת הערכת מחיר להובלה
           </Typography>
           <Typography variant="body2" align="center" color="textSecondary" sx={{ mb: 3 }}>

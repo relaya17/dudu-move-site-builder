@@ -34,7 +34,7 @@ export const Services = () => {
     <section id="services" className="py-20 bg-gray-50" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">שירותי ההובלה שלנו</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">הובלות בלי בעיות</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             פתרונות הובלה ואריזה מקיפים המותאמים לצרכים הספציפיים שלכם
           </p>

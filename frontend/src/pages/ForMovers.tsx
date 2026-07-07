@@ -686,8 +686,7 @@ const ForMovers = () => {
           <p className="text-blue-300 font-semibold mb-2">{t.hero.eyebrow}</p>
           <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-2">{t.hero.title}</h1>
           <h2 className="text-2xl md:text-4xl font-bold text-blue-300 mb-6">{t.hero.highlight}</h2>
-          <p className="text-lg text-blue-100 max-w-2xl mx-auto mb-8">{t.hero.subtitle}</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
             <Link to="/register">
               <Button className="bg-white text-blue-700 hover:bg-blue-100 px-8 py-4 text-lg font-semibold w-full sm:w-auto">
                 {t.hero.ctaPrimary}
@@ -702,6 +701,7 @@ const ForMovers = () => {
               </Button>
             </Link>
           </div>
+          <p className="text-sm sm:text-base text-blue-100/80 max-w-2xl mx-auto leading-relaxed">{t.hero.subtitle}</p>
         </div>
       </section>
 

@@ -286,10 +286,10 @@ export const MovingEstimateForm: React.FC = () => {
     }
   };
 
-  const stepNames = ['פרטים אישיים', 'סוג דירה ותאריך', 'כתובות המעבר', 'רשימת פריטים', 'סיכום'];
+  const stepNames = ['פרטים', 'דירה', 'כתובות', 'פריטים', 'סיכום'];
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, direction: 'rtl' }}>
+    <Container maxWidth="sm" sx={{ mt: 4, direction: 'rtl', px: { xs: 1, sm: 2 } }}>
       <Card elevation={8} sx={{ borderRadius: '16px' }}>
         <CardContent>
           <Typography variant="h5" component="h2" align="center" sx={{ mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
@@ -302,7 +302,14 @@ export const MovingEstimateForm: React.FC = () => {
           <Stepper activeStep={currentStep} alternativeLabel sx={{ mb: 4 }}>
             {stepNames.map((label) => (
               <Step key={label}>
-                <StepLabel>{label}</StepLabel>
+                <StepLabel
+                  sx={{
+                    '& .MuiStepLabel-label': {
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                      mt: '4px !important'
+                    }
+                  }}
+                >{label}</StepLabel>
               </Step>
             ))}
           </Stepper>

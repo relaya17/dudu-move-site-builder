@@ -10,21 +10,22 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { muiTheme } from "@/lib/muiTheme";
-import Index from "./pages/Index";
+import ForMovers from "./pages/ForMovers";
 import NotFound from "./pages/NotFound";
 import { ThankYou } from "./pages/ThankYou";
 import { Tracking } from "./pages/Tracking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-// טעינה עצלה (code-splitting) לדפי הניהול: רוב המבקרים באתר הם לקוחות רגילים
-// שלעולם לא מגיעים ל-/admin, ואין סיבה שהם יורידו את הקוד של הדשבורד (כולל
-// ספריית הגרפים recharts, שכבדה יחסית) כחלק מהטעינה הראשונית של דף הבית.
+// טעינה עצלה (code-splitting) לדפי הניהול: רוב המבקרים בדף הבית של הפלטפורמה
+// (מובילים פוטנציאליים) לעולם לא מגיעים ל-/admin, ואין סיבה שהם יורידו את הקוד
+// של הדשבורד (כולל ספריית הגרפים recharts, שכבדה יחסית) כחלק מהטעינה הראשונית.
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const MovingEstimatesAdminPage = lazy(() => import("./pages/admin/MovingEstimatesAdminPage"));
 
-// דף שיווקי למובילים פוטנציאליים — טעינה עצלה מאותה סיבה.
-const ForMovers = lazy(() => import("./pages/ForMovers"));
+// אתר הלקוחות של "דוד הובלות" - העסק לדוגמה שמריץ על גבי הפלטפורמה, עבר
+// מ-"/" ל-"/demo" כשעמוד הבית הראשי הפך לדף השיווק של הפלטפורמה עצמה (Movalo).
+const DemoBusinessSite = lazy(() => import("./pages/Index"));
 // דשבורד הניהול החדש (JWT / multi-tenant)
 const TenantDashboard = lazy(() => import("./pages/dashboard/TenantDashboard"));
 
@@ -57,20 +58,22 @@ const App = () => (
         <AuthProvider>
           <LandingShortcut />
           <Routes>
-            {/* דפי לקוחות ציבוריים */}
-            <Route path="/" element={<Index />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/tracking/:token" element={<Tracking />} />
+            {/* עמוד הבית הראשי - דף השיווק של הפלטפורמה (Movalo) למובילים פוטנציאליים */}
+            <Route path="/" element={<ForMovers />} />
+            {/* "/for-movers" נשאר עובד (לא שובר קישורים ישנים ששותפו) ומצביע לאותו דף */}
+            <Route path="/for-movers" element={<ForMovers />} />
 
-            {/* דף שיווקי */}
+            {/* אתר הלקוחות של דוד הובלות - דוגמה חיה לעסק שמריץ על הפלטפורמה */}
             <Route
-              path="/for-movers"
+              path="/demo"
               element={
                 <Suspense fallback={<Spinner />}>
-                  <ForMovers />
+                  <DemoBusinessSite />
                 </Suspense>
               }
             />
+            <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/tracking/:token" element={<Tracking />} />
 
             {/* Auth */}
             <Route path="/login" element={<Login />} />

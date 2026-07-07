@@ -48,7 +48,7 @@ export const Hero = () => {
           <Button
             onClick={callNow}
             variant="outline"
-            className="border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
+            className="bg-transparent border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
           >
             התקשרו עכשיו
           </Button>

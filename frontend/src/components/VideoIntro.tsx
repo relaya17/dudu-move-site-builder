@@ -25,21 +25,27 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
     };
 
     useEffect(() => {
-        // נועל גלילה בזמן הפרומו
-        const prev = document.body.style.overflow;
+        // נועל גלילה בזמן הפרומו — כולל איפוס מיידי לראש העמוד
+        const prevOverflow = document.body.style.overflow;
+        const prevPosition = document.body.style.position;
+        const prevTop = document.body.style.top;
+        const prevWidth = document.body.style.width;
+
+        window.scrollTo(0, 0);
         document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = '0';
+        document.body.style.width = '100%';
 
         const v = videoRef.current;
         if (v) v.play().catch(() => {});
 
-        // טיימר מינימום — רק אחרי 6 שניות הוידאו יכול לסגור אוטומטית
         const minTimer = setTimeout(() => { readyRef.current = true; }, MIN_DISPLAY_MS);
 
         const onEnded = () => {
             if (readyRef.current) {
                 dismiss();
             } else {
-                // אם הוידאו קצר מ-6 שניות — ממתינים לשאר הזמן
                 const remaining = MIN_DISPLAY_MS - (v ? v.currentTime * 1000 : 0);
                 setTimeout(dismiss, Math.max(0, remaining));
             }
@@ -48,7 +54,11 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
         if (v) v.addEventListener('ended', onEnded);
 
         return () => {
-            document.body.style.overflow = prev;
+            document.body.style.overflow = prevOverflow;
+            document.body.style.position = prevPosition;
+            document.body.style.top = prevTop;
+            document.body.style.width = prevWidth;
+            window.scrollTo(0, 0);
             clearTimeout(minTimer);
             if (v) v.removeEventListener('ended', onEnded);
         };

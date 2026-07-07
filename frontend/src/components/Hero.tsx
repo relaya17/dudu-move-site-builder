@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 
 const BG_VIDEO =
-  'https://res.cloudinary.com/dora8sxcb/video/upload/v1783457470/hailuo-2_3_English_Create_a_futuristic_high-tech_promotional_video_for_a_SaaS_platform_that-0_1_hf9pb8.mp4';
+  'https://res.cloudinary.com/dora8sxcb/video/upload/v1783456939/kling-3.0_English_Create_a_futuristic_high-tech_promotional_video_for_a_SaaS_platform_that-0_p4yvcm.mp4';
 
 export const Hero = () => {
   const scrollToEstimate = () => {
@@ -48,7 +48,7 @@ export const Hero = () => {
           <Button
             onClick={callNow}
             variant="outline"
-            className="border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
+            className="bg-transparent border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
           >
             התקשרו עכשיו
           </Button>

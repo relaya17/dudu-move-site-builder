@@ -692,16 +692,35 @@ const ForMovers = () => {
                 {t.hero.ctaPrimary}
               </Button>
             </Link>
-            <Link to="/">
+            {/* "/demo" - אתר הלקוחות לדוגמה (דוד הובלות). לינק ל-"/" היה שגוי מאז
+                שהעמוד הזה עצמו הפך לדף הבית (ר' App.tsx) - היה יוצר קישור למעגל. */}
+            <Link to="/demo">
               <Button
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold w-full sm:w-auto"
+                className="bg-transparent border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold w-full sm:w-auto"
               >
                 {t.hero.ctaSecondary}
               </Button>
             </Link>
           </div>
-          <p className="text-sm sm:text-base text-blue-100/80 max-w-2xl mx-auto leading-relaxed">{t.hero.subtitle}</p>
+          {/* כרטיסיות פיצ'רים מתחת לכפתורים */}
+          <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-2xl mx-auto">
+            {[
+              { icon: '🌐', label: lang === 'he' ? 'אתר עסקי' : 'Business Site' },
+              { icon: '👥', label: lang === 'he' ? 'מאגר לקוחות' : 'CRM' },
+              { icon: '📄', label: lang === 'he' ? 'הצעות מחיר וחשבוניות' : 'Quotes & Invoices' },
+              { icon: '📍', label: lang === 'he' ? 'מעקב GPS' : 'GPS Tracking' },
+              { icon: '🤖', label: lang === 'he' ? 'מזכירה AI' : 'AI Secretary' },
+            ].map(({ icon, label }) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs sm:text-sm px-3 py-1.5 rounded-full"
+              >
+                <span>{icon}</span>
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

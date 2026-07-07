@@ -210,6 +210,11 @@ export const MovingEstimateForm: React.FC = () => {
          alert('אנא הוסף לפחות פריט אחד להובלה.');
       return;
       }
+      const missingOtherDescription = items.some(item => item.type === 'other' && !item.note.trim());
+      if (missingOtherDescription) {
+        alert('אנא תאר/י בשדה ההערות מהו הפריט שנבחר כ"אחר".');
+        return;
+      }
     }
 
     if (currentStep < 4) {
@@ -605,15 +610,25 @@ export const MovingEstimateForm: React.FC = () => {
                         </Box>
                       )}
                       <Box sx={{ mb: 1 }}>
-                        <Typography component="label" htmlFor={`itemNote-${item.id}`} variant="body2" sx={{ mb: 0.5, display: 'block' }}>הערות</Typography>
+                        <Typography component="label" htmlFor={`itemNote-${item.id}`} variant="body2" sx={{ mb: 0.5, display: 'block' }}>
+                          {item.type === 'other' ? 'מהו הפריט? (חובה) *' : 'הערות'}
+                        </Typography>
                         <input
                           type="text"
                           id={`itemNote-${item.id}`}
                           name={`itemNote-${item.id}`}
                           value={item.note}
                           onChange={(e) => handleItemChange(item.id, 'note', e.target.value)}
-                          style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                          placeholder={item.type === 'other' ? 'לדוגמה: פסנתר, כספת ישנה, ציוד ספורט מיוחד...' : ''}
+                          required={item.type === 'other'}
+                          aria-required={item.type === 'other'}
+                          style={{ width: '100%', padding: '8px', borderRadius: '4px', border: item.type === 'other' ? '1px solid #f59e0b' : '1px solid #ccc' }}
                         />
+                        {item.type === 'other' && (
+                          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#b45309' }}>
+                            המחיר שמוצג (₪{getFurnitureOption('other')?.basePrice ?? 50}) הוא הערכה כללית בלבד לפריט לא-סטנדרטי - המחיר הסופי יאושר טלפונית לפי הפרטים שתכתוב/י כאן.
+                          </Typography>
+                        )}
                       </Box>
                       <Box sx={{ mb: 2 }}>
                         <Typography component="label" htmlFor={`itemImg-${item.id}`} variant="body2" sx={{ mb: 0.5, display: 'block' }}>תמונה</Typography>

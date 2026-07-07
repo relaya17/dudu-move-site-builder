@@ -218,6 +218,22 @@ export class PricingService {
             description: 'מזגן',
             category: FURNITURE_CATEGORIES.large_appliances
         },
+        dryer: {
+            basePrice: 200,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'מייבש כביסה',
+            category: FURNITURE_CATEGORIES.large_appliances
+        },
+        oven: {
+            basePrice: 180,
+            fragile: true,
+            needsDisassemble: false,
+            maxQuantity: 1,
+            description: 'תנור אפייה',
+            category: FURNITURE_CATEGORIES.large_appliances
+        },
 
         // ארונות ואחסון
         cabinet: {
@@ -460,14 +476,23 @@ export class PricingService {
             description: 'אקווריום',
             category: FURNITURE_CATEGORIES.special
         },
+        toolbox: {
+            basePrice: 60,
+            fragile: false,
+            needsDisassemble: false,
+            maxQuantity: 10,
+            description: 'ארגז כלי עבודה',
+            category: FURNITURE_CATEGORIES.special
+        },
 
-        // אחר
+        // אחר - פריט שלא ברשימה: יש לתאר אותו בשדה "הערות" (למשל פסנתר ישן,
+        // כספת לא סטנדרטית וכו') כדי שהמחיר הסופי יאושר טלפונית בהתאם.
         other: {
             basePrice: 50,
             fragile: false,
             needsDisassemble: false,
             maxQuantity: 10,
-            description: 'אחר',
+            description: 'אחר (תאר/י בהערות)',
             category: FURNITURE_CATEGORIES.other
         }
     };

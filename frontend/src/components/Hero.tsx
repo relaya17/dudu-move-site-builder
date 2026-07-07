@@ -1,9 +1,13 @@
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const BG_VIDEO =
   'https://res.cloudinary.com/dora8sxcb/video/upload/v1783456939/kling-3.0_English_Create_a_futuristic_high-tech_promotional_video_for_a_SaaS_platform_that-0_p4yvcm.mp4';
 
 export const Hero = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoEnded, setVideoEnded] = useState(false);
+
   const scrollToEstimate = () => {
     document.getElementById('estimate-form')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -14,17 +18,27 @@ export const Hero = () => {
 
   return (
     <section id="hero" dir="rtl" className="relative text-white overflow-hidden min-h-[520px] flex flex-col">
-      {/* רקע וידאו */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        aria-hidden="true"
-      >
-        <source src={BG_VIDEO} type="video/mp4" />
-      </video>
+      {/* רקע: וידאו עד שמסתיים, אחר כך תמונה */}
+      {!videoEnded ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          onEnded={() => setVideoEnded(true)}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          aria-hidden="true"
+        >
+          <source src={BG_VIDEO} type="video/mp4" />
+        </video>
+      ) : (
+        <img
+          src="/images/moving-bg.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-top"
+        />
+      )}
 
       {/* שכבת אפלה */}
       <div className="absolute inset-0 bg-black/55" />
@@ -48,7 +62,7 @@ export const Hero = () => {
           <Button
             onClick={callNow}
             variant="outline"
-            className="bg-transparent border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
+            className="border-white text-white hover:bg-white hover:text-blue-700 px-8 py-4 text-lg font-semibold"
           >
             התקשרו עכשיו
           </Button>

@@ -12,7 +12,6 @@ interface VideoIntroProps {
 export function VideoIntro({ onDone }: VideoIntroProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [fading, setFading] = useState(false);
-    const [muted, setMuted] = useState(true);
 
     const dismiss = () => {
         if (fading) return;
@@ -31,38 +30,24 @@ export function VideoIntro({ onDone }: VideoIntroProps) {
         return () => v.removeEventListener('ended', dismiss);
     }, []);
 
-    const toggleMute = () => {
-        const next = !muted;
-        setMuted(next);
-        if (videoRef.current) videoRef.current.muted = next;
-    };
-
     return (
         <div
             className={`fixed inset-0 z-[9999] bg-black transition-opacity duration-500 ${fading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         >
-            {/* וידאו — מכסה את כל המסך בכל גודל */}
+            {/* וידאו — מכסה את כל המסך בכל גודל, תמיד מושתק */}
             <video
                 ref={videoRef}
                 src={PROMO_URL}
-                muted={muted}
+                muted
                 playsInline
                 className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* שכבת עמעום קלה בתחתית לנראות כפתורים */}
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 to-transparent" />
+            {/* שכבת עמעום קלה בתחתית לנראות כפתור */}
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
 
-            {/* כפתורים — safe-area aware */}
-            <div className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-0 right-0 flex items-center justify-between px-4 sm:px-8">
-                <button
-                    onClick={toggleMute}
-                    className="bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full backdrop-blur-sm transition select-none"
-                    aria-label={muted ? 'הפעל שמע' : 'השתק'}
-                >
-                    {muted ? '🔇 הפעל שמע' : '🔊 השתק'}
-                </button>
-
+            {/* כפתור דלג בלבד — safe-area aware */}
+            <div className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 sm:right-8">
                 <button
                     onClick={dismiss}
                     className="bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-full backdrop-blur-sm transition font-semibold select-none"

@@ -87,7 +87,7 @@ export class AuthController {
                 role: 'owner'
             });
 
-            const token = signToken({ tenantId: business._id.toString(), role: 'owner' });
+            const token = signToken({ tenantId: business.id, role: 'owner' });
 
             res.status(201).json({
                 success: true,
@@ -128,7 +128,7 @@ export class AuthController {
                     res.status(401).json({ success: false, message: 'אימייל או סיסמה שגויים' });
                     return;
                 }
-                const token = signToken({ tenantId: business._id.toString(), role: 'owner' });
+                const token = signToken({ tenantId: business.id, role: 'owner' });
                 res.json({
                     success: true,
                     token,
@@ -165,7 +165,7 @@ export class AuthController {
 
             const token = signToken({
                 tenantId: user.businessId.toString(),
-                userId: user._id.toString(),
+                userId: user.id,
                 role: user.role
             });
 

@@ -7,11 +7,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import { AccessibilityButton } from "@/components/ui/accessibility-button";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { muiTheme } from "@/lib/muiTheme";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ThankYou } from "./pages/ThankYou";
 import { Tracking } from "./pages/Tracking";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 // טעינה עצלה (code-splitting) לדפי הניהול: רוב המבקרים באתר הם לקוחות רגילים
 // שלעולם לא מגיעים ל-/admin, ואין סיבה שהם יורידו את הקוד של הדשבורד (כולל
@@ -19,8 +23,10 @@ import { Tracking } from "./pages/Tracking";
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const MovingEstimatesAdminPage = lazy(() => import("./pages/admin/MovingEstimatesAdminPage"));
 
-// דף שיווקי למובילים פוטנציאליים (לא ללקוחות של דוד הובלות) - טעינה עצלה מאותה סיבה.
+// דף שיווקי למובילים פוטנציאליים — טעינה עצלה מאותה סיבה.
 const ForMovers = lazy(() => import("./pages/ForMovers"));
+// דשבורד הניהול החדש (JWT / multi-tenant)
+const TenantDashboard = lazy(() => import("./pages/dashboard/TenantDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -39,6 +45,8 @@ const LandingShortcut = () => {
   );
 };
 
+const Spinner = () => <div className="min-h-screen flex items-center justify-center" dir="rtl"><span className="text-gray-400">טוען...</span></div>;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider theme={muiTheme}>
@@ -46,41 +54,65 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <LandingShortcut />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/thank-you" element={<ThankYou />} />
-          <Route path="/tracking/:token" element={<Tracking />} />
-          <Route
-            path="/for-movers"
-            element={
-              <Suspense fallback={<div className="p-8 text-center">...</div>}>
-                <ForMovers />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminGuard>
-                <Suspense fallback={<div className="p-8 text-center" dir="rtl">טוען...</div>}>
-                  <Dashboard />
+        <AuthProvider>
+          <LandingShortcut />
+          <Routes>
+            {/* דפי לקוחות ציבוריים */}
+            <Route path="/" element={<Index />} />
+            <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/tracking/:token" element={<Tracking />} />
+
+            {/* דף שיווקי */}
+            <Route
+              path="/for-movers"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <ForMovers />
                 </Suspense>
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/admin/moving-estimates"
-            element={
-              <AdminGuard>
-                <Suspense fallback={<div className="p-8 text-center" dir="rtl">טוען...</div>}>
-                  <MovingEstimatesAdminPage />
-                </Suspense>
-              </AdminGuard>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+              }
+            />
+
+            {/* Auth */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* דשבורד טנאנט — JWT מוגן */}
+            <Route
+              path="/dashboard/*"
+              element={
+                <AuthGuard>
+                  <Suspense fallback={<Spinner />}>
+                    <TenantDashboard />
+                  </Suspense>
+                </AuthGuard>
+              }
+            />
+
+            {/* ניהול ישן — מפתח x-admin-key */}
+            <Route
+              path="/admin"
+              element={
+                <AdminGuard>
+                  <Suspense fallback={<Spinner />}>
+                    <Dashboard />
+                  </Suspense>
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/moving-estimates"
+              element={
+                <AdminGuard>
+                  <Suspense fallback={<Spinner />}>
+                    <MovingEstimatesAdminPage />
+                  </Suspense>
+                </AdminGuard>
+              }
+            />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
       <AccessibilityButton />
     </TooltipProvider>

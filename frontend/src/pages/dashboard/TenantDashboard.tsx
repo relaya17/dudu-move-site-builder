@@ -13,6 +13,7 @@ import {
     Phone, Mail, MapPin, Calendar, RefreshCw, Star, MessageSquare, Trash2
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { AiAssistantPanel } from '@/components/dashboard/AiAssistantPanel';
 
 // ─── טיפוסים ──────────────────────────────────────────────────────────────────
 
@@ -924,6 +925,9 @@ export default function TenantDashboard() {
                     </Routes>
                 </div>
             </main>
+
+            {/* AI Assistant - floating panel */}
+            <AiAssistantPanel />
         </div>
     );
 }

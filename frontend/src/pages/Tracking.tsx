@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, MapPin, ArrowLeft, Mail, RefreshCw } from 'lucide-react';
 import { TRACKING_STAGE_LABELS, TrackingViewDTO } from 'shared';
+import { CustomerAiChat } from '@/components/CustomerAiChat';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -172,6 +173,9 @@ export const Tracking = () => {
           </Button>
         </div>
       </main>
+
+      {/* Customer AI Chat */}
+      {token && <CustomerAiChat trackingToken={token} />}
     </div>
   );
 };

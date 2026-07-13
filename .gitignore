@@ -50,6 +50,7 @@ coverage
 # Cache
 .cache
 .temp
+_tmp_*
 .eslintcache
 .stylelintcache
 

@@ -16,7 +16,10 @@ import publicRoutes from './routes/publicRoutes';
 import authRoutes from './routes/authRoutes';
 import tenantRoutes from './routes/tenantRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import tenantAiRoutes from './routes/tenantAiRoutes';
+import publicAiRoutes from './routes/publicAiRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { AutomationService } from './services/AutomationService';
 import { generalRateLimit, clearRateLimitStore } from './middleware/rateLimiter';
 import { connectMongoDB } from './database/mongoConnection';
 import { startReminderCron } from './services/ReminderCronService';
@@ -118,7 +121,12 @@ app.use('/api/tracking', trackingRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tenant', tenantRoutes);
+app.use('/api/tenant/ai', tenantAiRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/public/ai', publicAiRoutes);
+
+// Initialize automation handlers
+AutomationService.init();
 
 // הגשת קבצי ה-frontend הבנויים (שרת Render אחד מגיש גם את ה-API וגם את האתר).
 // maxAge ארוך זול/מהיר לגמרי: Vite מוסיף hash לשם כל קובץ JS/CSS, כך שקובץ עם

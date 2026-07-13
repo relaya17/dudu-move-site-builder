@@ -6,7 +6,9 @@
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"],
+    "resolveJsonModule": true
   },
   "include": ["src"]
 }

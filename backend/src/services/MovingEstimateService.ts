@@ -7,6 +7,8 @@ import { PricingService } from './PricingService';
 import { MongoService } from './MongoService';
 import { EmailService } from './EmailService';
 import { tenantFilter } from '../lib/tenantFilter';
+import { eventBus } from './EventBus';
+import { AuditService } from './AuditService';
 
 export class MovingEstimateService {
     /**
@@ -109,6 +111,22 @@ export class MovingEstimateService {
 
             const savedEstimate = await estimate.save();
 
+            // Emit event for automations
+            eventBus.emit('estimate.created', {
+                estimateId: String(savedEstimate._id),
+                tenantId,
+                customerEmail: customerData.email || '',
+                totalPrice: priceEstimate,
+                moveDate: moveData.preferred_move_date
+            });
+
+            // Log to audit
+            AuditService.logSystem('create', 'estimate', tenantId, String(savedEstimate._id), {
+                customerEmail: customerData.email,
+                totalPrice: priceEstimate,
+                moveDate: moveData.preferred_move_date
+            });
+
             // עדכון/יצירת נתוני לקוח (לא קריטי - לא נכשיל את הבקשה אם זה נכשל)
             await MongoService.updateCustomerStats(
                 customerData.email || '',
@@ -175,6 +193,13 @@ export class MovingEstimateService {
      */
     static async updateMoveRequestStatus(id: string, status: EstimateStatus, tenantId?: string) {
         try {
+            // First get the current status
+            const current = await MoveEstimate.findOne({ _id: id, ...tenantFilter(tenantId) });
+            if (!current) {
+                throw new Error('בקשת הערכת המחיר לא נמצאה');
+            }
+            const oldStatus = current.status;
+
             const estimate = await MoveEstimate.findOneAndUpdate(
                 { _id: id, ...tenantFilter(tenantId) },
                 { status },
@@ -183,6 +208,22 @@ export class MovingEstimateService {
             if (!estimate) {
                 throw new Error('בקשת הערכת המחיר לא נמצאה');
             }
+
+            // Emit status change event
+            if (oldStatus !== status) {
+                eventBus.emit('estimate.status_changed', {
+                    estimateId: id,
+                    tenantId,
+                    oldStatus,
+                    newStatus: status
+                });
+
+                AuditService.logSystem('status_change', 'estimate', tenantId, id, {
+                    oldStatus,
+                    newStatus: status
+                });
+            }
+
             return { success: true };
         } catch (error) {
             console.error('שגיאה בעדכון סטטוס בקשת הערכת מחיר:', error);

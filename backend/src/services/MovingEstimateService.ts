@@ -32,6 +32,8 @@ export class MovingEstimateService {
             destination_has_elevator: boolean;
             origin_has_crane: boolean;
             destination_has_crane: boolean;
+            /** מספר חדרים — לתמחור מדויק יותר מסוג השירות בעברית. */
+            origin_rooms?: number;
         },
         furnitureItems: Array<{
             name: string;
@@ -66,7 +68,8 @@ export class MovingEstimateService {
             }));
 
             const priceEstimate = PricingService.calculateTotalPrice(
-                moveData.apartment_type,
+                // prefer numeric room count / apartment size keys over Hebrew move-type labels
+                String(moveData.origin_rooms || moveData.apartment_type || ''),
                 mappedFurnitureItems,
                 floorDifference,
                 moveData.origin_has_elevator && moveData.destination_has_elevator,

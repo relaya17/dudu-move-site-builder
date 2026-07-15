@@ -227,7 +227,7 @@ function Overview() {
 
                     {/* סטטוסים */}
                     {analytics.estimatesByStatus.length > 0 && (
-                        <div className="bg-white rounded-xl border shadow-sm p-5">
+                        <div className="bg-white rounded-xl border shadow-sm p-5 mb-8">
                             <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                                 <TrendingUp className="h-4 w-4 text-gray-500" />
                                 הזמנות לפי סטטוס
@@ -242,6 +242,8 @@ function Overview() {
                             </div>
                         </div>
                     )}
+
+                    <PricingInsightsCard />
                 </>
             ) : (
                 <div className="bg-white rounded-xl border shadow-sm p-6">
@@ -262,6 +264,71 @@ function StatCard({ icon, label, value, bg }: { icon: React.ReactNode; label: st
         <div className={`rounded-xl border p-5 ${bg}`}>
             <div className="flex items-center gap-2 mb-2">{icon}<span className="text-sm text-gray-600">{label}</span></div>
             <p className="text-3xl font-bold text-gray-800">{value}</p>
+        </div>
+    );
+}
+
+function PricingInsightsCard() {
+    const { call } = useTenantApi();
+    const { data, isLoading, isError, refetch, isFetching } = useQuery({
+        queryKey: ['tenant-pricing-recommendations'],
+        queryFn: async () => {
+            const r = await call<{
+                success: boolean;
+                data: {
+                    recommendations: string;
+                    data: { averagePrice: number; priceRange: { min: number; max: number } };
+                };
+            }>('/ai/pricing-recommendations');
+            if (!r.ok || !r.data.success) throw new Error('failed');
+            return r.data.data;
+        },
+        staleTime: 60 * 60 * 1000,
+        retry: 1,
+    });
+
+    const formatCurrency = (n: number) =>
+        new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 }).format(n || 0);
+
+    return (
+        <div className="bg-white rounded-xl border shadow-sm p-5">
+            <div className="flex items-center justify-between gap-3 mb-3">
+                <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    המלצות תמחור · ישראל
+                </h2>
+                <button
+                    type="button"
+                    onClick={() => refetch()}
+                    className="text-gray-400 hover:text-gray-600"
+                    title="רענן"
+                    disabled={isFetching}
+                >
+                    <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                </button>
+            </div>
+
+            {isLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-blue-500" /></div>
+            ) : isError || !data ? (
+                <p className="text-sm text-gray-500">לא ניתן לטעון המלצות כרגע. נסה שוב מאוחר יותר.</p>
+            ) : (
+                <>
+                    {data.data && (
+                        <div className="flex flex-wrap gap-3 mb-4 text-sm">
+                            <span className="rounded-lg bg-gray-50 border px-3 py-1.5 text-gray-700">
+                                ממוצע {formatCurrency(data.data.averagePrice)}
+                            </span>
+                            <span className="rounded-lg bg-gray-50 border px-3 py-1.5 text-gray-700">
+                                טווח {formatCurrency(data.data.priceRange?.min)} – {formatCurrency(data.data.priceRange?.max)}
+                            </span>
+                        </div>
+                    )}
+                    <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                        {data.recommendations}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

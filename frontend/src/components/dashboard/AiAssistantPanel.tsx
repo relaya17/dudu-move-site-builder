@@ -20,6 +20,7 @@ interface Message {
 const QUICK_ACTIONS = [
     { label: 'הזמנות היום', prompt: 'הראה לי את ההזמנות מהיום', icon: ListChecks },
     { label: 'לידים דחופים', prompt: 'יש לידים דחופים שצריך לטפל בהם?', icon: Sparkles },
+    { label: 'אומדן מחיר', prompt: 'חשב אומדן מחיר להזמנה האחרונה עם פירוק גורמים', icon: Zap },
     { label: 'סיכום עסקי', prompt: 'תן לי סיכום עסקי של השבוע האחרון', icon: TrendingUp },
     { label: 'לקוחות חדשים', prompt: 'מי הלקוחות החדשים השבוע?', icon: Users },
 ];

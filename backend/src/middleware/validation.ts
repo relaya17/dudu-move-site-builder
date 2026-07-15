@@ -31,7 +31,8 @@ export const moveDetailsSchema = z.object({
     origin_has_elevator: z.boolean().default(false),
     destination_has_elevator: z.boolean().default(false),
     origin_has_crane: z.boolean().default(false),
-    destination_has_crane: z.boolean().default(false)
+    destination_has_crane: z.boolean().default(false),
+    origin_rooms: z.number().min(0).max(20).optional(),
 });
 
 // סכמת ולידציה לפריט ריהוט

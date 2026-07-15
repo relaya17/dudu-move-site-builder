@@ -7,6 +7,7 @@ import { requireBusinessAuth } from '../middleware/businessAuth';
 import { AgentService } from '../services/ai/AgentService';
 import { AuditService } from '../services/AuditService';
 import { BusinessSettings } from '../database/models/BusinessSettings';
+import { AiAnalysisService } from '../services/AiAnalysisService';
 import { tenantFilter } from '../lib/tenantFilter';
 import { DEFAULT_TURBO_SETTINGS } from 'shared';
 
@@ -153,6 +154,21 @@ router.get('/audit-log', async (req: Request, res: Response): Promise<void> => {
         res.json({ success: true, data: logs });
     } catch (err: any) {
         res.status(500).json({ success: false, message: 'שגיאה בטעינת יומן' });
+    }
+});
+
+/**
+ * GET /api/tenant/ai/pricing-recommendations
+ * המלצות תמחור לדייר (מטמון יומי, מסונן לפי tenant)
+ */
+router.get('/pricing-recommendations', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const tenantId = (req as any).tenantId;
+        const recommendations = await AiAnalysisService.generatePricingRecommendations(tenantId);
+        res.json({ success: true, data: recommendations });
+    } catch (err: any) {
+        console.error('[tenantAiRoutes] Pricing recommendations error:', err.message);
+        res.status(500).json({ success: false, message: 'שגיאה בטעינת המלצות תמחור' });
     }
 });
 

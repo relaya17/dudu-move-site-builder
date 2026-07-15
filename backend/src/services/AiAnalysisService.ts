@@ -32,7 +32,7 @@ const AI_MODEL = 'gpt-4.1-nano';
 // מפעילה קריאה בתשלום מחדש; זה מקטין עלות בפועל בסדר גודל (מ"כל טעינת עמוד" ל"פעם ביום").
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const insightsCache: { data: unknown; expiresAt: number } = { data: null, expiresAt: 0 };
-const pricingCache: { data: unknown; expiresAt: number } = { data: null, expiresAt: 0 };
+const pricingCacheByTenant = new Map<string, { data: unknown; expiresAt: number }>();
 
 export class AiAnalysisService {
     static async generateBusinessInsights() {
@@ -196,41 +196,44 @@ export class AiAnalysisService {
         }
     }
 
-    static async generatePricingRecommendations() {
-        if (pricingCache.data && pricingCache.expiresAt > Date.now()) {
-            return pricingCache.data;
+    static async generatePricingRecommendations(tenantId?: string) {
+        const cacheKey = tenantId || '__legacy__';
+        const cached = pricingCacheByTenant.get(cacheKey);
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.data;
         }
 
         try {
-            // בדיקה אם יש API key
             if (!process.env.OPENAI_API_KEY) {
                 return {
-                    recommendations: `המלצות תמחור לדוגמה:
-                    
-                    1. מחירים דינמיים - התאם מחירים לפי עומס וזמן
-                    2. חבילות שירות - הצע חבילות כוללות עם הנחה
-                    3. מחירים תחרותיים - בדוק מחירי המתחרים ועדכן בהתאם`,
-                    data: { averagePrice: 500, priceRange: { min: 300, max: 800 }, expensiveDays: [] }
+                    recommendations: `המלצות תמחור לשוק ההובלות בישראל:
+
+1. תמחור לפי חדרים + גישה (קומות/מעלית/מנוף) — השקיפות מעלה אמון.
+2. הצג תמיד טווח בשקלים ואישור טלפוני סופי — מקובל בענף.
+3. עומס בסופי שבוע וסוף חודש: שקול תוספת עומס מתונה.`,
+                    data: { averagePrice: 2500, priceRange: { min: 1200, max: 6500 }, expensiveDays: [] }
                 };
             }
 
-            const moves = await this.getRecentMoves();
+            const moves = await this.getRecentMoves(tenantId);
             const priceData = this.analyzePricing(moves);
 
             const completion = await openai.chat.completions.create({
                 messages: [
                     {
                         role: "system",
-                        content: "אתה מומחה לתמחור בענף ההובלות. נתח את הנתונים ותן המלצות מחיר."
+                        content:
+                            "אתה יועץ תמחור לעסקי הובלות בישראל. ענה בעברית קצרה ומעשית. התחשב בשקלים, מע״מ לפי סוג עוסק, אישור טלפוני, ותחרות מקומית. אל תמציא נתונים מספריים שלא סופקו."
                     },
                     {
                         role: "user",
-                        content: `ניתוח מחירים:
-                            - מחיר ממוצע להובלה: ${priceData.averagePrice}₪
-                            - טווח מחירים: ${priceData.priceRange.min}₪ - ${priceData.priceRange.max}₪
-                            - ימים יקרים: ${JSON.stringify(priceData.expensiveDays)}
-                            
-                            אנא תן המלצות לאופטימיזציית מחירים.`
+                        content: `נתוני תמחור מהעסק (₪):
+- מחיר ממוצע: ${Math.round(priceData.averagePrice)}₪
+- טווח: ${Math.round(priceData.priceRange.min)}₪ - ${Math.round(priceData.priceRange.max)}₪
+- ימים יקרים: ${JSON.stringify(priceData.expensiveDays)}
+- מספר הזמנות בניתוח: ${moves.length}
+
+תן 3–5 המלצות אופרטיביות לאופטימיזציית מחירים בשוק הישראלי.`
                     }
                 ],
                 model: AI_MODEL,
@@ -240,25 +243,27 @@ export class AiAnalysisService {
                 recommendations: completion.choices[0].message.content,
                 data: priceData
             };
-            pricingCache.data = result;
-            pricingCache.expiresAt = Date.now() + CACHE_TTL_MS;
+            pricingCacheByTenant.set(cacheKey, {
+                data: result,
+                expiresAt: Date.now() + CACHE_TTL_MS,
+            });
             return result;
         } catch (error) {
             console.error('שגיאה בניתוח מחירים:', error);
-            // Fallback response
             return {
-                recommendations: `המלצות תמחור לדוגמה:
-                
-                1. מחירים דינמיים - התאם מחירים לפי עומס וזמן
-                2. חבילות שירות - הצע חבילות כוללות עם הנחה
-                3. מחירים תחרותיים - בדוק מחירי המתחרים ועדכן בהתאם`,
-                data: { averagePrice: 500, priceRange: { min: 300, max: 800 }, expensiveDays: [] }
+                recommendations: `המלצות תמחור לשוק ההובלות בישראל:
+
+1. תמחור לפי חדרים + גישה (קומות/מעלית/מנוף).
+2. הצג טווח בשקלים + אישור טלפוני.
+3. בדוק עומס בימי חמישי–שישי וסוף חודש.`,
+                data: { averagePrice: 2500, priceRange: { min: 1200, max: 6500 }, expensiveDays: [] }
             };
         }
     }
 
-    private static async getRecentMoves(): Promise<MoveDoc[]> {
-        const estimates = await MoveEstimate.find().sort({ createdAt: -1 }).limit(500);
+    private static async getRecentMoves(tenantId?: string): Promise<MoveDoc[]> {
+        const filter = tenantId ? { tenantId } : {};
+        const estimates = await MoveEstimate.find(filter).sort({ createdAt: -1 }).limit(500);
         return estimates.map(e => ({
             id: String(e._id),
             totalPrice: e.totalPrice,
@@ -267,7 +272,6 @@ export class AiAnalysisService {
             inventory: e.inventory
         }));
     }
-
     private static analyzePricing(moves: MoveDoc[]) {
         const prices = moves.map(m => extractPrice(m)).filter(p => p > 0);
         const total = prices.reduce((a, b) => a + b, 0);

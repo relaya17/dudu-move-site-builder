@@ -9,6 +9,8 @@ import { InvoiceService } from '../InvoiceService';
 import { EmailService } from '../EmailService';
 import { TrackingService } from '../TrackingService';
 import { AuditService } from '../AuditService';
+import { PricingService } from '../PricingService';
+import { AiAnalysisService } from '../AiAnalysisService';
 import { eventBus } from '../EventBus';
 import { PaymentMethod } from 'shared';
 
@@ -267,6 +269,65 @@ export const AGENT_TOOLS = [
                 required: ['estimateId']
             }
         }
+    },
+    {
+        type: 'function' as const,
+        function: {
+            name: 'estimate_price',
+            description:
+                'אומדן מחיר הובלה בשקלים לפי מנוע התמחור הישראלי. אפשר לפי מזהה הזמנה קיימת או לפי פרמטרים (חדרים, פריטים, קומות, מעלית, מנוף). אל תמציא מחיר — תמיד השתמש בכלי זה.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    estimateId: {
+                        type: 'string',
+                        description: 'מזהה הזמנה קיימת (אם יש)'
+                    },
+                    rooms: {
+                        type: 'number',
+                        description: 'מספר חדרים בדירה'
+                    },
+                    apartmentType: {
+                        type: 'string',
+                        description: 'גודל דירה: 1.5 / 2 / 2.5 / 3 / 3.5 / 4 / 4.5 / 5+'
+                    },
+                    floorDifference: {
+                        type: 'number',
+                        description: 'הפרש קומות בערך מוחלט'
+                    },
+                    hasElevator: {
+                        type: 'boolean',
+                        description: 'האם יש מעלית במוצא וביעד'
+                    },
+                    originHasCrane: { type: 'boolean' },
+                    destinationHasCrane: { type: 'boolean' },
+                    furnitureItems: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                type: { type: 'string' },
+                                quantity: { type: 'number' },
+                                needsDoorRemoval: { type: 'boolean' }
+                            },
+                            required: ['type', 'quantity']
+                        },
+                        description: 'רשימת פריטים (type מקטלוג, quantity)'
+                    }
+                }
+            }
+        }
+    },
+    {
+        type: 'function' as const,
+        function: {
+            name: 'get_pricing_recommendations',
+            description: 'המלצות תמחור מבוססות נתוני העסק (ממוצע, טווח, ימים יקרים) לשוק ההובלות בישראל',
+            parameters: {
+                type: 'object',
+                properties: {}
+            }
+        }
     }
 ];
 
@@ -312,6 +373,10 @@ export class AgentToolExecutor {
                 return this.classifyLead(args.estimateId as string);
             case 'draft_follow_up':
                 return this.draftFollowUp(args.estimateId as string, args.channel as string);
+            case 'estimate_price':
+                return this.estimatePrice(args);
+            case 'get_pricing_recommendations':
+                return this.getPricingRecommendations();
             default:
                 throw new Error(`Unknown tool: ${toolName}`);
         }
@@ -593,5 +658,66 @@ export class AgentToolExecutor {
             message,
             note: 'זוהי טיוטה. יש לעבור ולאשר לפני שליחה.'
         };
+    }
+
+    private async estimatePrice(args: Record<string, unknown>) {
+        const estimateId = args.estimateId as string | undefined;
+
+        if (estimateId) {
+            const estimate = await MongoService.getMoveEstimateById(estimateId, this.tenantId);
+            if (!estimate) return { error: 'הזמנה לא נמצאה' };
+
+            const floorDifference = Math.abs(
+                (estimate.destinationFloor || 0) - (estimate.originFloor || 0)
+            );
+            const furnitureItems = (estimate.inventory || []).map((item: any) => ({
+                type: item.type || item.name || 'other',
+                quantity: item.quantity || 1,
+                needsDoorRemoval: !!item.needsDoorRemoval,
+            }));
+
+            const detailed = PricingService.calculateDetailedEstimate({
+                apartmentType: estimate.apartmentType,
+                furnitureItems,
+                floorDifference,
+                hasElevator: !!(estimate.originHasElevator && estimate.destinationHasElevator),
+                originHasCrane: !!estimate.originHasCrane,
+                destinationHasCrane: !!estimate.destinationHasCrane,
+                hasAddresses: !!(estimate.currentAddress && estimate.destinationAddress),
+                moveDateKnown: !!estimate.preferredMoveDate,
+            });
+
+            return {
+                estimateId,
+                customerName: estimate.name,
+                storedPrice: estimate.totalPrice,
+                ...detailed,
+                disclaimer: 'אומדן ממנוע התמחור. המחיר הסופי מאושר בטלפון.',
+            };
+        }
+
+        const furnitureItems = Array.isArray(args.furnitureItems)
+            ? (args.furnitureItems as Array<{ type: string; quantity: number; needsDoorRemoval?: boolean }>)
+            : [];
+
+        const detailed = PricingService.calculateDetailedEstimate({
+            apartmentType: args.apartmentType as string | undefined,
+            rooms: typeof args.rooms === 'number' ? args.rooms : undefined,
+            furnitureItems,
+            floorDifference: typeof args.floorDifference === 'number' ? args.floorDifference : 0,
+            hasElevator: !!args.hasElevator,
+            originHasCrane: !!args.originHasCrane,
+            destinationHasCrane: !!args.destinationHasCrane,
+        });
+
+        return {
+            ...detailed,
+            disclaimer: 'אומדן ממנוע התמחור. המחיר הסופי מאושר בטלפון.',
+        };
+    }
+
+    private async getPricingRecommendations() {
+        const result = await AiAnalysisService.generatePricingRecommendations(this.tenantId);
+        return result;
     }
 }

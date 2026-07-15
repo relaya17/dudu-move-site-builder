@@ -30,6 +30,28 @@ interface FurniturePricing {
     };
 }
 
+/** גורם תמחור שקוף ללקוח/סוכן — סכומים ב־₪. */
+export interface PriceFactor {
+    id: string;
+    label: string;
+    amount: number;
+    kind: 'base' | 'add' | 'discount';
+}
+
+/** תוצאת אומדן מפורט לשוק ההובלות בישראל. */
+export interface DetailedPriceEstimate {
+    currency: 'ILS';
+    estimatedTotal: number;
+    minEstimate: number;
+    maxEstimate: number;
+    factors: PriceFactor[];
+    confidence: number;
+    confidenceLabel: string;
+    notes: string[];
+    algorithmVersion: string;
+    vatNote: string;
+}
+
 // קטגוריות תצוגה (תת-קטגוריות) לרשימת הפריטים בטופס - לשימוש ב-optgroup בצד ה-frontend.
 export const FURNITURE_CATEGORIES = {
     seating: 'ישיבה',
@@ -733,21 +755,165 @@ export class PricingService {
         originHasCrane: boolean = false,
         destinationHasCrane: boolean = false
     ): number {
+        return this.calculateDetailedEstimate({
+            apartmentType,
+            furnitureItems,
+            floorDifference,
+            hasElevator,
+            originHasCrane,
+            destinationHasCrane,
+        }).estimatedTotal;
+    }
+
+    /**
+     * ממיר מספר חדרים / תיאור דירה למפתח תמחור ישראלי (1.5 … 5+).
+     */
+    static resolveApartmentTypeKey(input?: string | number | null): string {
+        if (input === undefined || input === null || input === '') return '';
+        if (typeof input === 'number' && Number.isFinite(input)) {
+            if (input <= 1.5) return '1.5';
+            if (input <= 2) return '2';
+            if (input <= 2.5) return '2.5';
+            if (input <= 3) return '3';
+            if (input <= 3.5) return '3.5';
+            if (input <= 4) return '4';
+            if (input <= 4.5) return '4.5';
+            return '5+';
+        }
+        const raw = String(input).trim();
+        if (['1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5+'].includes(raw)) return raw;
+        const roomsMatch = raw.match(/(\d+(?:\.\d+)?)/);
+        if (roomsMatch) return this.resolveApartmentTypeKey(Number(roomsMatch[1]));
+        return '';
+    }
+
+    /**
+     * הערכת מחיר מפורטת לישראל: פירוק גורמים, טווח, ורמת ביטחון כנה
+     * (לפי שלמות הנתונים — לא "AI מדומה").
+     */
+    static calculateDetailedEstimate(input: {
+        apartmentType?: string | number | null;
+        rooms?: number | null;
+        furnitureItems: FurnitureItem[];
+        floorDifference: number;
+        hasElevator: boolean;
+        originHasCrane?: boolean;
+        destinationHasCrane?: boolean;
+        hasAddresses?: boolean;
+        moveDateKnown?: boolean;
+    }): DetailedPriceEstimate {
+        const apartmentKey = this.resolveApartmentTypeKey(input.apartmentType)
+            || this.resolveApartmentTypeKey(input.rooms);
+        const furnitureItems = input.furnitureItems || [];
+        const floorDifference = Math.max(0, input.floorDifference || 0);
+        const hasElevator = !!input.hasElevator;
+        const originHasCrane = !!input.originHasCrane;
+        const destinationHasCrane = !!input.destinationHasCrane;
+
         const basePrice = this.PRICING_CONFIG.basePrice;
-        const apartmentPrice = this.calculateApartmentTypePrice(apartmentType);
+        const apartmentPrice = apartmentKey ? this.calculateApartmentTypePrice(apartmentKey) : 0;
         const furniturePrice = this.calculateFurniturePrice(furnitureItems);
-        const floorPrice = this.calculateFloorPrice(floorDifference, hasElevator);
+        const floorPriceRaw = floorDifference * this.PRICING_CONFIG.floorPrice;
+        const floorPrice = hasElevator ? floorPriceRaw * this.PRICING_CONFIG.elevatorDiscount : floorPriceRaw;
+        const elevatorSavings = hasElevator ? Math.round(floorPriceRaw - floorPrice) : 0;
 
-        // מחיר מנוף
         let cranePrice = 0;
-        if (originHasCrane) {
-            cranePrice += this.PRICING_CONFIG.cranePrice;
+        if (originHasCrane) cranePrice += this.PRICING_CONFIG.cranePrice;
+        if (destinationHasCrane) cranePrice += this.PRICING_CONFIG.cranePrice;
+
+        const estimatedTotal = Math.round(
+            basePrice + apartmentPrice + furniturePrice + floorPrice + cranePrice
+        );
+
+        const factors: PriceFactor[] = [
+            { id: 'base', label: 'בסיס הובלה', amount: basePrice, kind: 'base' },
+        ];
+        if (apartmentPrice > 0) {
+            factors.push({
+                id: 'apartment',
+                label: `גודל דירה (${apartmentKey} חדרים)`,
+                amount: apartmentPrice,
+                kind: 'add',
+            });
         }
-        if (destinationHasCrane) {
-            cranePrice += this.PRICING_CONFIG.cranePrice;
+        if (furniturePrice > 0) {
+            factors.push({
+                id: 'furniture',
+                label: `פריטים וריהוט (${furnitureItems.reduce((s, i) => s + (i.quantity || 0), 0)} יח׳)`,
+                amount: Math.round(furniturePrice),
+                kind: 'add',
+            });
+        }
+        if (floorPriceRaw > 0) {
+            factors.push({
+                id: 'floors',
+                label: `קומות (הפרש ${floorDifference})`,
+                amount: Math.round(floorPriceRaw),
+                kind: 'add',
+            });
+        }
+        if (elevatorSavings > 0) {
+            factors.push({
+                id: 'elevator_discount',
+                label: 'הנחת מעלית על עלות קומות',
+                amount: -elevatorSavings,
+                kind: 'discount',
+            });
+        }
+        if (cranePrice > 0) {
+            const sides = [originHasCrane && 'מוצא', destinationHasCrane && 'יעד'].filter(Boolean).join(' + ');
+            factors.push({
+                id: 'crane',
+                label: `מנוף (${sides})`,
+                amount: cranePrice,
+                kind: 'add',
+            });
         }
 
-        return basePrice + apartmentPrice + furniturePrice + floorPrice + cranePrice;
+        // ביטחון כנה לפי שלמות הנתונים — שוק ישראלי דורש אישור טלפוני
+        let confidence = 50;
+        if (furnitureItems.length > 0) confidence += 18;
+        if (apartmentKey) confidence += 12;
+        if (typeof input.floorDifference === 'number') confidence += 8;
+        if (hasElevator || input.hasElevator === false) confidence += 6;
+        if (originHasCrane || destinationHasCrane) confidence += 4;
+        if (input.hasAddresses) confidence += 5;
+        if (input.moveDateKnown) confidence += 3;
+        confidence = Math.min(92, confidence);
+
+        const confidenceLabel =
+            confidence >= 80 ? 'גבוהה' : confidence >= 65 ? 'בינונית-גבוהה' : confidence >= 50 ? 'בינונית' : 'ראשונית';
+
+        // טווח צר יותר כשיש יותר נתונים (עדיין לא התחייבות)
+        const spreadLow = confidence >= 80 ? 0.94 : confidence >= 65 ? 0.91 : 0.88;
+        const spreadHigh = confidence >= 80 ? 1.10 : confidence >= 65 ? 1.13 : 1.18;
+
+        const notes: string[] = [
+            'המחיר הסופי מאושר בשיחת טלפון — מקובל בענף ההובלות בישראל.',
+            'ההערכה בשקלים (₪). מע״מ לפי סוג העוסק יופיע בחשבונית הרשמית.',
+        ];
+        if (!apartmentKey) {
+            notes.push('חסר גודל דירה — ההערכה מבוססת בעיקר על פריטים וגישה.');
+        }
+        if (!input.hasAddresses) {
+            notes.push('מרחק בין כתובות יתווסף באישור הסופי אם נדרש.');
+        }
+        if (furnitureItems.some(i => i.type === 'other')) {
+            notes.push('יש פריט מסוג "אחר" — ייתכן עדכון מחיר לאחר פירוט.');
+        }
+
+        return {
+            currency: 'ILS',
+            estimatedTotal,
+            minEstimate: Math.round(estimatedTotal * spreadLow),
+            maxEstimate: Math.round(estimatedTotal * spreadHigh),
+            factors,
+            confidence,
+            confidenceLabel,
+            notes,
+            algorithmVersion: 'il-movers-v1',
+            vatNote: 'הסכום המוצג הוא אומדן לפני/כולל מע״מ לפי מדיניות העסק; חשבונית רשמית תקבע את המע״מ.',
+        };
     }
 
     /**

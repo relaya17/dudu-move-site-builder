@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { NumberInputWithControls } from './ui/NumberInputWithControls';
+import { PriceEstimateBreakdown, type DetailedPriceEstimate } from './PriceEstimateBreakdown';
 
 interface FormData {
   fullName: string;
@@ -50,10 +51,7 @@ interface ItemForm {
   img: File | null;
 }
 
-interface PriceRangeEstimate {
-  minEstimate: number;
-  maxEstimate: number;
-}
+interface PriceRangeEstimate extends DetailedPriceEstimate {}
 
 const STEP_NAMES = ['פרטים', 'דירה', 'כתובות', 'פריטים', 'סיכום'];
 
@@ -181,6 +179,7 @@ export const MovingEstimateForm: React.FC = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            rooms: formData.fromRooms || undefined,
             furnitureItems: itemsWithType.map(item => ({
               type: item.type,
               quantity: item.quantity,
@@ -189,7 +188,9 @@ export const MovingEstimateForm: React.FC = () => {
             floorDifference,
             hasElevator,
             originHasCrane: formData.fromLift,
-            destinationHasCrane: formData.toLift
+            destinationHasCrane: formData.toLift,
+            hasAddresses: !!(formData.fromAddress && formData.toAddress),
+            moveDateKnown: !!formData.moveDate,
           })
         });
         const data = await response.json();
@@ -202,7 +203,7 @@ export const MovingEstimateForm: React.FC = () => {
     }, 400); // דיבאונס קל כדי לא להפציץ את השרת בכל הקשת מקלדת
 
     return () => clearTimeout(timeoutId);
-  }, [items, formData.fromFloor, formData.toFloor, formData.fromElevator, formData.toElevator, formData.fromLift, formData.toLift, API_URL]);
+  }, [items, formData.fromFloor, formData.toFloor, formData.fromElevator, formData.toElevator, formData.fromLift, formData.toLift, formData.fromRooms, formData.fromAddress, formData.toAddress, formData.moveDate, API_URL]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -292,6 +293,7 @@ export const MovingEstimateForm: React.FC = () => {
         destination_has_elevator: formData.toElevator > 0, // Convert number to boolean
         origin_has_crane: formData.fromLift,
         destination_has_crane: formData.toLift,
+        origin_rooms: formData.fromRooms || undefined,
       },
       furnitureItems: items.map(item => ({
         name: item.type,
@@ -685,13 +687,8 @@ export const MovingEstimateForm: React.FC = () => {
                 <Button type="button" onClick={addItem} className="mb-6">הוסף פריט</Button>
 
                 {priceRange && (
-                  <div className="mb-6 p-4 rounded-lg text-center" style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe' }}>
-                    <p className="text-sm font-bold" style={{ color: '#1e40af' }}>
-                      הערכת מחיר משוערת: ₪{priceRange.minEstimate} - ₪{priceRange.maxEstimate}
-                    </p>
-                    <p className="text-xs" style={{ color: '#1e40af' }}>
-                      המחיר הסופי המדויק ייקבע לאחר אישור טלפוני
-                    </p>
+                  <div className="mb-6">
+                    <PriceEstimateBreakdown estimate={priceRange} compact />
                   </div>
                 )}
 
@@ -707,13 +704,8 @@ export const MovingEstimateForm: React.FC = () => {
                 <h3 className="text-lg font-semibold mb-3">סיכום</h3>
 
                 {priceRange && (
-                  <div className="mb-6 p-4 rounded-lg text-center" style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe' }}>
-                    <p className="text-base font-bold" style={{ color: '#1e40af' }}>
-                      הערכת מחיר משוערת: ₪{priceRange.minEstimate} - ₪{priceRange.maxEstimate}
-                    </p>
-                    <p className="text-xs" style={{ color: '#1e40af' }}>
-                      ההערכה מבוססת על הפריטים, הקומות והמעליות שציינת. המחיר הסופי המדויק ייקבע לאחר אישור טלפוני.
-                    </p>
+                  <div className="mb-6">
+                    <PriceEstimateBreakdown estimate={priceRange} />
                   </div>
                 )}
 

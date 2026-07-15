@@ -8,9 +8,16 @@ import { AGENT_TOOLS, AgentToolExecutor } from './AgentTools';
 import { AuditService } from '../AuditService';
 import { eventBus } from '../EventBus';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
+/** Lazy init — לא מפיל את השרת ב-startup אם חסר OPENAI_API_KEY. */
+let openaiClient: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+    if (!openaiClient) {
+        openaiClient = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY || 'missing-openai-key',
+        });
+    }
+    return openaiClient;
+}
 
 const SYSTEM_PROMPT = `אתה "לאה" - מזכירה חכמה של חברת הובלות שמשתמשת בפלטפורמת Movalo.
 
@@ -116,7 +123,7 @@ export class AgentService {
             iterations++;
 
             try {
-                const response = await openai.chat.completions.create({
+                const response = await getOpenAI().chat.completions.create({
                     model: this.getModel(),
                     messages: this.conversationHistory as any,
                     tools: AGENT_TOOLS,
@@ -280,7 +287,7 @@ export class CustomerAgentService {
 `;
 
         try {
-            const response = await openai.chat.completions.create({
+            const response = await getOpenAI().chat.completions.create({
                 model: 'gpt-4o-mini',
                 messages: [
                     { role: 'system', content: CUSTOMER_SYSTEM_PROMPT + '\n\n' + contextInfo },

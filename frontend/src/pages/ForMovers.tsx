@@ -36,12 +36,19 @@ interface HiddenItem {
   desc: string;
 }
 
+interface ComparisonExample {
+  name: string;
+  industry: string;
+  stat: string;
+}
+
 interface PageContent {
   dir: 'rtl' | 'ltr';
   langLabel: string;
   brand: string;
   nav: { backHome: string };
   hero: {
+    badge: string;
     eyebrow: string;
     title: string;
     highlight: string;
@@ -68,8 +75,12 @@ interface PageContent {
     items: HiddenItem[];
   };
   comparison: {
+    eyebrow: string;
     title: string;
     text: string;
+    examples: ComparisonExample[];
+    marketStat: string;
+    positioning: string;
   };
   cta: {
     title: string;
@@ -89,6 +100,7 @@ function buildContent(): Record<Lang, PageContent> {
       brand: 'מערכת ניהול חכמה למובילים',
       nav: { backHome: 'לאתר של דוד הובלות' },
       hero: {
+        badge: '🇺🇸 בהשראת המודל שכבר הוכיח את עצמו בארה"ב',
         eyebrow: 'למובילים ולחברות הובלה',
         title: 'כל מה שחברת הובלה צריכה,',
         highlight: 'במקום אחד ובמחיר אחד',
@@ -180,9 +192,17 @@ function buildContent(): Record<Lang, PageContent> {
         ],
       },
       comparison: {
-        title: 'איך זה משתווה לרמה העולמית',
+        eyebrow: 'השיטה מאחורי הפלטפורמה',
+        title: 'מודל שכבר הוכיח את עצמו בארה"ב',
         text:
-          'מעקב חי בזמן אמת, תקשורת אוטומטית עם הלקוח ושירות מבוסס AI - אלו בדיוק אותם רכיבי הליבה שחברות המשלוחים והלוגיסטיקה הגדולות בעולם בנו במשך שנים ובעלויות גבוהות. המערכת הזו לא "מעתיקה" חברה ספציפית, אלא מביאה את אותו עיקרון - שקיפות, אוטומציה ומידע בזמן אמת ללקוח - לחברת הובלות קטנה, במחיר נגיש.',
+          'בעשור האחרון, חברות אמריקאיות לקחו תעשיות שירות מקומיות מפוצלות - קבלנים, מסעדות, מכוני כושר - ונתנו לכל עסק קטן בהן מערכת ניהול אחת: אתר, לקוחות, תשלומים ותפעול. התוצאה: חברות ציבוריות בשווי מיליארדי דולרים. Movalo מביאה בדיוק את אותה שיטה לתעשיית ההובלות בישראל.',
+        examples: [
+          { name: 'ServiceTitan', industry: 'לקבלני שיפוצים ובתים', stat: 'הונפקה ב-2024 בשווי של כ-9 מיליארד דולר' },
+          { name: 'Toast', industry: 'למסעדות', stat: 'שווי שוק של כ-14 מיליארד דולר (2026)' },
+        ],
+        marketStat: 'שוק ה-Vertical SaaS העולמי מוערך ב-130 מיליארד דולר וצומח בקצב של כ-20% בשנה',
+        positioning:
+          'אנחנו בשלב הגיוס הראשוני של המובילים הראשונים שיעצבו את המוצר איתנו - בדיוק כמו שכל אחת מהחברות האלה התחילה עם קבוצה קטנה של שותפים ראשונים.',
       },
       cta: {
         title: 'רוצים להיות בין הראשונים?',
@@ -197,6 +217,7 @@ function buildContent(): Record<Lang, PageContent> {
       brand: 'Smart Management System for Movers',
       nav: { backHome: 'Back to David Move site' },
       hero: {
+        badge: '🇺🇸 Inspired by a model already proven in the US',
         eyebrow: 'For movers & relocation companies',
         title: 'Everything a moving company needs,',
         highlight: 'in one place, one price',
@@ -288,9 +309,17 @@ function buildContent(): Record<Lang, PageContent> {
         ],
       },
       comparison: {
-        title: 'How this compares to world-class platforms',
+        eyebrow: 'The method behind the platform',
+        title: 'A model that already proved itself in the US',
         text:
-          'Live real-time tracking, automated customer communication and AI-based service are exactly the core building blocks that the world’s biggest logistics and delivery companies spent years and large budgets building. This system doesn’t copy any specific company - it brings the same principle, transparency, automation and real-time information for the customer, to a small moving business at an accessible price.',
+          'Over the last decade, American companies took fragmented local-service industries - contractors, restaurants, gyms - and gave every small business in them one system to run their whole operation: website, customers, payments and operations. The result: publicly traded companies worth billions of dollars. Movalo brings that exact same method to the moving industry in Israel.',
+        examples: [
+          { name: 'ServiceTitan', industry: 'For home-service contractors', stat: 'Went public in 2024 at a roughly $9B valuation' },
+          { name: 'Toast', industry: 'For restaurants', stat: 'About a $14B market cap (2026)' },
+        ],
+        marketStat: 'The global vertical SaaS market is valued at $130B and growing roughly 20% a year',
+        positioning:
+          'We’re in the early stage of recruiting the first movers who’ll help shape the product with us - just like each of these companies started with a small group of first partners.',
       },
       cta: {
         title: 'Want to be one of the first?',
@@ -305,6 +334,7 @@ function buildContent(): Record<Lang, PageContent> {
       brand: 'Système de gestion intelligent pour déménageurs',
       nav: { backHome: 'Retour au site David Move' },
       hero: {
+        badge: '🇺🇸 Inspiré d’un modèle déjà éprouvé aux États-Unis',
         eyebrow: 'Pour les entreprises de déménagement',
         title: 'Tout ce dont une entreprise de déménagement a besoin,',
         highlight: 'en un seul endroit, à un seul prix',
@@ -396,9 +426,17 @@ function buildContent(): Record<Lang, PageContent> {
         ],
       },
       comparison: {
-        title: 'Comparaison avec les plateformes de classe mondiale',
+        eyebrow: 'La méthode derrière la plateforme',
+        title: 'Un modèle qui a déjà fait ses preuves aux États-Unis',
         text:
-          'Le suivi en direct, la communication automatisée avec le client et le service basé sur l’IA sont exactement les briques de base que les plus grandes entreprises de logistique et de livraison au monde ont mis des années et des budgets considérables à construire. Ce système ne copie aucune entreprise en particulier - il apporte le même principe, transparence, automatisation et information en temps réel pour le client, à une petite entreprise de déménagement, à un prix accessible.',
+          'Au cours de la dernière décennie, des entreprises américaines ont pris des secteurs de services locaux fragmentés - artisans, restaurants, salles de sport - et ont donné à chaque petite entreprise un seul système pour gérer toute son activité : site web, clients, paiements et opérations. Résultat : des entreprises cotées en bourse valant des milliards de dollars. Movalo apporte exactement la même méthode au secteur du déménagement en Israël.',
+        examples: [
+          { name: 'ServiceTitan', industry: 'Pour les artisans et entrepreneurs du bâtiment', stat: 'Entrée en bourse en 2024 avec une valorisation d’environ 9 milliards de dollars' },
+          { name: 'Toast', industry: 'Pour les restaurants', stat: 'Capitalisation boursière d’environ 14 milliards de dollars (2026)' },
+        ],
+        marketStat: 'Le marché mondial du Vertical SaaS est évalué à 130 milliards de dollars et croît d’environ 20 % par an',
+        positioning:
+          'Nous sommes dans la phase initiale de recrutement des premiers déménageurs qui façonneront le produit avec nous - tout comme chacune de ces entreprises a commencé avec un petit groupe de premiers partenaires.',
       },
       cta: {
         title: 'Vous voulez être parmi les premiers ?',
@@ -413,6 +451,7 @@ function buildContent(): Record<Lang, PageContent> {
       brand: 'نظام إدارة ذكي لشركات النقل',
       nav: { backHome: 'العودة إلى موقع David Move' },
       hero: {
+        badge: '🇺🇸 مستوحى من نموذج أثبت نجاحه بالفعل في أمريكا',
         eyebrow: 'لشركات النقل والانتقال',
         title: 'كل ما تحتاجه شركة نقل،',
         highlight: 'في مكان واحد وبسعر واحد',
@@ -504,9 +543,17 @@ function buildContent(): Record<Lang, PageContent> {
         ],
       },
       comparison: {
-        title: 'كيف يقارن هذا بمنصات عالمية',
+        eyebrow: 'المنهجية وراء المنصة',
+        title: 'نموذج أثبت نجاحه بالفعل في الولايات المتحدة',
         text:
-          'التتبع اللحظي، والتواصل الآلي مع العميل، والخدمة المعتمدة على الذكاء الاصطناعي - هي بالضبط اللبنات الأساسية نفسها التي أمضت أكبر شركات اللوجستيات والتوصيل في العالم سنوات وميزانيات ضخمة لبنائها. هذا النظام لا "ينسخ" شركة معينة، بل يجلب نفس المبدأ - الشفافية والأتمتة والمعلومات اللحظية للعميل - إلى شركة نقل صغيرة، بسعر ميسور.',
+          'خلال العقد الماضي، أخذت شركات أمريكية صناعات خدمات محلية مجزأة - مقاولون، مطاعم، صالات رياضية - ومنحت كل عمل صغير فيها نظاماً واحداً لإدارة كامل نشاطه: موقع إلكتروني، عملاء، مدفوعات وعمليات تشغيل. النتيجة: شركات مطروحة للتداول العام بقيمة مليارات الدولارات. Movalo تجلب بالضبط نفس هذه المنهجية لصناعة النقل في إسرائيل.',
+        examples: [
+          { name: 'ServiceTitan', industry: 'لمقاولي خدمات المنازل', stat: 'طُرحت للاكتتاب العام عام 2024 بقيمة نحو 9 مليارات دولار' },
+          { name: 'Toast', industry: 'للمطاعم', stat: 'قيمة سوقية تبلغ نحو 14 مليار دولار (2026)' },
+        ],
+        marketStat: 'يُقدَّر سوق الـ Vertical SaaS العالمي بـ 130 مليار دولار وينمو بمعدل نحو 20% سنوياً',
+        positioning:
+          'نحن في المرحلة الأولى من استقطاب أوائل الناقلين الذين سيشكّلون المنتج معنا - تماماً كما بدأت كل شركة من هذه الشركات بمجموعة صغيرة من الشركاء الأوائل.',
       },
       cta: {
         title: 'تريد أن تكون من الأوائل؟',
@@ -521,6 +568,7 @@ function buildContent(): Record<Lang, PageContent> {
       brand: 'Умная система управления для транспортных компаний',
       nav: { backHome: 'Вернуться на сайт David Move' },
       hero: {
+        badge: '🇺🇸 Вдохновлено моделью, уже доказавшей себя в США',
         eyebrow: 'Для компаний по переезду и перевозкам',
         title: 'Всё, что нужно транспортной компании,',
         highlight: 'в одном месте и по одной цене',
@@ -612,9 +660,17 @@ function buildContent(): Record<Lang, PageContent> {
         ],
       },
       comparison: {
-        title: 'Как это соотносится с платформами мирового уровня',
+        eyebrow: 'Метод, лежащий в основе платформы',
+        title: 'Модель, уже доказавшая себя в США',
         text:
-          'Живое отслеживание в реальном времени, автоматизированное общение с клиентом и сервис на основе ИИ - это именно те базовые компоненты, на создание которых крупнейшие логистические и курьерские компании мира потратили годы и огромные бюджеты. Эта система не копирует конкретную компанию - она приносит тот же принцип: прозрачность, автоматизацию и информацию в реальном времени для клиента - небольшой транспортной компании по доступной цене.',
+          'За последнее десятилетие американские компании взяли раздробленные отрасли локальных услуг - подрядчиков, рестораны, фитнес-залы - и дали каждому небольшому бизнесу в них единую систему для управления всей деятельностью: сайт, клиенты, платежи и операции. Результат - публичные компании стоимостью в миллиарды долларов. Movalo приносит точно такой же метод в индустрию перевозок в Израиле.',
+        examples: [
+          { name: 'ServiceTitan', industry: 'Для подрядчиков в сфере домашних услуг', stat: 'Вышла на IPO в 2024 году с оценкой около 9 млрд долларов' },
+          { name: 'Toast', industry: 'Для ресторанов', stat: 'Рыночная капитализация около 14 млрд долларов (2026)' },
+        ],
+        marketStat: 'Мировой рынок Vertical SaaS оценивается в 130 млрд долларов и растёт примерно на 20% в год',
+        positioning:
+          'Мы находимся на начальном этапе набора первых транспортных компаний, которые будут формировать продукт вместе с нами - точно так же, как каждая из этих компаний начинала с небольшой группы первых партнёров.',
       },
       cta: {
         title: 'Хотите быть одним из первых?',
@@ -706,7 +762,10 @@ const ForMovers = () => {
                 העסק של כל מוביל (זה שמופיע ב-Navbar/Footer של האתר שלו עצמו). */}
             <span dir="ltr" className="text-2xl font-bold tracking-tight text-white">Movalo</span>
           </div>
-          <p className="text-blue-300/80 text-sm mb-6">{t.brand}</p>
+          <p className="text-blue-300/80 text-sm mb-4">{t.brand}</p>
+          <span className="inline-block bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs sm:text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+            {t.hero.badge}
+          </span>
           <p className="text-blue-300 font-semibold mb-2">{t.hero.eyebrow}</p>
           <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-2">{t.hero.title}</h1>
           <h2 className="text-2xl md:text-4xl font-bold text-blue-300 mb-6">{t.hero.highlight}</h2>
@@ -745,6 +804,38 @@ const ForMovers = () => {
               </span>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* US playbook / credibility - "we're bringing the model that already proved
+          itself in the US" positioning, with named, factual reference points
+          (ServiceTitan, Toast) rather than vague claims. Placed right after the
+          hero so the credibility story lands before anything else. */}
+      <section className="py-16 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-10">
+            <span className="inline-block bg-blue-500/20 text-blue-300 text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+              {t.comparison.eyebrow}
+            </span>
+            <h2 className="text-3xl font-bold mb-4">{t.comparison.title}</h2>
+            <p className="text-gray-300 leading-relaxed text-lg max-w-3xl mx-auto">{t.comparison.text}</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            {t.comparison.examples.map((ex, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+                <p dir="ltr" className="text-2xl font-bold text-white mb-1">{ex.name}</p>
+                <p className="text-blue-300 text-sm font-medium mb-3">{ex.industry}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{ex.stat}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-blue-600/20 border border-blue-400/30 rounded-xl px-6 py-4 text-center mb-8">
+            <p className="text-blue-100 font-medium">{t.comparison.marketStat}</p>
+          </div>
+
+          <p className="text-center text-gray-200 text-lg font-medium max-w-2xl mx-auto">{t.comparison.positioning}</p>
         </div>
       </section>
 
@@ -828,14 +919,6 @@ const ForMovers = () => {
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* Comparison to world-class platforms */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t.comparison.title}</h2>
-          <p className="text-gray-700 leading-relaxed text-lg">{t.comparison.text}</p>
         </div>
       </section>
 

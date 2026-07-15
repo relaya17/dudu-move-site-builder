@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { BusinessType, InvoiceProvider } from 'shared';
+import { BusinessType, InvoiceProvider, TurboSettings } from 'shared';
 
 /**
  * הגדרות עסק - מסמך יחיד (singleton) שמחזיק את פרטי העסק ואת אופן הפקת
@@ -25,9 +25,19 @@ export interface IBusinessSettings extends Document {
     greenInvoiceEnv?: 'sandbox' | 'production';
     // מספר המסמך הסידורי הבא שיינתן במצב 'built_in' - חייב לעלות ברצף ולא לחזור על עצמו.
     nextDocumentNumber: number;
+    /** מצב טורבו - אופטימיזציות ביצועים (ר' shared TurboSettings). */
+    turbo: TurboSettings;
     createdAt: Date;
     updatedAt: Date;
 }
+
+const TurboSchema = new Schema({
+    turboMode: { type: Boolean, default: false },
+    turboAi: { type: Boolean, default: true },
+    turboForms: { type: Boolean, default: true },
+    turboDashboard: { type: Boolean, default: true },
+    turboProcessing: { type: Boolean, default: true },
+}, { _id: false });
 
 const BusinessSettingsSchema = new Schema<IBusinessSettings>({
     // index: true הוסר בכוונה מכאן - האינדקס האמיתי מוגדר למטה כ-unique+sparse,
@@ -46,7 +56,8 @@ const BusinessSettingsSchema = new Schema<IBusinessSettings>({
     greenInvoiceApiKey: { type: String, select: false },
     greenInvoiceApiSecret: { type: String, select: false },
     greenInvoiceEnv: { type: String, enum: ['sandbox', 'production'], default: 'sandbox' },
-    nextDocumentNumber: { type: Number, default: 1000, min: 1 }
+    nextDocumentNumber: { type: Number, default: 1000, min: 1 },
+    turbo: { type: TurboSchema, default: () => ({}) },
 }, {
     timestamps: true
 });

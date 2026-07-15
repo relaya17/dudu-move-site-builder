@@ -6,6 +6,9 @@ import { Router, Request, Response } from 'express';
 import { requireBusinessAuth } from '../middleware/businessAuth';
 import { AgentService } from '../services/ai/AgentService';
 import { AuditService } from '../services/AuditService';
+import { BusinessSettings } from '../database/models/BusinessSettings';
+import { tenantFilter } from '../lib/tenantFilter';
+import { DEFAULT_TURBO_SETTINGS } from 'shared';
 
 const router = Router();
 
@@ -15,12 +18,12 @@ router.use(requireBusinessAuth);
 // In-memory session store (in production use Redis)
 const agentSessions: Map<string, AgentService> = new Map();
 
-// Clean up old sessions periodically (every 30 min)
-setInterval(() => {
-    const maxAge = 30 * 60 * 1000; // 30 minutes
-    const now = Date.now();
-    // Note: In production, add timestamp tracking to sessions
-}, 30 * 60 * 1000);
+async function isTurboAiEnabled(tenantId?: string): Promise<boolean> {
+    if (!tenantId) return false;
+    const settings = await BusinessSettings.findOne(tenantFilter(tenantId)).lean();
+    const turbo = { ...DEFAULT_TURBO_SETTINGS, ...(settings?.turbo || {}) };
+    return turbo.turboMode && turbo.turboAi;
+}
 
 /**
  * POST /api/tenant/ai/chat
@@ -45,10 +48,13 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
         // Get or create agent session
         const sessionKey = `${tenantId}:${userId}`;
         let agent = agentSessions.get(sessionKey);
+        const turboAi = await isTurboAiEnabled(tenantId);
 
         if (!agent || resetSession) {
-            agent = new AgentService(tenantId, userId);
+            agent = new AgentService(tenantId, userId, { turboAi });
             agentSessions.set(sessionKey, agent);
+        } else {
+            agent.setTurboAi(turboAi);
         }
 
         // Process the message
@@ -59,7 +65,8 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
             data: {
                 message: response.message,
                 toolsUsed: response.toolsUsed,
-                tokensUsed: response.tokensUsed
+                tokensUsed: response.tokensUsed,
+                turboAi,
             }
         });
     } catch (err: any) {

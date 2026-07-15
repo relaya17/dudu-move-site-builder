@@ -16,6 +16,7 @@ router.use(requireBusinessAuth);
 // יצירת הערכה חדשה עדיין מתבצעת אך ורק דרך /api/move-requests הציבורי
 // (טופס ההערכה של האתר של אותו דייר, עם tenantSlug - ר' moveRequestController.ts).
 router.get('/estimates', MongoController.getAllMoveEstimates);
+router.post('/estimates/batch-invoice', MongoController.batchIssueInvoices);
 router.get('/estimates/:id', MongoController.getMoveEstimateById);
 router.patch('/estimates/:id/status', MongoController.updateMoveEstimateStatus);
 router.post('/estimates/:id/quote', MongoController.issueQuote);

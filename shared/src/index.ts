@@ -6,6 +6,7 @@
 export { ESTIMATE_STATUSES, ESTIMATE_STATUS_LABELS } from './estimateStatus';
 export { TRACKING_STAGES, TRACKING_STAGE_LABELS } from './tracking';
 export { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from './billing';
+export { DEFAULT_TURBO_SETTINGS } from './businessSettings';
 
 // ─── טיפוסים בלבד ────────────────────────────────────────────────────────────
 export type { EstimateStatus } from './estimateStatus';
@@ -14,4 +15,4 @@ export type { FurnitureItem } from './furniture';
 export type { MoveEstimateDTO } from './moveEstimate';
 export type { ApiResponse } from './apiResponse';
 export type { QuoteDocumentInfo, InvoiceDocumentInfo, PaymentMethod } from './billing';
-export type { InvoiceProvider, BusinessType, BusinessSettingsDTO, BusinessSettingsUpdateInput } from './businessSettings';
+export type { InvoiceProvider, BusinessType, BusinessSettingsDTO, BusinessSettingsUpdateInput, TurboSettings } from './businessSettings';

@@ -56,20 +56,37 @@ export interface AgentResponse {
     tokensUsed: number;
 }
 
+export interface AgentOptions {
+    /** מצב טורבו AI - משתמש במודל מהיר יותר. */
+    turboAi?: boolean;
+}
+
 export class AgentService {
     private tenantId?: string;
     private userId?: string;
     private conversationHistory: AgentMessage[] = [];
     private toolExecutor: AgentToolExecutor;
+    private turboAi: boolean;
 
-    constructor(tenantId?: string, userId?: string) {
+    constructor(tenantId?: string, userId?: string, options: AgentOptions = {}) {
         this.tenantId = tenantId;
         this.userId = userId;
+        this.turboAi = !!options.turboAi;
         this.toolExecutor = new AgentToolExecutor(tenantId);
         this.conversationHistory.push({
             role: 'system',
             content: SYSTEM_PROMPT
         });
+    }
+
+    /** מודל מהיר בטורבו, מודל מאוזן אחרת. */
+    private getModel(): string {
+        return this.turboAi ? 'gpt-4.1-nano' : 'gpt-4o-mini';
+    }
+
+    /** מעדכן את דגל הטורבו (למשל אחרי שינוי בהגדרות בלי לאפס שיחה). */
+    setTurboAi(enabled: boolean): void {
+        this.turboAi = !!enabled;
     }
 
     /**
@@ -98,12 +115,12 @@ export class AgentService {
 
             try {
                 const response = await openai.chat.completions.create({
-                    model: 'gpt-4o-mini',
+                    model: this.getModel(),
                     messages: this.conversationHistory as any,
                     tools: AGENT_TOOLS,
                     tool_choice: 'auto',
-                    temperature: 0.7,
-                    max_tokens: 1500
+                    temperature: this.turboAi ? 0.4 : 0.7,
+                    max_tokens: this.turboAi ? 1000 : 1500
                 });
 
                 const message = response.choices[0].message;

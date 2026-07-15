@@ -4,10 +4,11 @@
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import { useTenantApi } from '@/hooks/useTenantApi';
+import { useTurboMode } from '@/contexts/TurboModeContext';
 import { Button } from '@/components/ui/button';
 import { 
     Bot, Send, Loader2, RefreshCw, Sparkles, 
-    ListChecks, TrendingUp, Users
+    ListChecks, TrendingUp, Users, Zap
 } from 'lucide-react';
 
 interface Message {
@@ -25,6 +26,8 @@ const QUICK_ACTIONS = [
 
 export function AiAssistantPanel() {
     const { call } = useTenantApi();
+    const { isActive } = useTurboMode();
+    const turboAi = isActive('turboAi');
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -106,8 +109,17 @@ export function AiAssistantPanel() {
                 <div className="flex items-center gap-2">
                     <Bot className="h-5 w-5" />
                     <div>
-                        <h3 className="font-semibold text-sm">לאה - מזכירה חכמה</h3>
-                        <p className="text-xs text-blue-100">מוכנה לעזור לך</p>
+                        <h3 className="font-semibold text-sm flex items-center gap-1.5">
+                            לאה - מזכירה חכמה
+                            {turboAi && (
+                                <span className="inline-flex items-center gap-0.5 text-[10px] font-medium bg-amber-400/90 text-amber-950 rounded px-1.5 py-0.5">
+                                    <Zap className="h-2.5 w-2.5" /> טורבו
+                                </span>
+                            )}
+                        </h3>
+                        <p className="text-xs text-blue-100">
+                            {turboAi ? 'מצב מהיר פעיל' : 'מוכנה לעזור לך'}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1">

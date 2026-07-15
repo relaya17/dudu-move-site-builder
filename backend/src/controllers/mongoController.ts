@@ -209,6 +209,77 @@ export class MongoController {
         }
     }
 
+    /**
+     * הפקת חשבוניות באצווה (Turbo Processing).
+     * גוף: { ids: string[], paymentMethod, customerIdNumber? }
+     * מחזיר תוצאה לכל מזהה (הצלחה/כישלון) בלי לעצור על השגיאה הראשונה.
+     */
+    static async batchIssueInvoices(req: Request, res: Response): Promise<void> {
+        try {
+            const { ids, paymentMethod, customerIdNumber } = req.body as {
+                ids?: string[];
+                paymentMethod?: string;
+                customerIdNumber?: string;
+            };
+
+            if (!Array.isArray(ids) || ids.length === 0) {
+                res.status(400).json({ success: false, message: 'יש לספק רשימת מזהי הזמנות' });
+                return;
+            }
+            if (ids.length > 50) {
+                res.status(400).json({ success: false, message: 'מקסימום 50 חשבוניות באצווה אחת' });
+                return;
+            }
+            if (!paymentMethod || !PAYMENT_METHODS.includes(paymentMethod as PaymentMethod)) {
+                res.status(400).json({
+                    success: false,
+                    message: `יש לבחור אמצעי תשלום תקין: ${PAYMENT_METHODS.join(', ')}`
+                });
+                return;
+            }
+
+            const results: Array<{ id: string; success: boolean; error?: string }> = [];
+
+            for (const id of ids) {
+                try {
+                    const owned = await MongoService.getMoveEstimateById(id, req.tenantId);
+                    if (!owned) {
+                        results.push({ id, success: false, error: 'הזמנה לא נמצאה' });
+                        continue;
+                    }
+                    await InvoiceService.issueInvoiceReceipt(
+                        id,
+                        { paymentMethod: paymentMethod as PaymentMethod, customerIdNumber },
+                        req.tenantId
+                    );
+                    results.push({ id, success: true });
+                } catch (err) {
+                    results.push({
+                        id,
+                        success: false,
+                        error: err instanceof Error ? err.message : 'שגיאה בהפקה',
+                    });
+                }
+            }
+
+            const succeeded = results.filter(r => r.success).length;
+            res.status(200).json({
+                success: true,
+                data: {
+                    results,
+                    summary: { total: ids.length, succeeded, failed: ids.length - succeeded },
+                },
+            });
+        } catch (error) {
+            console.error('Error batch issuing invoices:', error);
+            res.status(500).json({
+                success: false,
+                message: 'הפקת חשבוניות באצווה נכשלה',
+                error: error instanceof Error ? error.message : 'Unknown error',
+            });
+        }
+    }
+
     // שולח הצעת מחיר במייל ללקוח (מנפיק מספר הצעה אם עדיין לא קיים)
     static async sendQuoteEmail(req: Request, res: Response): Promise<void> {
         try {

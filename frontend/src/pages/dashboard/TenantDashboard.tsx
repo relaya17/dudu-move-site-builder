@@ -1,19 +1,24 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { TurboModeProvider, useTurboMode } from '@/contexts/TurboModeContext';
 import { useTenantApi } from '@/hooks/useTenantApi';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
     Truck, LayoutDashboard, Users, Settings, LogOut,
     Menu, X, ClipboardList, TrendingUp, DollarSign,
     Search, ChevronRight, Loader2, Bell, UserCheck,
-    Phone, Mail, MapPin, Calendar, RefreshCw, Star, MessageSquare, Trash2
+    Phone, Mail, MapPin, Calendar, RefreshCw, Star, MessageSquare, Trash2, Zap
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { AiAssistantPanel } from '@/components/dashboard/AiAssistantPanel';
+import { DEFAULT_TURBO_SETTINGS, type TurboSettings } from 'shared';
 
 // ─── טיפוסים ──────────────────────────────────────────────────────────────────
 
@@ -59,6 +64,7 @@ interface BusinessSettings {
     vatRate: number;
     invoiceProvider: string;
     greenInvoiceConfigured: boolean;
+    turbo?: TurboSettings;
 }
 
 interface Employee {
@@ -162,23 +168,35 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
 function Overview() {
     const { business } = useAuth();
     const { call } = useTenantApi();
-    const [analytics, setAnalytics] = useState<Analytics | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { isActive } = useTurboMode();
+    const turboDash = isActive('turboDashboard');
 
-    useEffect(() => {
-        call<{ success: boolean; data: Analytics }>('/analytics')
-            .then(r => { if (r.ok) setAnalytics(r.data.data); })
-            .finally(() => setLoading(false));
-    }, [call]);
+    const { data: analytics, isLoading: loading } = useQuery({
+        queryKey: ['tenant-analytics'],
+        queryFn: async () => {
+            const r = await call<{ success: boolean; data: Analytics }>('/analytics');
+            if (!r.ok) throw new Error('Failed to load analytics');
+            return r.data.data;
+        },
+        staleTime: turboDash ? 5 * 60 * 1000 : 0,
+        gcTime: turboDash ? 30 * 60 * 1000 : 5 * 60 * 1000,
+    });
 
     const formatCurrency = (n: number) =>
         new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 }).format(n);
 
     return (
         <div dir="rtl" className="p-6 max-w-5xl">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                ברוך הבא{business?.businessName ? `, ${business.businessName}` : ''}!
-            </h1>
+            <div className="flex items-start justify-between gap-3 mb-1">
+                <h1 className="text-2xl font-bold text-gray-900">
+                    ברוך הבא{business?.businessName ? `, ${business.businessName}` : ''}!
+                </h1>
+                {turboDash && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
+                        <Zap className="h-3 w-3" /> טורבו
+                    </span>
+                )}
+            </div>
             <p className="text-gray-500 mb-6 text-sm">סקירת פעילות העסק שלך</p>
 
             {business?.subscriptionStatus === 'trial' && (
@@ -252,17 +270,24 @@ function StatCard({ icon, label, value, bg }: { icon: React.ReactNode; label: st
 
 function EstimatesPage() {
     const { call } = useTenantApi();
+    const { isActive } = useTurboMode();
+    const turboForms = isActive('turboForms');
+    const turboProcessing = isActive('turboProcessing');
     const [estimates, setEstimates] = useState<Estimate[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [selected, setSelected] = useState<Estimate | null>(null);
+    const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+    const [batchRunning, setBatchRunning] = useState(false);
+    const [batchMsg, setBatchMsg] = useState('');
+    const debouncedSearch = useDebouncedValue(search, turboForms ? 300 : 0);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const path = search.trim()
-                ? `/search/estimates?query=${encodeURIComponent(search.trim())}`
+            const path = debouncedSearch.trim()
+                ? `/search/estimates?query=${encodeURIComponent(debouncedSearch.trim())}`
                 : statusFilter
                     ? `/estimates?status=${statusFilter}&limit=100`
                     : '/estimates?limit=100';
@@ -271,9 +296,45 @@ function EstimatesPage() {
         } finally {
             setLoading(false);
         }
-    }, [call, search, statusFilter]);
+    }, [call, debouncedSearch, statusFilter]);
 
     useEffect(() => { load(); }, [load]);
+
+    const toggleCheck = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCheckedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const batchInvoice = async () => {
+        if (checkedIds.size === 0) return;
+        setBatchRunning(true);
+        setBatchMsg('');
+        const r = await call<{
+            success: boolean;
+            data: { summary: { total: number; succeeded: number; failed: number } };
+            message?: string;
+        }>('/estimates/batch-invoice', {
+            method: 'POST',
+            body: JSON.stringify({
+                ids: Array.from(checkedIds),
+                paymentMethod: 'cash',
+            }),
+        });
+        setBatchRunning(false);
+        if (r.ok && r.data.success) {
+            const s = r.data.data.summary;
+            setBatchMsg(`✓ הופקו ${s.succeeded}/${s.total} חשבוניות${s.failed ? ` (${s.failed} נכשלו)` : ''}`);
+            setCheckedIds(new Set());
+            load();
+        } else {
+            setBatchMsg('✗ הפקה באצווה נכשלה');
+        }
+    };
 
     const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('he-IL') : '—';
     const formatCurrency = (n: number) => n ? `₪${n.toLocaleString('he-IL')}` : '—';
@@ -321,6 +382,26 @@ function EstimatesPage() {
                 </select>
             </div>
 
+            {turboProcessing && checkedIds.size > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <Zap className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm text-amber-900">{checkedIds.size} הזמנות נבחרו</span>
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={batchInvoice}
+                        disabled={batchRunning}
+                        className="bg-amber-600 hover:bg-amber-700"
+                    >
+                        {batchRunning ? <><Loader2 className="h-4 w-4 animate-spin ml-1" />מפיק...</> : 'הפק חשבוניות (טורבו)'}
+                    </Button>
+                    <button type="button" className="text-xs text-amber-700 underline" onClick={() => setCheckedIds(new Set())}>
+                        נקה בחירה
+                    </button>
+                </div>
+            )}
+            {batchMsg && <p className="mb-3 text-sm text-gray-700">{batchMsg}</p>}
+
             {loading ? (
                 <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-blue-500" /></div>
             ) : estimates.length === 0 ? (
@@ -330,6 +411,7 @@ function EstimatesPage() {
                     <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b">
                             <tr>
+                                {turboProcessing && <th className="px-3 py-3 w-8" />}
                                 <th className="text-right px-4 py-3 font-medium text-gray-600">לקוח</th>
                                 <th className="text-right px-4 py-3 font-medium text-gray-600 hidden md:table-cell">תאריך הובלה</th>
                                 <th className="text-right px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">מחיר</th>
@@ -340,6 +422,16 @@ function EstimatesPage() {
                         <tbody className="divide-y">
                             {estimates.map(e => (
                                 <tr key={e._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelected(e)}>
+                                    {turboProcessing && (
+                                        <td className="px-3 py-3" onClick={ev => toggleCheck(e._id, ev)}>
+                                            <input
+                                                type="checkbox"
+                                                checked={checkedIds.has(e._id)}
+                                                onChange={() => {}}
+                                                className="h-4 w-4 rounded border-gray-300"
+                                            />
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3">
                                         <p className="font-medium text-gray-800">{e.name}</p>
                                         <p className="text-xs text-gray-400" dir="ltr">{e.phone}</p>
@@ -440,22 +532,25 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 
 function CustomersPage() {
     const { call } = useTenantApi();
+    const { isActive } = useTurboMode();
+    const turboForms = isActive('turboForms');
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebouncedValue(search, turboForms ? 300 : 0);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const path = search.trim()
-                ? `/search/customers?query=${encodeURIComponent(search.trim())}`
+            const path = debouncedSearch.trim()
+                ? `/search/customers?query=${encodeURIComponent(debouncedSearch.trim())}`
                 : '/customers?limit=200';
             const r = await call<{ success: boolean; data: Customer[] }>(path);
             if (r.ok) setCustomers(r.data.data || []);
         } finally {
             setLoading(false);
         }
-    }, [call, search]);
+    }, [call, debouncedSearch]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -518,14 +613,22 @@ function CustomersPage() {
 
 function SettingsPage() {
     const { call } = useTenantApi();
+    const { setTurboLocal } = useTurboMode();
+    const queryClient = useQueryClient();
     const [form, setForm] = useState<Partial<BusinessSettings>>({});
+    const [turbo, setTurbo] = useState<TurboSettings>(DEFAULT_TURBO_SETTINGS);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState('');
 
     useEffect(() => {
         call<{ success: boolean; data: BusinessSettings }>('/settings')
-            .then(r => { if (r.ok) setForm(r.data.data); })
+            .then(r => {
+                if (r.ok) {
+                    setForm(r.data.data);
+                    setTurbo({ ...DEFAULT_TURBO_SETTINGS, ...(r.data.data.turbo || {}) });
+                }
+            })
             .finally(() => setLoading(false));
     }, [call]);
 
@@ -533,13 +636,33 @@ function SettingsPage() {
         e.preventDefault();
         setSaving(true);
         setMsg('');
-        const r = await call('/settings', { method: 'PUT', body: JSON.stringify(form) });
+        const r = await call<{ success: boolean; data?: { turbo?: TurboSettings } }>('/settings', {
+            method: 'PUT',
+            body: JSON.stringify({ ...form, turbo }),
+        });
         setSaving(false);
-        setMsg(r.ok ? '✓ ההגדרות נשמרו בהצלחה' : '✗ שגיאה בשמירה');
+        if (r.ok) {
+            const next = { ...DEFAULT_TURBO_SETTINGS, ...(r.data.data?.turbo || turbo) };
+            setTurbo(next);
+            setTurboLocal(next);
+            queryClient.invalidateQueries({ queryKey: ['tenant-analytics'] });
+            setMsg('✓ ההגדרות נשמרו בהצלחה');
+        } else {
+            setMsg('✗ שגיאה בשמירה');
+        }
     };
 
     const set = (key: keyof BusinessSettings) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
         setForm(p => ({ ...p, [key]: e.target.value }));
+
+    const setTurboFlag = (key: keyof TurboSettings, value: boolean) => {
+        setTurbo(prev => {
+            if (key === 'turboMode') {
+                return { ...prev, turboMode: value };
+            }
+            return { ...prev, [key]: value };
+        });
+    };
 
     if (loading) return <div className="flex justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>;
 
@@ -584,6 +707,54 @@ function SettingsPage() {
                             {form.greenInvoiceConfigured
                                 ? '✓ חשבוניות ירוקות מחוברות. ניתן לשנות מפתחות API בממשק הניהול הישן.'
                                 : 'לחיבור חשבוניות ירוקות עבור לממשק הניהול הישן > הגדרות.'}
+                        </div>
+                    )}
+                </div>
+
+                <div className={`rounded-xl border shadow-sm p-5 space-y-4 ${turbo.turboMode ? 'bg-amber-50/80 border-amber-200' : 'bg-white'}`}>
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className={`mt-0.5 rounded-lg p-2 ${turbo.turboMode ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                <Zap className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="font-semibold text-gray-800">מצב טורבו · ביצועים מקסימליים</h2>
+                                <p className="text-sm text-gray-500 mt-0.5">
+                                    מפעיל אופטימיזציות ל-AI, דשבורד, חיפוש ועיבוד אצווה — כמו Ultimate Performance בווינדוס.
+                                </p>
+                            </div>
+                        </div>
+                        <Switch
+                            dir="ltr"
+                            checked={turbo.turboMode}
+                            onCheckedChange={v => setTurboFlag('turboMode', v)}
+                            aria-label="הפעל מצב טורבו"
+                        />
+                    </div>
+
+                    {turbo.turboMode && (
+                        <div className="space-y-3 pt-2 border-t border-amber-200/80">
+                            {(
+                                [
+                                    { key: 'turboAi' as const, title: 'טורבו AI', desc: 'מודל מהיר יותר לתגובות קצרות' },
+                                    { key: 'turboForms' as const, title: 'טורבו טפסים', desc: 'חיפוש מעוכב — פחות בקשות לשרת' },
+                                    { key: 'turboDashboard' as const, title: 'טורבו דשבורד', desc: 'Caching לסקירה (עד 5 דקות)' },
+                                    { key: 'turboProcessing' as const, title: 'טורבו עיבוד', desc: 'הפקת חשבוניות מרובות בלחיצה אחת' },
+                                ]
+                            ).map(item => (
+                                <div key={item.key} className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800">{item.title}</p>
+                                        <p className="text-xs text-gray-500">{item.desc}</p>
+                                    </div>
+                                    <Switch
+                                        dir="ltr"
+                                        checked={turbo[item.key]}
+                                        onCheckedChange={v => setTurboFlag(item.key, v)}
+                                        aria-label={item.title}
+                                    />
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -888,6 +1059,7 @@ export default function TenantDashboard() {
     usePageMeta({ title: 'הדשבורד שלי | Movalo', noindex: true });
 
     return (
+        <TurboModeProvider>
         <div dir="rtl" className="flex h-screen bg-gray-50">
             {/* Sidebar desktop */}
             <div className="hidden md:flex flex-shrink-0">
@@ -929,5 +1101,6 @@ export default function TenantDashboard() {
             {/* AI Assistant - floating panel */}
             <AiAssistantPanel />
         </div>
+        </TurboModeProvider>
     );
 }

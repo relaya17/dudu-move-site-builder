@@ -2,11 +2,18 @@ import { Request, Response } from 'express';
 import { BusinessSettings } from '../database/models/BusinessSettings';
 import { Business } from '../database/models/Business';
 import { InvoiceService } from '../services/InvoiceService';
-import { BusinessType, InvoiceProvider } from 'shared';
+import { BusinessType, DEFAULT_TURBO_SETTINGS, InvoiceProvider, TurboSettings } from 'shared';
 import { tenantFilter } from '../lib/tenantFilter';
 
 const BUSINESS_TYPES: BusinessType[] = ['exempt', 'licensed', 'company'];
 const INVOICE_PROVIDERS: InvoiceProvider[] = ['built_in', 'green_invoice'];
+
+function normalizeTurbo(turbo?: Partial<TurboSettings> | null): TurboSettings {
+    return {
+        ...DEFAULT_TURBO_SETTINGS,
+        ...(turbo || {}),
+    };
+}
 
 export class SettingsController {
     // מחזיר את הגדרות העסק - ללא הסודות עצמם (מפתחות ה-API), רק דגל שמציין אם הם מוגדרים.
@@ -32,7 +39,8 @@ export class SettingsController {
                     invoiceProvider: settings.invoiceProvider,
                     greenInvoiceConfigured: await InvoiceService.isGreenInvoiceConfigured(req.tenantId),
                     greenInvoiceEnv: settings.greenInvoiceEnv,
-                    nextDocumentNumber: settings.nextDocumentNumber
+                    nextDocumentNumber: settings.nextDocumentNumber,
+                    turbo: normalizeTurbo(settings.turbo),
                 }
             });
         } catch (error) {
@@ -87,7 +95,7 @@ export class SettingsController {
                 businessName: string; businessId: string; businessType: string;
                 address: string; phone: string; email: string; vatRate: number;
                 invoiceProvider: string; greenInvoiceApiKey: string; greenInvoiceApiSecret: string;
-                greenInvoiceEnv: string;
+                greenInvoiceEnv: string; turbo: Partial<TurboSettings>;
             }>;
 
             if (body.businessType !== undefined && !BUSINESS_TYPES.includes(body.businessType as BusinessType)) {
@@ -120,9 +128,16 @@ export class SettingsController {
             if (body.greenInvoiceApiKey) settings.greenInvoiceApiKey = body.greenInvoiceApiKey;
             if (body.greenInvoiceApiSecret) settings.greenInvoiceApiSecret = body.greenInvoiceApiSecret;
             if (body.greenInvoiceEnv !== undefined) settings.greenInvoiceEnv = body.greenInvoiceEnv as 'sandbox' | 'production';
+            if (body.turbo !== undefined && typeof body.turbo === 'object') {
+                settings.turbo = normalizeTurbo({ ...normalizeTurbo(settings.turbo), ...body.turbo });
+            }
 
             await settings.save();
-            res.status(200).json({ success: true, message: 'ההגדרות נשמרו בהצלחה' });
+            res.status(200).json({
+                success: true,
+                message: 'ההגדרות נשמרו בהצלחה',
+                data: { turbo: normalizeTurbo(settings.turbo) },
+            });
         } catch (error) {
             console.error('Error updating business settings:', error);
             res.status(500).json({

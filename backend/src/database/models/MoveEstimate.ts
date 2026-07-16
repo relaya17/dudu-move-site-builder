@@ -8,7 +8,8 @@ import {
     ESTIMATE_STATUSES,
     FurnitureItem,
     QuoteDocumentInfo,
-    InvoiceDocumentInfo
+    InvoiceDocumentInfo,
+    OnlinePaymentInfo
 } from 'shared';
 
 // מקור האמת לשלבי המעקב ולסטטוסים מוגדר בחבילת shared (נצרך גם ב-frontend).
@@ -50,6 +51,16 @@ export interface IMoveEstimate extends Document {
     // --- מסמכי חשבונאות ---
     quote?: IQuoteDocumentInfo;
     invoice?: IInvoiceDocumentInfo;
+    /** תשלום אונליין / העברה / Open Banking */
+    payment?: OnlinePaymentInfo<Date>;
+    /** הסכמות GDPR שנאספו בטופס */
+    consents?: {
+        termsAccepted: boolean;
+        privacyAccepted: boolean;
+        marketingAccepted: boolean;
+        acceptedAt: Date;
+        version: string;
+    };
     createdAt: Date;
     updatedAt: Date;
 }
@@ -221,6 +232,43 @@ const MoveEstimateSchema = new Schema<IMoveEstimate>({
         },
         // ת.ז./ח.פ של הלקוח - חובה כשסכום התשלום עולה על 5,000 ₪.
         customerIdNumber: String
+    },
+    payment: {
+        status: {
+            type: String,
+            enum: ['unpaid', 'pending', 'paid', 'failed', 'refunded'],
+            default: 'unpaid'
+        },
+        channel: {
+            type: String,
+            enum: ['card_demo', 'card_provider', 'bank_transfer', 'open_banking']
+        },
+        amount: Number,
+        currency: { type: String, default: 'ILS' },
+        reference: String,
+        providerPaymentId: String,
+        paidAt: Date,
+        lastUpdatedAt: Date,
+        openBankingStatus: {
+            type: String,
+            enum: ['none', 'pending', 'linked', 'revoked'],
+            default: 'none'
+        },
+        bankTransfer: {
+            bankName: String,
+            accountName: String,
+            accountNumber: String,
+            branch: String,
+            iban: String,
+            instructionsHe: String
+        }
+    },
+    consents: {
+        termsAccepted: Boolean,
+        privacyAccepted: Boolean,
+        marketingAccepted: Boolean,
+        acceptedAt: Date,
+        version: String
     }
 }, {
     timestamps: true

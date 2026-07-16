@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { TRACKING_STAGE_LABELS, TrackingViewDTO, type BusinessSettingsDTO, type PaymentMethod } from 'shared';
 import { CustomerAiChat } from '@/components/CustomerAiChat';
+import { TrackingPaymentCard } from '@/components/TrackingPaymentCard';
 import { printBuiltInInvoice } from '@/lib/printInvoice';
 import { printQuote } from '@/lib/quotePrint';
 import type { MovingEstimateRequest } from '@/types/movingEstimate';
@@ -205,6 +206,12 @@ export const Tracking = () => {
             )}
           </CardContent>
         </Card>
+
+        <TrackingPaymentCard
+          token={token!}
+          initialPayment={data.payment}
+          onUpdated={() => { fetchTracking(); }}
+        />
 
         {/* מסמכים להורדה */}
         <Card>

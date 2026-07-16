@@ -88,4 +88,22 @@ export interface TrackingViewDTO {
     documents: TrackingDocumentSummary;
     /** פרטי יצירת קשר עם המוביל לשיחה ישירה. */
     businessContact: TrackingBusinessContact;
+    /** מצב תשלום אונליין / העברה / Open Banking (תצוגה ציבורית). */
+    payment: {
+        status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded';
+        channel?: string;
+        amount: number;
+        currency: 'ILS';
+        reference: string;
+        paidAt?: string;
+        openBankingStatus?: 'none' | 'pending' | 'linked' | 'revoked';
+        bankTransfer?: {
+            bankName: string;
+            accountName: string;
+            accountNumber: string;
+            branch?: string;
+            iban?: string;
+            instructionsHe: string;
+        };
+    } | null;
 }

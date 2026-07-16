@@ -20,6 +20,8 @@ const quickLinks = [
   { label: 'קבלת הצעת מחיר', href: '/demo#estimate-form' },
   { label: 'ביקורות', href: '/demo#testimonials' },
   { label: 'צור קשר', href: '/demo/contact' },
+  { label: 'Virtual Staging', href: '/demo/staging' },
+  { label: 'מרכז פרטיות', href: '/demo/privacy' },
 ];
 
 export const Footer = () => {
@@ -94,6 +96,10 @@ export const Footer = () => {
           <TermsModal />
           <span className="text-gray-700 text-xs">|</span>
           <AccessibilityStatement />
+          <span className="text-gray-700 text-xs">|</span>
+          <a href="/demo/privacy" className="text-xs text-gray-400 hover:text-white transition-colors">
+            מרכז פרטיות (GDPR)
+          </a>
         </div>
         </div>
       </div>

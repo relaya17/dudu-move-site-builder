@@ -131,14 +131,19 @@ export class TrackingService {
                 at: toIso(h.at),
                 note: h.note,
             })),
-            location: estimate.location
-                ? {
-                    lat: estimate.location.lat,
-                    lng: estimate.location.lng,
-                    address: estimate.location.address,
-                    updatedAt: toIso(estimate.location.updatedAt),
-                }
-                : null,
+            location:
+                estimate.location &&
+                typeof estimate.location.lat === 'number' &&
+                typeof estimate.location.lng === 'number'
+                    ? {
+                        lat: estimate.location.lat,
+                        lng: estimate.location.lng,
+                        address: estimate.location.address,
+                        updatedAt: estimate.location.updatedAt
+                            ? toIso(estimate.location.updatedAt)
+                            : '',
+                    }
+                    : null,
             reminderEmailSentAt: estimate.reminderEmailSentAt
                 ? toIso(estimate.reminderEmailSentAt)
                 : null,
@@ -170,6 +175,27 @@ export class TrackingService {
                 email: settings?.email || FALLBACK_CONTACT.email,
                 address: settings?.address || FALLBACK_CONTACT.address,
             },
+            payment: estimate.payment?.reference
+                ? {
+                    status: estimate.payment.status || 'unpaid',
+                    channel: estimate.payment.channel,
+                    amount: estimate.payment.amount ?? estimate.totalPrice ?? 0,
+                    currency: 'ILS' as const,
+                    reference: estimate.payment.reference,
+                    paidAt: estimate.payment.paidAt ? toIso(estimate.payment.paidAt) : undefined,
+                    openBankingStatus: estimate.payment.openBankingStatus || 'none',
+                    bankTransfer: estimate.payment.bankTransfer
+                        ? {
+                            bankName: estimate.payment.bankTransfer.bankName || '',
+                            accountName: estimate.payment.bankTransfer.accountName || '',
+                            accountNumber: estimate.payment.bankTransfer.accountNumber || '',
+                            branch: estimate.payment.bankTransfer.branch,
+                            iban: estimate.payment.bankTransfer.iban,
+                            instructionsHe: estimate.payment.bankTransfer.instructionsHe || '',
+                        }
+                        : undefined,
+                }
+                : null,
         };
     }
 }

@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { label: 'שירותים', id: 'services', type: 'hash' as const },
   { label: 'אודות', id: 'about', type: 'hash' as const },
   { label: 'הצעת מחיר', id: 'estimate-form', type: 'hash' as const },
+  { label: 'עיצוב מדומה', id: 'staging', type: 'route' as const, to: '/demo/staging' },
   { label: 'צור קשר', id: 'contact', type: 'route' as const, to: '/demo/contact' },
 ];
 

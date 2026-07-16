@@ -50,10 +50,21 @@ export const furnitureItemSchema = z.object({
 });
 
 // סכמת ולידציה לבקשת הערכת מחיר מלאה
+export const consentsSchema = z.object({
+    termsAccepted: z.literal(true, {
+        errorMap: () => ({ message: 'יש לאשר את תנאי השימוש' }),
+    }),
+    privacyAccepted: z.literal(true, {
+        errorMap: () => ({ message: 'יש לאשר את מדיניות הפרטיות' }),
+    }),
+    marketingAccepted: z.boolean().optional().default(false),
+});
+
 export const estimateRequestSchema = z.object({
     customerData: customerSchema,
     moveData: moveDetailsSchema,
     furnitureItems: z.array(furnitureItemSchema)
         .min(1, 'חובה לכלול לפחות פריט אחד')
-        .max(50, 'יותר מדי פריטים')
+        .max(50, 'יותר מדי פריטים'),
+    consents: consentsSchema,
 });

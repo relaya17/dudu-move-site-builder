@@ -9,16 +9,17 @@ const PHONE_NUMBER = '0547777623';
 const EMAIL_ADDRESS = 'davidgueta3232@gmail.com';
 
 const serviceLinks = [
-  { label: 'הובלות דירה', href: '#services' },
-  { label: 'הובלות משרדים', href: '#services' },
-  { label: 'הובלות למרחקים ארוכים', href: '#services' },
-  { label: 'שירותי אריזה', href: '#services' },
+  { label: 'הובלות דירה', href: '/demo#services' },
+  { label: 'הובלות משרדים', href: '/demo#services' },
+  { label: 'הובלות למרחקים ארוכים', href: '/demo#services' },
+  { label: 'שירותי אריזה', href: '/demo#services' },
 ];
 
 const quickLinks = [
-  { label: 'אודותינו', href: '#about' },
-  { label: 'קבלת הצעת מחיר', href: '#estimate-form' },
-  { label: 'ביקורות', href: '#testimonials' },
+  { label: 'אודותינו', href: '/demo#about' },
+  { label: 'קבלת הצעת מחיר', href: '/demo#estimate-form' },
+  { label: 'ביקורות', href: '/demo#testimonials' },
+  { label: 'צור קשר', href: '/demo/contact' },
 ];
 
 export const Footer = () => {

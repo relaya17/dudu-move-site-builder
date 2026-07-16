@@ -79,7 +79,12 @@ export class SettingsController {
             const settings = await BusinessSettings.findOne(tenantFilter(tenantId));
             res.status(200).json({
                 success: true,
-                data: { businessName: settings?.businessName || 'David Move' }
+                data: {
+                    businessName: settings?.businessName || 'David Move',
+                    phone: settings?.phone || '0547777623',
+                    email: settings?.email || 'davidgueta3232@gmail.com',
+                    address: settings?.address || 'אילת, ישראל',
+                }
             });
         } catch (error) {
             console.error('Error getting public business info:', error);

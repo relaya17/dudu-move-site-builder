@@ -46,6 +46,29 @@ export interface TrackingLocation<TDate extends DateLike = string> {
  * תצוגה ציבורית ומצומצמת של מעקב הובלה - מוחזרת מ-GET /api/tracking/:token,
  * ללא חשיפת מזהי מסד הנתונים הפנימיים או פרטי לקוח רגישים מעבר לנדרש.
  */
+export interface TrackingDocumentSummary {
+    quote: {
+        quoteNumber: string;
+        generatedAt: string;
+    } | null;
+    invoice: {
+        documentNumber: string;
+        documentUrl: string;
+        issuedAt: string;
+        docType: string;
+        /** true כשהמסמך מובנה באפליקציה (ניתן להדפסה דרך /documents). */
+        printable: boolean;
+    } | null;
+    totalPrice: number | null;
+}
+
+export interface TrackingBusinessContact {
+    businessName: string;
+    phone: string;
+    email: string;
+    address?: string;
+}
+
 export interface TrackingViewDTO {
     trackingToken: string;
     name: string;
@@ -61,4 +84,8 @@ export interface TrackingViewDTO {
     reminderEmailSentAt: string | null;
     reminderSmsSentAt: string | null;
     createdAt: string;
+    /** מסמכים זמינים ללקוח (הצעה / חשבונית). */
+    documents: TrackingDocumentSummary;
+    /** פרטי יצירת קשר עם המוביל לשיחה ישירה. */
+    businessContact: TrackingBusinessContact;
 }

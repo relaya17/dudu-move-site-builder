@@ -104,6 +104,30 @@ export class EmailService {
         await EmailService.send({ to, subject, html });
     }
 
+    /** הודעת יצירת קשר מהאתר הציבורי → למייל העסק. */
+    static async sendContactMessage(params: {
+        to: string;
+        fromName: string;
+        fromPhone: string;
+        fromEmail?: string;
+        message: string;
+        businessName?: string;
+    }): Promise<void> {
+        const { to, fromName, fromPhone, fromEmail, message, businessName } = params;
+        const subject = `פנייה חדשה מהאתר${businessName ? ` - ${businessName}` : ''}`;
+        const html = `
+            <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>פנייה חדשה מהאתר</h2>
+                <p><strong>שם:</strong> ${fromName}</p>
+                <p><strong>טלפון:</strong> <a href="tel:${fromPhone}">${fromPhone}</a></p>
+                ${fromEmail ? `<p><strong>אימייל:</strong> <a href="mailto:${fromEmail}">${fromEmail}</a></p>` : ''}
+                <hr/>
+                <p style="white-space:pre-wrap;">${message}</p>
+            </div>
+        `;
+        await EmailService.send({ to, subject, html });
+    }
+
     private static async send(params: { to: string; subject: string; html: string }): Promise<void> {
         const t = getTransporter();
         if (!t) {

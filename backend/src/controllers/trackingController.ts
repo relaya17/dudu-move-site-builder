@@ -18,6 +18,24 @@ export const getTrackingByToken = async (req: Request, res: Response) => {
     }
 };
 
+/** מסמכים להדפסה/הורדה ללקוח לפי טוקן מעקב. */
+export const getTrackingDocuments = async (req: Request, res: Response) => {
+    try {
+        const { token } = req.params;
+        const data = await TrackingService.getPrintableDocuments(token);
+
+        if (!data) {
+            res.status(404).json({ success: false, message: 'לא נמצא מעקב עבור קישור זה' });
+            return;
+        }
+
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        console.error('שגיאה בשליפת מסמכי מעקב:', error);
+        res.status(500).json({ success: false, message: 'אירעה שגיאה בטעינת המסמכים' });
+    }
+};
+
 export const updateTrackingStage = async (req: Request, res: Response) => {
     try {
         const { token } = req.params;

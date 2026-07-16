@@ -10,7 +10,7 @@ export { DEFAULT_TURBO_SETTINGS } from './businessSettings';
 
 // ─── טיפוסים בלבד ────────────────────────────────────────────────────────────
 export type { EstimateStatus } from './estimateStatus';
-export type { TrackingStage, DateLike, StageHistoryEntry, TrackingLocation, TrackingViewDTO } from './tracking';
+export type { TrackingStage, DateLike, StageHistoryEntry, TrackingLocation, TrackingViewDTO, TrackingDocumentSummary, TrackingBusinessContact } from './tracking';
 export type { FurnitureItem } from './furniture';
 export type { MoveEstimateDTO } from './moveEstimate';
 export type { ApiResponse } from './apiResponse';

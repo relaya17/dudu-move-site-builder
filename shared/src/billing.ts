@@ -42,6 +42,35 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
     other: 'אחר'
 };
 
+/** סטטוס תשלום אונליין / העברה בנקאית להזמנה. */
+export type OnlinePaymentStatus = 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded';
+
+export type OnlinePaymentChannel = 'card_demo' | 'card_provider' | 'bank_transfer' | 'open_banking';
+
+export type OpenBankingLinkStatus = 'none' | 'pending' | 'linked' | 'revoked';
+
+export interface OnlinePaymentInfo<TDate extends DateLike = string> {
+    status: OnlinePaymentStatus;
+    channel?: OnlinePaymentChannel;
+    /** סכום ששולם / לתשלום בשקלים. */
+    amount: number;
+    currency: 'ILS';
+    /** אסמכתא להעברה בנקאית / סליקה. */
+    reference: string;
+    providerPaymentId?: string;
+    paidAt?: TDate;
+    lastUpdatedAt?: TDate;
+    openBankingStatus?: OpenBankingLinkStatus;
+    bankTransfer?: {
+        bankName: string;
+        accountName: string;
+        accountNumber: string;
+        branch?: string;
+        iban?: string;
+        instructionsHe: string;
+    };
+}
+
 export interface InvoiceDocumentInfo<TDate extends DateLike = string> {
     /** סוג המסמך שהופק אצל ספק החשבוניות */
     docType: 'invoice_receipt' | 'invoice' | 'receipt';

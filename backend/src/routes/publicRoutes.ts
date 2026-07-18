@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { SettingsController } from '../controllers/settingsController';
+import { submitContactForm } from '../controllers/contactController';
+import { submitPrivacyRequest, exportMyData } from '../controllers/privacyController';
+import { generateVirtualStaging } from '../controllers/stagingController';
+import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
 
-// נתיבים ציבוריים בכוונה - בלי requireAdminKey (בניגוד ל-mongoRoutes) - נועדו
-// לשימוש בעמודי הלקוחות עצמם (Navbar/Footer) כדי שכל מוביל שמפעיל את המערכת
-// יוכל להציג את שם העסק שלו (שנקבע במסך ההגדרות בפאנל הניהול) בלי מפתח ניהול
-// ובלי לגעת בקוד. חושפים כאן אך ורק מידע ציבורי ובטוח - ר' SettingsController.getPublicInfo.
 router.get('/business-info', SettingsController.getPublicInfo);
+router.post('/contact', asyncHandler(submitContactForm));
+router.post('/privacy/request', asyncHandler(submitPrivacyRequest));
+router.post('/privacy/export', asyncHandler(exportMyData));
+router.post('/staging', asyncHandler(generateVirtualStaging));
 
 export default router;

@@ -24,6 +24,9 @@ const MovingEstimatesAdminPage = lazy(() => import("./pages/admin/MovingEstimate
 // אתר הלקוחות של "דוד הובלות" - העסק לדוגמה שמריץ על גבי הפלטפורמה, עבר
 // מ-"/" ל-"/demo" כשעמוד הבית הראשי הפך לדף השיווק של הפלטפורמה עצמה (Movalo).
 const DemoBusinessSite = lazy(() => import("./pages/Index"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const VirtualStagingPage = lazy(() => import("./pages/VirtualStagingPage"));
+const PrivacyCenterPage = lazy(() => import("./pages/PrivacyCenterPage"));
 // דשבורד הניהול החדש (JWT / multi-tenant)
 const TenantDashboard = lazy(() => import("./pages/dashboard/TenantDashboard"));
 
@@ -69,6 +72,30 @@ const App = () => (
               element={
                 <Suspense fallback={<Spinner />}>
                   <DemoBusinessSite />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/demo/contact"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <ContactPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/demo/staging"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <VirtualStagingPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/demo/privacy"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <PrivacyCenterPage />
                 </Suspense>
               }
             />

@@ -46,7 +46,12 @@ export class MovingEstimateService {
         }>,
         // tenantId אופציונלי - ריק עבור האתר הישן/הזרימה החד-דיירית של דוד הובלות,
         // מוגדר כשההזמנה מגיעה מטופס ההערכה של דייר/מוביל ספציפי שנרשם למערכת.
-        tenantId?: string
+        tenantId?: string,
+        consents?: {
+            termsAccepted: boolean;
+            privacyAccepted: boolean;
+            marketingAccepted?: boolean;
+        }
     ) {
         try {
             // ולידציה של הנתונים
@@ -109,7 +114,16 @@ export class MovingEstimateService {
                 status: 'pending',
                 trackingToken,
                 stage: 'order_placed',
-                stageHistory: [{ stage: 'order_placed', at: new Date() }]
+                stageHistory: [{ stage: 'order_placed', at: new Date() }],
+                consents: consents
+                    ? {
+                        termsAccepted: !!consents.termsAccepted,
+                        privacyAccepted: !!consents.privacyAccepted,
+                        marketingAccepted: !!consents.marketingAccepted,
+                        acceptedAt: new Date(),
+                        version: '1.0',
+                    }
+                    : undefined,
             });
 
             const savedEstimate = await estimate.save();

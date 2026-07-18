@@ -10,9 +10,9 @@ export { DEFAULT_TURBO_SETTINGS } from './businessSettings';
 
 // ─── טיפוסים בלבד ────────────────────────────────────────────────────────────
 export type { EstimateStatus } from './estimateStatus';
-export type { TrackingStage, DateLike, StageHistoryEntry, TrackingLocation, TrackingViewDTO } from './tracking';
+export type { TrackingStage, DateLike, StageHistoryEntry, TrackingLocation, TrackingViewDTO, TrackingDocumentSummary, TrackingBusinessContact } from './tracking';
 export type { FurnitureItem } from './furniture';
 export type { MoveEstimateDTO } from './moveEstimate';
 export type { ApiResponse } from './apiResponse';
-export type { QuoteDocumentInfo, InvoiceDocumentInfo, PaymentMethod } from './billing';
+export type { QuoteDocumentInfo, InvoiceDocumentInfo, PaymentMethod, OnlinePaymentInfo, OnlinePaymentStatus, OnlinePaymentChannel, OpenBankingLinkStatus } from './billing';
 export type { InvoiceProvider, BusinessType, BusinessSettingsDTO, BusinessSettingsUpdateInput, TurboSettings } from './businessSettings';

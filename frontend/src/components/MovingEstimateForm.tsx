@@ -116,6 +116,11 @@ export const MovingEstimateForm: React.FC = () => {
     toLift: false,
     notes: ''
   });
+  const [consents, setConsents] = useState({
+    termsAccepted: false,
+    privacyAccepted: false,
+    marketingAccepted: false,
+  });
   const formRef = useRef<HTMLFormElement>(null);
 
   const API_URL = import.meta.env.VITE_API_URL ||
@@ -275,6 +280,11 @@ export const MovingEstimateForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!consents.termsAccepted || !consents.privacyAccepted) {
+      alert('יש לאשר את תנאי השימוש ומדיניות הפרטיות לפני השליחה.');
+      return;
+    }
+
     const formattedData = {
       customerData: {
         name: formData.fullName,
@@ -306,6 +316,7 @@ export const MovingEstimateForm: React.FC = () => {
         // The 'description' field is optional on the backend and not available directly from the frontend ItemForm.
         // The 'id' and 'img' fields are not part of the backend schema and are omitted.
       })),
+      consents,
     };
 
     try {
@@ -720,9 +731,51 @@ export const MovingEstimateForm: React.FC = () => {
                     style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
                   ></textarea>
                 </div>
+
+                <div className="mb-6 space-y-3 rounded-lg border bg-slate-50 p-4 text-sm">
+                  <p className="font-medium text-gray-800">הסכמות פרטיות (GDPR)</p>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={consents.termsAccepted}
+                      onChange={(e) => setConsents((c) => ({ ...c, termsAccepted: e.target.checked }))}
+                      required
+                    />
+                    <span>אני מאשר/ת את תנאי השימוש *</span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={consents.privacyAccepted}
+                      onChange={(e) => setConsents((c) => ({ ...c, privacyAccepted: e.target.checked }))}
+                      required
+                    />
+                    <span>
+                      אני מאשר/ת את{' '}
+                      <a href="/demo/privacy" className="text-blue-600 underline" target="_blank" rel="noreferrer">
+                        מדיניות הפרטיות
+                      </a>{' '}
+                      *
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={consents.marketingAccepted}
+                      onChange={(e) => setConsents((c) => ({ ...c, marketingAccepted: e.target.checked }))}
+                    />
+                    <span>אני מאשר/ת קבלת עדכונים שיווקיים (אופציונלי)</span>
+                  </label>
+                </div>
+
                 <div className="flex justify-between mt-6">
                   <Button type="button" variant="outline" onClick={prevStep}>חזור</Button>
-                  <Button type="submit">שליחה</Button>
+                  <Button type="submit" disabled={!consents.termsAccepted || !consents.privacyAccepted}>
+                    שליחה
+                  </Button>
                 </div>
               </div>
             )}

@@ -32,13 +32,13 @@ export const submitMoveRequest = async (req: Request, res: Response) => {
             console.log('Validated data:', JSON.stringify(validatedData, null, 2));
         }
 
-        const { customerData, moveData, furnitureItems } = validatedData;
+        const { customerData, moveData, furnitureItems, consents } = validatedData;
         const tenantId = await resolveTenantId((req.body as { tenantSlug?: unknown })?.tenantSlug);
         const result = await MovingEstimateService.submitEstimateRequest(customerData, {
             ...moveData,
             preferred_move_date: moveData.preferred_move_date || '',
             additional_notes: moveData.additional_notes || ''
-        }, furnitureItems, tenantId);
+        }, furnitureItems, tenantId, consents);
         res.status(201).json({ success: true, message: 'בקשת הערכת מחיר נשלחה בהצלחה', data: result });
     } catch (error) {
         console.error('שגיאה בשליחת בקשת הערכת מחיר:', error);

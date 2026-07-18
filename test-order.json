@@ -1,0 +1,70 @@
+{
+    "customerData": {
+        "name": "ישראל ישראלי",
+        "email": "israel@example.com",
+        "phone": "0501234567"
+    },
+    "moveData": {
+        "apartment_type": "3",
+        "preferred_move_date": "2024-12-15",
+        "current_address": "רחוב הרצל 123, תל אביב",
+        "destination_address": "רחוב ויצמן 456, חיפה",
+        "additional_notes": "יש לנו רהיטים שבירים רבים",
+        "origin_floor": 2,
+        "destination_floor": 4,
+        "origin_has_elevator": true,
+        "destination_has_elevator": true,
+        "origin_has_crane": false,
+        "destination_has_crane": false
+    },
+    "furnitureItems": [
+        {
+            "name": "sofa",
+            "quantity": 1,
+            "isFragile": false,
+            "needsDisassemble": true,
+            "needsReassemble": true,
+            "comments": "ספה 3 מושבים"
+        },
+        {
+            "name": "bed_double",
+            "quantity": 1,
+            "isFragile": false,
+            "needsDisassemble": true,
+            "needsReassemble": true,
+            "comments": "מיטה זוגית"
+        },
+        {
+            "name": "wardrobe",
+            "quantity": 2,
+            "isFragile": false,
+            "needsDisassemble": true,
+            "needsReassemble": true,
+            "comments": "ארונות בגדים"
+        },
+        {
+            "name": "tv",
+            "quantity": 1,
+            "isFragile": true,
+            "needsDisassemble": false,
+            "needsReassemble": false,
+            "comments": "טלוויזיה 55 אינץ'"
+        },
+        {
+            "name": "refrigerator",
+            "quantity": 1,
+            "isFragile": true,
+            "needsDisassemble": false,
+            "needsReassemble": false,
+            "comments": "מקרר גדול"
+        },
+        {
+            "name": "box",
+            "quantity": 15,
+            "isFragile": false,
+            "needsDisassemble": false,
+            "needsReassemble": false,
+            "comments": "קופסאות אריזה"
+        }
+    ]
+}
